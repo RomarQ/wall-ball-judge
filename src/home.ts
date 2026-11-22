@@ -261,6 +261,11 @@ async function checkPhone(): Promise<void> {
   await showReadiness(problem);
 }
 
+/** Whether a device check runs, which a reload would stop. */
+export function checkRunning(): boolean {
+  return checking !== null;
+}
+
 let demo: (on: boolean) => void = () => {};
 
 /** Tells the home view that it shows, or that another view took its place. */

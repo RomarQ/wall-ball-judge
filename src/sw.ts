@@ -33,7 +33,6 @@ function isVendor(url: URL): boolean {
   return url.origin === self.location.origin && url.pathname.includes('/vendor/');
 }
 
-self.skipWaiting();
 clientsClaim();
 
 precacheAndRoute(self.__WB_MANIFEST);
@@ -57,4 +56,6 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'version') event.ports[0]?.postMessage(__APP_VERSION__);
+  // A new build waits for its page's word, sent when a reload loses nothing (main.ts).
+  if (event.data?.type === 'SKIP_WAITING') void self.skipWaiting();
 });

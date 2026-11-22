@@ -8,7 +8,7 @@
 import { registerSW } from 'virtual:pwa-register';
 import { unlockAudio } from './audio';
 import { bindDesktopHint } from './desktop-site';
-import { bindHome, homeShown } from './home';
+import { bindHome, checkRunning, homeShown } from './home';
 import { translatePage } from './i18n';
 import { $ } from './dom';
 import { bindSettings } from './settings-view';
@@ -16,7 +16,41 @@ import { go, watchViews } from './views';
 
 translatePage();
 document.documentElement.classList.remove('translating');
-registerSW({ immediate: true });
+
+let registration: ServiceWorkerRegistration | undefined;
+let reloadDue = false;
+
+/**
+ * Moves the page to a new build once a reload loses nothing: on the home view with no device check running, or on
+ * the settings. The board never reloads in place, so a set and its video keep their build. Until then the new build
+ * waits in its service worker, and the old one serves the page whole.
+ */
+function takeNewBuild(): void {
+  if (location.hash === '#judge' || checkRunning()) return;
+  if (reloadDue) location.reload();
+  else if (registration?.waiting) void releaseNewBuild();
+}
+
+const releaseNewBuild = registerSW({
+  immediate: true,
+  onRegisteredSW: (_url, registered) => {
+    registration = registered;
+  },
+  onNeedRefresh: takeNewBuild,
+  // The page reloads by its controller rule below. The plugin's own rule misses a page that had no worker at first.
+  onNeedReload: () => {},
+});
+
+let controlled = Boolean(navigator.serviceWorker?.controller);
+navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  // A page with no worker yet runs the build the server holds, which its first worker brings too. Another page of the
+  // app may release a new build while this one runs a set, so the reload still waits for takeNewBuild.
+  if (controlled) {
+    reloadDue = true;
+    takeNewBuild();
+  }
+  controlled = true;
+});
 
 type Board = typeof import('./judge');
 
@@ -74,6 +108,7 @@ watchViews(async (view, from) => {
   if (from === 'judge' && loading) await (await loading.catch(() => null))?.stopSet();
   if (view === 'judge') void loadBoard();
   homeShown(view === 'home');
+  takeNewBuild();
 });
 
 // Ready before the first tap on most visits, and after the home view has painted.

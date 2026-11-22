@@ -29,10 +29,10 @@ Use `npm run dev` and `adb reverse tcp:5173 tcp:5173` instead when the change is
 
 ## Making the phone take the new build
 
-The service worker calls `skipWaiting` and `clientsClaim`, so a build it has fetched takes over as soon as it installs. The catch is that the phone has to fetch it, and an installed app only looks when it opens.
+A new build waits in its service worker until the page can reload without losing anything: on the home view while no device check runs, or on the settings. The page then takes the build and reloads itself once. The judge board never reloads in place, so a set in progress keeps its build, and the page takes the new one when you leave the board. The catch is that the phone has to fetch the new build, and an installed app only looks when it opens.
 
-- **In a browser tab:** pull down to reload. Twice, because the first reload is what fetches the new worker and the second runs it.
-- **Installed from the home screen:** close it from the recent-apps list, then open it again. Backgrounding is not enough.
+- **In a browser tab:** pull down to reload on the home view. A few seconds later the page reloads once by itself, on the new build.
+- **Installed from the home screen:** close it from the recent-apps list, then open it again. Backgrounding is not enough. On the home view it then reloads once by itself.
 - **When it still runs the old one:** the version in the footer is reported by the worker in control of that page, not by the server, so it is the honest answer. If it will not move, the phone is holding a worker that failed to update. Clear it at `chrome://serviceworker-internals` or, faster, uninstall the app from the home screen and reinstall it.
 
 ## Bump the version, every time
