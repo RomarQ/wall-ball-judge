@@ -56,7 +56,8 @@ export interface BoardState {
   elapsedMs: number;
   running: boolean;
   done: boolean;
-  required: Target;
+  /** The target the athlete must reach, or null until the set's first hit picks it. */
+  required: Target | null;
   /** The banner of the change numbered `seq`. */
   flash: BoardFlash | null;
 }
@@ -67,7 +68,7 @@ const BOARD_VERSION = 1;
 const EVENTS: (BoardEvent | null)[] = [null, 'rep', 'targetFault', 'moveFault'];
 const PLATES: (Target | null)[] = [null, 'upper', 'lower'];
 const REASONS: BoardFlash['reason'][] = [null, 'depth', 'target'];
-const FLAG = { running: 1, done: 2, lower: 4, flash: 8, valid: 16, ballSeen: 32 } as const;
+const FLAG = { running: 1, done: 2, lower: 4, flash: 8, valid: 16, ballSeen: 32, unpicked: 64 } as const;
 /** `maxDepth` crosses in tenths. */
 const DEPTH_SCALE = 10;
 
@@ -80,6 +81,7 @@ export function encodeBoard(state: BoardState): Uint8Array {
   if (state.running) flags |= FLAG.running;
   if (state.done) flags |= FLAG.done;
   if (state.required === 'lower') flags |= FLAG.lower;
+  if (state.required === null) flags |= FLAG.unpicked;
   if (flash) flags |= FLAG.flash;
   if (flash?.valid) flags |= FLAG.valid;
   if (flash?.ballSeen) flags |= FLAG.ballSeen;
@@ -121,7 +123,7 @@ export function decodeBoard(bytes: ArrayLike<number>): BoardState | null {
     elapsedMs: view.getUint32(10, true),
     running: on(FLAG.running),
     done: on(FLAG.done),
-    required: on(FLAG.lower) ? 'lower' : 'upper',
+    required: on(FLAG.unpicked) ? null : on(FLAG.lower) ? 'lower' : 'upper',
     flash: on(FLAG.flash)
       ? {
           valid: on(FLAG.valid),

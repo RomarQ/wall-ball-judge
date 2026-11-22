@@ -82,7 +82,14 @@ const session = new Session({
   },
   onVerdict(verdict, times) {
     tally.judged(verdict, times);
+    // The set's first hit may have picked the division.
+    renderDivision();
     return tally.count;
+  },
+  onPicked() {
+    // The boxes go with the pick, and with them the reason to lock the lines.
+    session.linesLocked = false;
+    notice(t('board.picked'), t('board.placedBanner'), 'ok');
   },
   onTrackingLost: () => audio.trackingLost(),
   record: recordVideo,
@@ -249,7 +256,7 @@ function plainLine(tick: FrameTick): string {
     : tick.mode === 'target'
       ? session.board.singleTarget
         ? t('board.judgingTarget')
-        : t('board.judging')(session.target.required === 'lower')
+        : t('board.judging')(session.target.required)
       : t('board.depthOnly');
   return [what, `${tick.fps} fps`, ...(tick.recording ? [t('board.recording')] : [])].join(' · ');
 }
@@ -278,23 +285,22 @@ async function findTarget(): Promise<void> {
   session.linesLocked = true;
   const started = performance.now();
   try {
-    const { placed, candidates } = await session.findTargets();
-    session.linesLocked = candidates.length > 0;
+    const outcome = await session.findTargets();
+    // One number on the preview for each station, the plates of a station together.
+    const n = session.board.stations.length;
+    session.linesLocked = n > 0;
     showChips();
     const took = t('board.searched')(
       chipOf(session.finder?.detector?.delegate),
       decimal((performance.now() - started) / 1000, 1),
     );
-    if (placed) notice(t('board.placed') + took, t('board.placedBanner'), 'ok');
-    else if (candidates.length === 1) {
+    if (outcome === 'placed') notice(t('board.placed') + took, t('board.placedBanner'), 'ok');
+    else if (outcome === 'squat')
+      notice(t('board.atSquat')(n) + took, t('board.atSquatBanner')(n), 'ok', 15000);
+    else if (n === 1) {
       notice(t('board.oneCandidate') + took, t('board.oneCandidateBanner'), 'ok', 15000);
-    } else if (candidates.length) {
-      notice(
-        t('board.candidates')(candidates.length) + took,
-        t('board.candidatesBanner')(candidates.length),
-        'ok',
-        15000,
-      );
+    } else if (n) {
+      notice(t('board.candidates')(n) + took, t('board.candidatesBanner')(n), 'ok', 15000);
     } else {
       const best = session.finder?.lastBest ?? 0;
       notice(
@@ -374,6 +380,8 @@ async function start(open: () => Promise<void>, source: 'camera' | 'file'): Prom
   session.armed = false;
   try {
     await open();
+    // Each start takes the division afresh, as the settings say.
+    renderDivision();
     showCamera(true);
     // Search before offering the view. Until something is found there is
     // nothing to tap, and a tap would move a line to wherever it landed.

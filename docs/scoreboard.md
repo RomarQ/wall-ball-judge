@@ -26,19 +26,19 @@ The judging phone writes with response, so a failed write is known to have faile
 
 A display that calls the reps needs more than the count: which change to call, the two kinds of no-rep, the clock, the division and the verdict's banner. The judging phone writes it to `board`, little-endian, in one write of 18 bytes, so the link never needs packets larger than Bluetooth's smallest. [src/scoreboard-wire.ts](../src/scoreboard-wire.ts) encodes and decodes it.
 
-| Bytes | Field                                                                                                                      | Type |
-| ----- | -------------------------------------------------------------------------------------------------------------------------- | ---- |
-| 0     | version, 1                                                                                                                 | u8   |
-| 1     | `seq`, the number of the last change, round from 255 to 0                                                                  | u8   |
-| 2     | that change: 0 none, 1 rep, 2 target no-rep, 3 squat no-rep                                                                | u8   |
-| 3     | the plate it lit: 0 none, 1 men's, 2 women's                                                                               | u8   |
-| 4–5   | the count                                                                                                                  | u16  |
-| 6–7   | the target no-reps                                                                                                         | u16  |
-| 8–9   | the squat no-reps                                                                                                          | u16  |
-| 10–13 | the set clock's reading when written, in milliseconds                                                                      | u32  |
-| 14    | flags: 1 the clock runs, 2 the set is done, 4 the women's target, 8 a banner, 16 the banner is a rep, 32 the ball was seen | u8   |
-| 15    | the banner's reason: 0 none, 1 depth, 2 target                                                                             | u8   |
-| 16–17 | the banner's depth, in tenths of a percent of the femur's length                                                           | i16  |
+| Bytes | Field                                                                                                                                                                              | Type |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 0     | version, 1                                                                                                                                                                         | u8   |
+| 1     | `seq`, the number of the last change, round from 255 to 0                                                                                                                          | u8   |
+| 2     | that change: 0 none, 1 rep, 2 target no-rep, 3 squat no-rep                                                                                                                        | u8   |
+| 3     | the plate it lit: 0 none, 1 men's, 2 women's                                                                                                                                       | u8   |
+| 4–5   | the count                                                                                                                                                                          | u16  |
+| 6–7   | the target no-reps                                                                                                                                                                 | u16  |
+| 8–9   | the squat no-reps                                                                                                                                                                  | u16  |
+| 10–13 | the set clock's reading when written, in milliseconds                                                                                                                              | u32  |
+| 14    | flags: 1 the clock runs, 2 the set is done, 4 the women's target, 8 a banner, 16 the banner is a rep, 32 the ball was seen, 64 the set's first hit has not picked the division yet | u8   |
+| 15    | the banner's reason: 0 none, 1 depth, 2 target                                                                                                                                     | u8   |
+| 16–17 | the banner's depth, in tenths of a percent of the femur's length                                                                                                                   | i16  |
 
 `seq` moves only for a change to call. A write sent again, after a reconnect, a clock hold or a new division, keeps its number. The rules on each side:
 

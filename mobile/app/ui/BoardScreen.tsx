@@ -38,10 +38,10 @@ import { COLOURS, REM, TAP } from './theme';
 
 export type BoardSource = { kind: 'camera' } | { kind: 'recording'; uri: string; name: string; durationMs: number };
 
-/** A set started without taps, for checks over adb: the candidate to place and the target to judge. */
+/** A set started without taps, for checks over adb: the candidate to place, and the target to judge or null for the first hit to pick. */
 export interface AutoSet {
   pick: number;
-  required: Target;
+  required: Target | null;
 }
 
 type Phase = 'searching' | 'choosing' | 'counting' | 'done';
@@ -127,7 +127,12 @@ export function BoardScreen({
 }) {
   // A replay's counts are no part of the live totals, and the live totals no part of a replay's.
   const tally = useMemo(() => (source.kind === 'recording' ? new Tally(tallySounds) : liveTally), [source.kind, liveTally]);
-  const board = useMemo(() => new PipelineBoard(ballCheckOn() && ballUnit !== 'off', tally, ballModel), [ballUnit, ballModel, tally]);
+  // The board tells of its pick through this, as the notice that shows it comes after the board.
+  const onPicked = useRef(() => {});
+  const board = useMemo(
+    () => new PipelineBoard(ballCheckOn() && ballUnit !== 'off', tally, ballModel, () => onPicked.current()),
+    [ballUnit, ballModel, tally],
+  );
   const [phase, setPhase] = useState<Phase>('searching');
   const [, setTick] = useState(0);
   const redraw = useCallback(() => setTick((n) => n + 1), []);
@@ -151,6 +156,11 @@ export function BoardScreen({
     setSaid({ line, banner: { text: banner, tone } });
     saidTimer.current = setTimeout(() => setSaid(null), holdMs);
   }, []);
+  onPicked.current = () => {
+    // For checks over adb: the station the athlete's squat picked, in frame pixels.
+    console.log(`PICKED ${JSON.stringify(board.plates.map((p) => [p.x, p.y, p.w, p.h].map((v) => Math.round(v * board.height))))}`);
+    notice(t('board.picked'), t('board.placedBanner'), 'ok', 6000);
+  };
 
   const find = useCallback(async () => {
     if (!board.armed) setPhase('searching');
@@ -163,22 +173,23 @@ export function BoardScreen({
         board.height = found.frame.height;
         setImage(found.frame.image);
       }
-      const sure = board.searched(found.seen, FINDER);
-      const placed = sure >= 0;
-      if (placed) board.placeCandidate(sure);
-      const n = board.candidates.length;
+      const outcome = board.searched(found.seen, FINDER);
+      // One number on the preview for each station, the plates of a station together.
+      const n = board.stations.length;
       // For checks over adb: the search's plates, in frame pixels, best first.
       const round = (v: number) => Math.round(v);
       console.log(
         `SEARCH ${JSON.stringify({
           size: [found.frame.width, found.frame.height],
-          placed,
+          outcome,
+          stations: board.stations,
           best: Number(found.best.toFixed(3)),
           candidates: found.seen.look.plates.map((b) => [round(b.x), round(b.y), round(b.w), round(b.h), Number(b.score.toFixed(3))]),
         })}`,
       );
       const took = t('board.searched')(FINDER_UNIT, decimal((wallballVision.nowMs() - started) / 1000, 1));
-      if (placed) notice(t('board.placed') + took, t('board.placedBanner'), 'ok', 6000);
+      if (outcome === 'placed') notice(t('board.placed') + took, t('board.placedBanner'), 'ok', 6000);
+      else if (outcome === 'squat') notice(t('board.atSquat')(n) + took, t('board.atSquatBanner')(n), 'ok', 15000);
       else if (n === 1) notice(t('board.oneCandidate') + took, t('board.oneCandidateBanner'), 'ok', 15000);
       else if (n > 1) notice(t('board.candidates')(n) + took, t('board.candidatesBanner')(n), 'ok', 15000);
       else notice(t('board.noTarget')(found.best ? decimal(found.best, 2) : null) + took, t('board.noTargetBanner'), 'warn', 20000);
@@ -572,7 +583,7 @@ function Scoreboard({
   byHand,
 }: {
   tally: Tally;
-  required: Target;
+  required: Target | null;
   onRequired: (which: Target) => void;
   byHand: (count: () => void) => void;
 }) {
@@ -783,7 +794,7 @@ function saveSet(board: PipelineBoard, name: string, ballUnit: string): void {
     moveFaults: verdicts.filter((v) => !v.valid && v.reason === 'depth').length,
     verdicts,
   };
-  wallballVision.saveText(`set-${name.replace(/\.mp4$/, '')}-${board.required}.json`, JSON.stringify(set));
+  wallballVision.saveText(`set-${name.replace(/\.mp4$/, '')}-${board.required ?? 'unpicked'}.json`, JSON.stringify(set));
   console.log(`SET ${JSON.stringify({ ...set, verdicts: undefined })}`);
 }
 

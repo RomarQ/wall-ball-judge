@@ -1,6 +1,7 @@
 /**
  * The settings, laid out as the PWA's settings page and kept under its keys: the language and its spoken count, the
- * ball check, its model's input size and the pose confidence, the two phones' roles, and what the app runs.
+ * ball check, the division picked by the first hit, the ball model's input size and the pose confidence, the two
+ * phones' roles, and what the app runs.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { PanResponder, Pressable, ScrollView, StyleSheet, Text, View, type PanResponderGestureState } from 'react-native';
@@ -11,12 +12,14 @@ import {
   chooseLanguage,
   decimal,
   deviceLanguage,
+  divisionByHit,
   language,
   languageChoice,
   LANGUAGES,
   poseConfidence,
   setBallCheckOn,
   setBallInput,
+  setDivisionByHit,
   setPoseConfidence,
   SPEECH_RATE,
   t,
@@ -110,6 +113,20 @@ export function SettingsScreen({
               on={ballCheckOn()}
               onChange={(on) => {
                 setBallCheckOn(on);
+                redraw();
+              }}
+            />
+          </View>
+          <View style={styles.switchRow}>
+            <View style={styles.switchText}>
+              <Text style={styles.strong}>{t('settings.divisionByHit')}</Text>
+              <Text style={styles.small}>{t('settings.divisionByHitOn')}</Text>
+            </View>
+            <Switch
+              label={t('settings.divisionByHit')}
+              on={divisionByHit()}
+              onChange={(on) => {
+                setDivisionByHit(on);
                 redraw();
               }}
             />

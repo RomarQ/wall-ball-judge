@@ -14,8 +14,9 @@ import { SettingsScreen } from './app/ui/SettingsScreen';
 
 /**
  * Launch options from the intent, for checks over adb. Without one the app opens on its home screen. `--es board <file>`
- * opens the board on that file in the app's `clips` folder, and with `--es pick <n>` places the search's candidate n,
- * takes the target `--es required upper|lower`, and starts the set. `--es display 1` opens Display mode; `--es link
+ * opens the board on that file in the app's `clips` folder, and with `--es pick <n>` places the search's candidate n
+ * (none for -1, so the athlete's squat picks the station), takes the target `--es required upper|lower`, or leaves it
+ * to the first hit with `auto`, and starts the set. `--es display 1` opens Display mode; `--es link
  * first` links the board to the strongest display a scan finds.
  */
 interface LaunchProps {
@@ -27,7 +28,7 @@ interface LaunchProps {
 }
 
 export default function App({ board, pick, required, display, link }: LaunchProps): React.JSX.Element {
-  const auto = pick === undefined ? undefined : { pick: Number(pick), required: required === 'lower' ? ('lower' as const) : ('upper' as const) };
+  const auto = pick === undefined ? undefined : { pick: Number(pick), required: required === 'auto' ? null : required === 'lower' ? ('lower' as const) : ('upper' as const) };
   return (
     <SafeAreaProvider>
       <Main board={board} auto={auto} display={display === '1'} linkFirst={link === 'first'} />

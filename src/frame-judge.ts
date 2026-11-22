@@ -165,6 +165,7 @@ export class FrameJudge {
     }
     const ball = this.#pending;
     this.#pending = null;
+    this.target.twoMarks = weighedMarks(this.target.lines, input.plates).length > 1;
     const look = this.#ask(input);
     const verdict = this.target.update({
       tMs,

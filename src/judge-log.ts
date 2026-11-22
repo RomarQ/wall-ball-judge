@@ -13,7 +13,7 @@ import type { Box, Landmark } from './types';
 /** The target as the board holds it: the lines and spot in fractions of the picture, the plates in frame units. */
 export interface LoggedTarget {
   lines: { upper: number | null; lower: number | null };
-  required: 'upper' | 'lower';
+  required: 'upper' | 'lower' | null;
   x: number | null;
   plates: Rect[];
 }

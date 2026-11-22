@@ -81,6 +81,17 @@ export interface BallSeen {
   struck: Target | null;
 }
 
+/**
+ * Whether a strike at `target` makes the rep for an athlete who must reach
+ * `required`: one at the required target or higher, so the women's throw that
+ * sails to the men's target counts and the men's throw that lands on the
+ * women's does not. Before the division is decided, only the men's target,
+ * which makes the rep for either.
+ */
+export function counts(target: Target | null, required: Target | null): boolean {
+  return target !== null && TARGETS.indexOf(target) <= TARGETS.indexOf(required ?? 'upper');
+}
+
 /** The higher of two targets, or the one that is not null. */
 const higher = (a: Target | null, b: Target | null): Target | null =>
   a === null || (b !== null && TARGETS.indexOf(b) < TARGETS.indexOf(a)) ? b : a;
@@ -141,7 +152,8 @@ const newWindow = (squat: Squat): ThrowWindow => ({
  * returns null, or one verdict.
  *
  * There are two targets, `upper` and `lower`, the men's and the women's, and
- * `required` names the one this athlete must reach. A throw opens
+ * `required` names the one this athlete must reach, or is null until the first
+ * throw that strikes a mark decides it. A throw opens
  * when the squat leaves BOTTOM, which is when the athlete drives the ball up.
  * It ends on the hit, or as a miss once the next squat is under way, because
  * the ball is back in the hands by then. Nothing times it, so a throw made
@@ -151,19 +163,22 @@ const newWindow = (squat: Squat): ThrowWindow => ({
 export class TargetCheck {
   /** The target lines, as fractions of the frame height. The lower one is the larger. */
   lines: Record<Target, number | null> = { upper: null, lower: null };
-  /** The target this athlete must reach. */
-  required: Target = 'upper';
+  /**
+   * The target this athlete must reach, or null until a throw decides it: the
+   * first throw that strikes a mark of a pair makes the highest mark it struck
+   * this athlete's. Until then only the men's mark ends a throw, and a throw
+   * that strikes the women's goes on until the next squat, in case the ball
+   * reaches the men's.
+   */
+  required: Target | null = 'upper';
+  /**
+   * Whether the target holds the men's and the women's marks, so a strike
+   * tells the division. A single disc is one mark for both, and a strike on it
+   * decides nothing.
+   */
+  twoMarks = true;
   window: ThrowWindow | null = null;
   prevState: string | null = null;
-
-  /**
-   * Whether a strike at `target` makes the rep: one at the required target or
-   * higher, so the women's throw that sails to the men's target counts and
-   * the men's throw that lands on the women's does not.
-   */
-  #counts(target: Target | null): boolean {
-    return target !== null && TARGETS.indexOf(target) <= TARGETS.indexOf(this.required);
-  }
 
   reset(): void {
     this.window = null;
@@ -231,7 +246,7 @@ export class TargetCheck {
     }
 
     const nextSquat = squat !== null && this.window !== null && squat.startMs > this.window.squat.startMs;
-    if ((this.window && this.#counts(this.window.struck)) || nextSquat) verdict = this.endThrow(tMs);
+    if ((this.window && counts(this.window.struck, this.required)) || nextSquat) verdict = this.endThrow(tMs);
 
     if (this.prevState === 'BOTTOM' && state === 'DRIVING') {
       // The next throw begins, so the last one is done whatever it did.
@@ -250,7 +265,8 @@ export class TargetCheck {
     const w = this.window;
     this.window = null;
     if (!w) return null;
-    const valid = this.#counts(w.struck);
+    if (this.required === null && this.twoMarks && w.struck) this.required = w.struck;
+    const valid = counts(w.struck, this.required);
     return {
       type: 'verdict',
       rep: { startMs: w.squat.startMs, endMs: tMs, maxDepth: w.squat.maxDepth },

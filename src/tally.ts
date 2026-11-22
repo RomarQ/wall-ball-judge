@@ -4,7 +4,7 @@
  * starts of the app until Reset; a replayed video has a tally of its own, from zero, kept nowhere. No DOM:
  * test/tally.test.ts drives it.
  */
-import { TARGETS, type Target, type Verdict } from './ball';
+import { counts, type Target, type Verdict } from './ball';
 import { SetClock } from './clock';
 
 /** The count at which the set is done. */
@@ -138,8 +138,8 @@ export class Tally {
   }
 
   /** A tap on a target's plate: the judge saw the ball hit it, enough when it is the required target or above it. */
-  hitByHand(which: Target, required: Target): void {
-    this.#targetHit(which, TARGETS.indexOf(which) <= TARGETS.indexOf(required), undefined, null);
+  hitByHand(which: Target, required: Target | null): void {
+    this.#targetHit(which, counts(which, required), undefined, null);
   }
 
   /** Takes back the last rep, as a correction: a set below its last rep is no longer done. */

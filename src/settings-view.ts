@@ -15,12 +15,14 @@ import {
   LANGUAGES,
   ballCheckOn,
   deviceLanguage,
+  divisionByHit,
   language,
   languageChoice,
   poseConfidence,
   recordVideo,
   setBallCheckOn,
   setBallInput,
+  setDivisionByHit,
   type LanguageChoice,
   type LanguageTag,
   setModels,
@@ -83,6 +85,9 @@ export function bindSettings(): void {
   const ball = $<HTMLInputElement>('ball-check');
   ball.checked = ballCheckOn();
   ball.addEventListener('change', () => setBallCheckOn(ball.checked));
+  const division = $<HTMLInputElement>('division-by-hit');
+  division.checked = divisionByHit();
+  division.addEventListener('change', () => setDivisionByHit(division.checked));
 
   const listBallInputs = () => {
     const { inputs, inUse } = ballInputChoices();

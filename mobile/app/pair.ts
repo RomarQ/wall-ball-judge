@@ -31,7 +31,7 @@ export type LinkState = 'none' | 'linking' | 'linked' | 'lost';
 /** What the board sends from: a tally, the division it judges, and how a display's command switches that division. */
 export interface Source {
   tally: Tally;
-  required: () => Target;
+  required: () => Target | null;
   setRequired: (which: Target) => void;
 }
 
@@ -180,7 +180,7 @@ const BANNER_MS = 2500;
  */
 export class DisplayMirror extends Changes {
   readonly tally = new Tally(tallySounds);
-  required: Target = 'upper';
+  required: Target | null = 'upper';
   flash: Flash | null = null;
   /** Whether the judge sends `board`. A judge that sends `score` alone has one count of no-reps, in `moveFaults`. */
   full = false;

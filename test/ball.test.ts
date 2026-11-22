@@ -43,7 +43,7 @@ const ballOn = (struck: Target | null = null) => ({ centre: { x: 0.9, y: 0.3 }, 
 const nextSquat = (tc: TargetCheck, t: number) =>
   tc.update({ tMs: t, state: 'DOWN', squat: { startMs: t, maxDepth: -30, reachedBottom: false } });
 
-function newCheck(required: Target = 'upper') {
+function newCheck(required: Target | null = 'upper') {
   const tc = new TargetCheck();
   tc.required = required;
   return tc;
@@ -212,6 +212,60 @@ function squat(tc: TargetCheck, t: number) {
     "the upper target counts for a women's athlete too, and is named",
     [v?.valid, v?.target],
     [true, 'upper'],
+  );
+}
+
+{
+  // The first hit picks the division. The ball passes the women's mark on its way to the men's, so the throw's
+  // highest hit decides, not its first look.
+  const tc = newCheck(null);
+  const t = squat(tc, 0);
+  const passing = tc.update({ tMs: t + 200, state: 'DRIVING', ball: ballOn('lower') });
+  const v = tc.update({ tMs: t + 300, state: 'DRIVING', ball: ballOn('upper') });
+  check(
+    "before the division is picked, a hit on the women's mark waits, and the men's mark then picks the men's",
+    [passing, v?.valid, v?.target, tc.required],
+    [null, true, 'upper', 'upper'],
+  );
+}
+
+{
+  const tc = newCheck(null);
+  const t = squat(tc, 0);
+  tc.update({ tMs: t + 300, state: 'DRIVING', ball: ballOn('lower') });
+  const v = nextSquat(tc, t + 2000);
+  check(
+    "a first throw that hits only the women's mark picks the women's, and is a rep, not a no-rep",
+    [v?.valid, v?.target, tc.required],
+    [true, 'lower', 'lower'],
+  );
+  const after = squat(tc, t + 2000);
+  check(
+    'and the next one counts at once',
+    tc.update({ tMs: after + 300, state: 'DRIVING', ball: ballOn('lower') })?.valid,
+    true,
+  );
+}
+
+{
+  // A single disc is one mark for both divisions, and a hit on it says nothing about the athlete.
+  const tc = newCheck(null);
+  tc.twoMarks = false;
+  const t = squat(tc, 0);
+  const v = tc.update({ tMs: t + 300, state: 'DRIVING', ball: ballOn('upper') });
+  check('a hit on a single disc counts and picks no division', [v?.valid, tc.required], [true, null]);
+}
+
+{
+  const tc = newCheck(null);
+  let t = squat(tc, 0);
+  const miss = nextSquat(tc, t + 2000);
+  t = squat(tc, t + 2000);
+  const v = tc.update({ tMs: t + 300, state: 'DRIVING', ball: ballOn('upper') });
+  check(
+    'a miss picks nothing, and the next hit picks',
+    [miss?.reason, v?.valid, tc.required],
+    ['target', true, 'upper'],
   );
 }
 

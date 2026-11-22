@@ -10,6 +10,7 @@ import {
   placeable,
   readLook,
   weighedMarks,
+  type Athlete,
   type Look,
 } from '../src/placement';
 import type { Rect } from '../src/reach';
@@ -97,6 +98,9 @@ const WOMENS = { x: 244, y: 38, w: 13, h: 31 };
   check('of several heights the nearest is taken', pairFor(WOMENS, [MENS, WOMENS, third]), third);
 }
 
+/** A search look and where it saw the athlete. */
+const seen = (look: Look, athlete: Athlete | null = null) => ({ look, athlete });
+
 {
   const plate = (score: number): Box => ({ x: 0, y: 0, w: 10, h: 10, score, name: 'target' });
   const sure = plate(0.89);
@@ -105,12 +109,27 @@ const WOMENS = { x: 244, y: 38, w: 13, h: 31 };
   check(
     'a sure box beside a weak one is placed, two sure boxes ask, a lone weak one asks',
     [
-      placeable(look(sure, weak)),
-      placeable(look(sure, plate(0.6))),
-      placeable(look(weak)),
-      placeable(look()),
+      placeable(seen(look(sure, weak))),
+      placeable(seen(look(sure, plate(0.6)))),
+      placeable(seen(look(weak))),
+      placeable(seen(look())),
     ],
-    [0, -1, -1, -1],
+    [[0], null, null, null],
+  );
+}
+
+{
+  // gym-raw-8's search, in pixels of its 1080 x 1920 frame: the athlete's station, its two plates stacked, and the
+  // next station out of the model's sight.
+  const box = ([x, y, w, h, score]: number[]): Box => ({ x, y, w, h, score, name: 'target' });
+  const look = { plates: [box([320, 147, 111, 143, 0.962]), box([320, 9, 124, 164, 0.953])], balls: [] };
+  check(
+    'two sure plates stacked in one lane are one station, placed whole, the higher first',
+    [placeable(seen(look)), placeable(seen(look, { x: 60, torso: 300 }))],
+    [
+      [1, 0],
+      [1, 0],
+    ],
   );
 }
 
@@ -120,8 +139,11 @@ const WOMENS = { x: 244, y: 38, w: 13, h: 31 };
   const ball = (x: number): Box => ({ x, y: 100, w: 50, h: 50, score: 0.45, name: 'ball' });
   check(
     'a sure plate the same look also calls a ball asks; a ball elsewhere does not stop it',
-    [placeable({ plates: [plate], balls: [ball(101)] }), placeable({ plates: [plate], balls: [ball(600)] })],
-    [-1, 0],
+    [
+      placeable(seen({ plates: [plate], balls: [ball(101)] })),
+      placeable(seen({ plates: [plate], balls: [ball(600)] })),
+    ],
+    [null, [0]],
   );
 }
 
@@ -131,20 +153,29 @@ const WOMENS = { x: 244, y: 38, w: 13, h: 31 };
   const look = { plates: [plate], balls: [] };
   check(
     'a sure plate is placed within a lane of the athlete, measured from its centre in torsos, and asks further off',
-    [placeable(look, { x: 290, torso: 100 }), placeable(look, { x: 320, torso: 100 }), placeable(look, null)],
-    [0, -1, 0],
+    [
+      placeable(seen(look, { x: 290, torso: 100 })),
+      placeable(seen(look, { x: 320, torso: 100 })),
+      placeable(seen(look)),
+    ],
+    [[0], null, [0]],
   );
 }
 
 {
-  // A wall of two lanes read whole: the athlete's plate and the next lane's, both sure.
+  // A wall of two stations read whole: the athlete's and the next one, both sure. gym-raw-11 and gym-raw-14 show the
+  // athlete beside the next station while the search looks, walking from the phone to their own.
   const own: Box = { x: 250, y: 50, w: 50, h: 50, score: 0.8, name: 'target' };
   const next: Box = { x: 450, y: 60, w: 50, h: 50, score: 0.9, name: 'target' };
   const look = { plates: [next, own], balls: [] };
   check(
-    "two sure plates a lane apart place the athlete's own, and ask with no athlete in view or with both in the lane",
-    [placeable(look, { x: 280, torso: 100 }), placeable(look, null), placeable(look, { x: 380, torso: 100 })],
-    [1, -1, -1],
+    'two sure stations a lane apart place neither, wherever the search sees the athlete',
+    [
+      placeable(seen(look, { x: 280, torso: 100 })),
+      placeable(seen(look)),
+      placeable(seen(look, { x: 460, torso: 100 })),
+    ],
+    [null, null, null],
   );
 }
 

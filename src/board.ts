@@ -1,6 +1,6 @@
 /**
- * One set on the board, the same in both apps: the judge, the target placed from a search, a tap or a drag, the
- * banner of each verdict, and the ball a look found.
+ * One set on the board, the same in both apps: the judge, the target placed from a search, the athlete's squat, a
+ * tap or a drag, the banner of each verdict, and the ball a look found.
  *
  * Positions are in the picture as judged, never mirrored. A screen that shows the front camera mirrored turns its
  * taps and drags around before it calls here. Nothing in it needs a browser.
@@ -15,12 +15,16 @@ import {
   type LookTicket,
 } from './frame-judge';
 import {
+  athleteFrom,
+  DEFAULTS as FINDER,
   handPlate,
   moveLine,
-  pairFor,
   placeable,
   placePlates,
   spotAt,
+  stationsOf,
+  stationUnder,
+  sureStations,
   weighedMarks,
   type FinderOptions,
   type Seen,
@@ -49,6 +53,12 @@ export type BallView = BallSighting & { until: number };
 /** Why the board cannot judge the athlete on this frame: nobody there, the legs hidden, or too small in the picture. */
 export type Warning = 'no-athlete' | 'hidden' | 'too-far';
 
+/**
+ * What a search left on the board: the target placed, sure stations that the athlete's first squat picks between
+ * unless the judge taps one first, or plates for a tap.
+ */
+export type SearchOutcome = 'placed' | 'squat' | 'tap';
+
 /** A frame for the board: the judge's input, with the target the board itself holds. */
 export type BoardFrame = Omit<FrameInput, 'x' | 'plates'>;
 
@@ -57,6 +67,8 @@ export interface BoardOptions {
   ball: BallTuning;
   /** Counts a verdict at `times`, and returns the count its banner shows. */
   onVerdict: (verdict: Verdict, times: RepTimes) => number;
+  /** Told when the board places the station the athlete squats under. */
+  onPicked?: () => void;
 }
 
 export class Board {
@@ -71,6 +83,8 @@ export class Board {
   plates: Rect[] = [];
   /** The search's plates, in pixels, for a tap to choose from. */
   candidates: Box[] = [];
+  /** The candidates grouped into stations, as indices into `candidates`, the higher plate first. */
+  stations: number[][] = [];
   flash: Flash | null = null;
   ball: BallView | null = null;
   landmarks: Landmark[] | null = null;
@@ -79,19 +93,28 @@ export class Board {
   width = 0;
   height = 0;
   readonly #onVerdict: BoardOptions['onVerdict'];
+  readonly #onPicked: () => void;
+  readonly #visibilityMin: number;
   #lastMs = 0;
+  /** Whether a search ran since the set-up began. A later search means the judge wants another plate. */
+  #searched = false;
+  /** The sure stations the athlete's next squat picks between, or null when no squat picks. */
+  #atSquat: number[][] | null = null;
+  #finder: FinderOptions = FINDER;
 
-  constructor({ depth, ball, onVerdict }: BoardOptions) {
+  constructor({ depth, ball, onVerdict, onPicked = () => {} }: BoardOptions) {
     this.judge = new FrameJudge(depth, ball);
     this.#onVerdict = onVerdict;
+    this.#onPicked = onPicked;
+    this.#visibilityMin = depth.visibilityMin;
   }
 
-  /** The target the athlete must reach: 'upper' for men, 'lower' for women. */
-  get required(): Target {
+  /** The target the athlete must reach: 'upper' for men, 'lower' for women, or null until the first strike decides it. */
+  get required(): Target | null {
     return this.judge.target.required;
   }
 
-  setRequired(which: Target): void {
+  setRequired(which: Target | null): void {
     this.judge.target.required = which;
   }
 
@@ -106,31 +129,51 @@ export class Board {
   }
 
   /**
-   * Takes a search's look: its plates become the candidates. Returns the index of the one sure plate in the
-   * athlete's lane, which the caller may place without asking, or -1.
+   * Takes a search's look: its plates become the candidates. The first search of a set-up places the only sure
+   * station, or leaves several for the athlete's first squat to pick between. A later search means the target placed
+   * was the wrong one, so it only offers its plates for a tap.
    */
-  searched(seen: Seen, finder: FinderOptions): number {
+  searched(seen: Seen, finder: FinderOptions): SearchOutcome {
+    const first = !this.#searched;
+    this.#searched = true;
+    this.clearCandidates();
     this.candidates = seen.look.plates;
-    return placeable(seen.look, seen.athlete, finder);
+    this.stations = stationsOf(this.candidates, finder);
+    if (!first) return 'tap';
+    const station = placeable(seen, finder);
+    if (station) {
+      this.#place(station);
+      return 'placed';
+    }
+    const sure = sureStations(seen.look, this.stations, finder);
+    if (!sure.length) return 'tap';
+    this.#atSquat = sure;
+    this.#finder = finder;
+    return 'squat';
   }
 
-  /** Places the target from candidate `index`, with the mark stacked in its lane when the search saw one. */
+  /** Places the target from the station of candidate `index`. */
   placeCandidate(index: number): void {
-    const box = this.candidates[index];
-    if (!box) return;
-    const partner = pairFor(box, this.candidates);
+    const station = this.stations.find((s) => s.includes(index));
+    if (station) this.#place(station);
+  }
+
+  /** Forgets the search's plates, and with them the pick at the next squat. */
+  clearCandidates(): void {
     this.candidates = [];
-    this.placeBoxes(partner ? [box, partner] : [box]);
+    this.stations = [];
+    this.#atSquat = null;
   }
 
   /** Places a plate centred where a tap landed, `x` and `y` fractions of the picture, sized as the plate placed before. */
   placeAt(x: number, y: number): void {
-    this.candidates = [];
-    this.placeBoxes([handPlate(x, y, this.width, this.height, this.plates, this.required)]);
+    this.clearCandidates();
+    this.placeBoxes([handPlate(x, y, this.width, this.height, this.plates, this.required ?? 'upper')]);
   }
 
   /** Places the target from plate boxes in pixels: one plate, or a pair holding a mark each. */
   placeBoxes(boxes: Rect[]): void {
+    this.#atSquat = null;
     const placed = placePlates(boxes, this.width, this.height);
     Object.assign(this.judge.target.lines, placed.lines);
     this.targetX = placed.x;
@@ -152,6 +195,7 @@ export class Board {
 
   /** Moves line `which` to `y`, a fraction of the picture's height. The plates go: the line now stands on bare wall. */
   moveLine(which: Target, y: number): void {
+    this.#atSquat = null;
     const { lines } = this.judge.target;
     Object.assign(lines, moveLine(lines, which, y, lines.upper ?? y));
     this.plates = [];
@@ -159,6 +203,7 @@ export class Board {
 
   /** Moves the spot along the lines to `x`, a fraction of the picture's width. The plates go, as for a line. */
   moveSpot(x: number): void {
+    this.#atSquat = null;
     this.targetX = spotAt(x);
     this.plates = [];
   }
@@ -171,6 +216,8 @@ export class Board {
     this.#lastMs = frame.tMs;
     const judged = this.judge.frame({ ...frame, x: this.targetX, plates: this.plates });
     this.depth = judged.depth;
+    // At the bottom of a squat the athlete stands at their station, and the throw that opens next needs its target.
+    if (this.#atSquat && this.judge.counter.state === 'BOTTOM') this.#pickAt(frame);
     if (judged.verdict) this.#counted(judged.verdict, frame.tMs);
     if (this.flash && frame.tMs > this.flash.until) this.flash = null;
     if (this.ball && frame.tMs > this.ball.until) this.ball = null;
@@ -195,13 +242,31 @@ export class Board {
     return verdict;
   }
 
-  /** Starts a set afresh on the same target. */
+  /** Starts a set afresh on the same target. The set-up's next search is its first. */
   reset(): void {
     this.judge.reset();
+    this.#searched = false;
+    this.#atSquat = null;
     this.flash = null;
     this.ball = null;
     this.landmarks = null;
     this.depth = { ok: false, reason: 'no-pose' };
+  }
+
+  /** Places the station of the search's plates that the athlete in `frame` stands under, if they stand under one. */
+  #pickAt({ landmarks, width, height }: BoardFrame): void {
+    const athlete = athleteFrom(landmarks, width, height, this.#visibilityMin);
+    const station =
+      athlete && this.#atSquat && stationUnder(this.#atSquat, this.candidates, athlete, this.#finder);
+    if (!station) return;
+    this.#place(station);
+    this.#onPicked();
+  }
+
+  #place(station: number[]): void {
+    const boxes = station.map((i) => this.candidates[i]);
+    this.clearCandidates();
+    this.placeBoxes(boxes);
   }
 
   #counted(verdict: Verdict, tMs: number): void {

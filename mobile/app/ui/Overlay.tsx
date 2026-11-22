@@ -55,6 +55,7 @@ export function Overlay({ fit, board, notice, showPose }: Props): React.JSX.Elem
           plates: board.plates,
           ball: board.ball,
           candidates: board.candidates,
+          stations: board.stations,
           single: board.singleTarget,
         }
       : null,

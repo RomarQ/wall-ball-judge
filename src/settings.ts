@@ -121,6 +121,22 @@ export function storeRequired(which: Target): void {
   localStorage.setItem(REQUIRED_KEY, which);
 }
 
+const DIVISION_BY_HIT_KEY = 'divisionByHit';
+
+/** Whether each set's first throw that hits a mark of a pair picks the division. Off unless turned on. */
+export function divisionByHit(): boolean {
+  return localStorage.getItem(DIVISION_BY_HIT_KEY) === 'on';
+}
+
+export function setDivisionByHit(on: boolean): void {
+  localStorage.setItem(DIVISION_BY_HIT_KEY, on ? 'on' : 'off');
+}
+
+/** The target a set starts with: none while the first hit picks it, else the one the board's last division required. */
+export function requiredAtStart(): Target | null {
+  return divisionByHit() ? null : storedRequired();
+}
+
 /** The models the device check times on each unit. */
 export type TimedModel = 'pose' | 'ball';
 

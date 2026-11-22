@@ -156,24 +156,70 @@ export function readLook(
 }
 
 /**
- * The index of the plate to place without asking, or -1 to ask: the one
- * sure plate in the athlete's lane, or in the whole look when the athlete is
- * not in view, which the same look did not also call a ball. A sure plate in
- * another lane does not count against it, so a wall of two lanes the model
- * reads whole still places the athlete's own. Every plate stays offered for
- * a tap either way.
+ * A look's plates grouped into stations, each as the indices of its plates, the higher plate first.
+ *
+ * A plate and the plate stacked in its lane hold one station's two marks; any other plate is a station of its own.
+ * `plates` come best first, as `readLook` gives them, and so do the stations, by their best plate.
  */
-export function placeable(
+export function stationsOf(plates: Plate[], options: Partial<FinderOptions> = {}): number[][] {
+  const free = new Set(plates.keys());
+  const stations: number[][] = [];
+  for (const [i, plate] of plates.entries()) {
+    if (!free.delete(i)) continue;
+    const partner = pairFor(
+      plate,
+      [...free].map((j) => plates[j]),
+      options,
+    );
+    const j = partner ? plates.indexOf(partner) : -1;
+    free.delete(j);
+    stations.push(j < 0 ? [i] : plates[j].y < plate.y ? [j, i] : [i, j]);
+  }
+  return stations;
+}
+
+/**
+ * The stations the board may place without a tap: a plate of each is sure, and the same look called none of its
+ * plates a ball. The others stay offered for a tap.
+ */
+export function sureStations(
   { plates, balls }: Look,
-  athlete: Athlete | null = null,
+  stations: number[][],
   cfg: FinderOptions = DEFAULTS,
-): number {
-  const inLane = (b: Box) =>
-    !athlete || Math.abs(b.x + b.w / 2 - athlete.x) <= cfg.laneTorsos * athlete.torso;
-  const sure = plates.flatMap((b, i) => (b.score >= cfg.sureScore && inLane(b) ? [i] : []));
-  if (sure.length !== 1) return -1;
-  const [index] = sure;
-  return balls.some((b) => overlap(plates[index], b) >= cfg.ballOverlap) ? -1 : index;
+): number[][] {
+  const ball = (i: number) => balls.some((b) => overlap(plates[i], b) >= cfg.ballOverlap);
+  return stations.filter((s) => s.some((i) => plates[i].score >= cfg.sureScore) && !s.some(ball));
+}
+
+/** The station the athlete stands under: of `stations`, the nearest to them sideways within their lane, or null. */
+export function stationUnder(
+  stations: number[][],
+  plates: Plate[],
+  athlete: Athlete,
+  cfg: FinderOptions = DEFAULTS,
+): number[] | null {
+  const lane = cfg.laneTorsos * athlete.torso;
+  let under: number[] | null = null;
+  let nearest = Infinity;
+  for (const station of stations) {
+    const x = station.reduce((sum, i) => sum + centre(plates[i]).x, 0) / station.length;
+    const away = Math.abs(x - athlete.x);
+    if (away <= lane && away < nearest) [under, nearest] = [station, away];
+  }
+  return under;
+}
+
+/**
+ * The station a search places without asking, or null: the only sure station, when the athlete stands under it or
+ * is out of view.
+ *
+ * Several sure stations wait for the athlete's first squat: the search often sees the athlete still walking from
+ * the phone, beside the next station.
+ */
+export function placeable({ look, athlete }: Seen, cfg: FinderOptions = DEFAULTS): number[] | null {
+  const sure = sureStations(look, stationsOf(look.plates, cfg), cfg);
+  if (sure.length !== 1) return null;
+  return !athlete || stationUnder(sure, look.plates, athlete, cfg) ? sure[0] : null;
 }
 
 /**
@@ -208,7 +254,7 @@ export async function searchClip(
     }
     looked = true;
     if (next.best > found.best) found = { ...next, at };
-    if (placeable(next.seen.look, next.seen.athlete, cfg) >= 0) break;
+    if (placeable(next.seen, cfg)) break;
   }
   if (!looked && failure) throw failure;
   return found;

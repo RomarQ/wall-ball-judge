@@ -3,7 +3,7 @@
  * pipeline runs and what the line under the picture says. React-free, so a recording and the camera share it.
  */
 import type { Look, LookWindow, PoseFrame } from 'wallball-vision';
-import { Board, DEPTH, MIN_SCORE, REACH, storedRequired, storeRequired, t, type Landmark, type LookTicket, type Tally, type Target, type Verdict } from './core';
+import { Board, DEPTH, MIN_SCORE, REACH, requiredAtStart, storeRequired, t, type Landmark, type LookTicket, type Tally, type Target, type Verdict } from './core';
 import { boxesOf, type TrainedFile } from './detect';
 import { trackingLost } from './sound';
 
@@ -34,12 +34,14 @@ export class PipelineBoard extends Board {
 
   /**
    * `ballCheck` says whether the ball is judged: the setting is on and a ball model runs. `ballModel` is the model that
-   * reads the looks, whose input sets the window's side. Verdicts count on `tally`.
+   * reads the looks, whose input sets the window's side. Verdicts count on `tally`. `onPicked` hears when the board
+   * places the station the athlete squats under.
    */
   constructor(
     readonly ballCheck: boolean,
     readonly tally: Tally,
     readonly ballModel: TrainedFile,
+    onPicked: () => void,
   ) {
     super({
       depth: DEPTH,
@@ -48,13 +50,15 @@ export class PipelineBoard extends Board {
         tally.judged(verdict, times);
         return tally.count;
       },
+      onPicked,
     });
-    super.setRequired(storedRequired());
+    super.setRequired(requiredAtStart());
   }
 
-  override setRequired(which: Target): void {
+  /** Sets the division. One chosen is kept for the next board, which takes it unless the first hit picks there. */
+  override setRequired(which: Target | null): void {
     super.setRequired(which);
-    storeRequired(which);
+    if (which) storeRequired(which);
   }
 
   get placed(): boolean {
@@ -65,7 +69,7 @@ export class PipelineBoard extends Board {
   get mode(): string {
     if (!this.armed) return t('board.notCounting');
     if (!this.ballCheck) return t('board.depthOnly');
-    return this.singleTarget ? t('board.judgingTarget') : t('board.judging')(this.required === 'lower');
+    return this.singleTarget ? t('board.judgingTarget') : t('board.judging')(this.required);
   }
 
   /** Judges one frame of the pipeline, and says whether the next frames should start looks for the ball, and where. */

@@ -89,6 +89,8 @@ const LAYOUTS: [BoardState, number[]][] = [
     }),
     [1, 11, 1, 2, 42, 0, 3, 0, 1, 0, 112, 17, 1, 0, 29, 0, 100, 0],
   ],
+  // A set whose first hit has not picked the division yet.
+  [board({ seq: 12, required: null }), [1, 12, 2, 2, 2, 1, 3, 0, 1, 0, 112, 17, 1, 0, 105, 2, 133, 255]],
 ];
 
 it('lays the board out as the contract table gives it', () => {

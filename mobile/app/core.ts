@@ -5,7 +5,7 @@ export { CUT_WIDTH, cutScale, cutSize, decode, fromArea, IOU_MAX, letterbox, MAX
 export { clockText, paceOf, SetClock } from '../../src/clock';
 export { sceneAt, STILL_MS, type Division, type Point, type StationScene } from '../../src/demo-scene';
 export { DEFAULTS as DEPTH, LM, type Depth } from '../../src/depth';
-export { Board, type Flash } from '../../src/board';
+export { Board, type Flash, type SearchOutcome } from '../../src/board';
 export { flashText } from '../../src/flash';
 export { layoutOverlay, type Colour, type NoticeTone, type OverlayLayout } from '../../src/overlay-layout';
 export { FrameJudge, type JudgedFrame, type LookTicket } from '../../src/frame-judge';
@@ -57,14 +57,17 @@ export {
   ballCheckOn,
   CONFIDENCE_DEFAULT,
   deviceLanguage,
+  divisionByHit,
   JUDGING_DETECTION,
   language,
   languageChoice,
   LANGUAGES,
   poseConfidence,
+  requiredAtStart,
   SEARCH_CONFIDENCE,
   setBallCheckOn,
   setBallInput,
+  setDivisionByHit,
   setLanguage,
   setPoseConfidence,
   storedBallInput,

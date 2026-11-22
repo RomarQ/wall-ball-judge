@@ -12,6 +12,7 @@
  * details and internal errors are read by whoever fixes the app, and match
  * the code and the docs.
  */
+import type { Target } from './ball';
 import type { Warning } from './board';
 import { language, setLanguage, type LanguageChoice, type LanguageTag } from './settings';
 
@@ -130,7 +131,10 @@ const en = {
   'board.chip': (model: 'ball' | 'finder' | 'pose', chip: string) =>
     `${{ ball: 'Ball', finder: 'Target finder', pose: 'Pose' }[model]} on ${chip}`,
   'board.notCounting': 'Not counting yet',
-  'board.judging': (women: boolean) => `Judging the ${women ? "women's" : "men's"} target`,
+  'board.judging': (which: Target | null) =>
+    which === null
+      ? 'Judging the target the first hit picks'
+      : `Judging the ${which === 'lower' ? "women's" : "men's"} target`,
   'board.judgingTarget': 'Judging the target',
   'board.depthOnly': 'Judging depth only',
   'board.recording': 'recording',
@@ -146,6 +150,13 @@ const en = {
   'board.oneCandidateBanner': 'Tap the target to place it',
   'board.candidates': (n: number) => `${n} possible targets, tap the right one`,
   'board.candidatesBanner': (n: number) => `${n} possible targets: tap one`,
+  'board.atSquat': (n: number) =>
+    n === 1
+      ? 'one possible target, placed when the athlete squats under it, or tap it'
+      : `${n} possible targets, the athlete's first squat picks theirs, or tap one`,
+  'board.atSquatBanner': (n: number) =>
+    n === 1 ? 'Squat under the target, or tap it' : `${n} possible targets: squat under yours, or tap it`,
+  'board.picked': 'target placed above the athlete, drag a line to adjust',
   'board.noTarget': (best: string | null) =>
     `no target found${best ? ` (best guess ${best})` : ''}, tap it on the screen`,
   'board.noTargetBanner': 'No target found: tap it',
@@ -258,6 +269,9 @@ const en = {
   'settings.judging': 'Judging',
   'settings.ballCheck': 'Check the ball on the target',
   'settings.ballCheckOff': 'Off, the board judges the squat alone.',
+  'settings.divisionByHit': 'Pick the division from the first hit',
+  'settings.divisionByHitOn':
+    'On, each set’s first throw that hits the men’s or the women’s mark picks the division.',
   'settings.ballInput': 'Ball model input',
   'settings.pixels': (n: number) => `${n} px`,
   'settings.ballInputHint':
@@ -398,7 +412,10 @@ const ptPT: Texts = {
       chip === 'GPU' ? 'na GPU' : chip === 'CPU' ? 'no CPU' : `em ${chip}`
     }`,
   'board.notCounting': 'Ainda sem contar',
-  'board.judging': (women: boolean) => `A julgar o alvo ${women ? 'das mulheres' : 'dos homens'}`,
+  'board.judging': (which: Target | null) =>
+    which === null
+      ? 'A julgar o alvo que o primeiro acerto escolher'
+      : `A julgar o alvo ${which === 'lower' ? 'das mulheres' : 'dos homens'}`,
   'board.judgingTarget': 'A julgar o alvo',
   'board.depthOnly': 'A julgar só a profundidade',
   'board.recording': 'a gravar',
@@ -415,6 +432,15 @@ const ptPT: Texts = {
   'board.oneCandidateBanner': 'Toque no alvo para o colocar',
   'board.candidates': (n: number) => `${n} alvos possíveis, toque no certo`,
   'board.candidatesBanner': (n: number) => `${n} alvos possíveis: toque num`,
+  'board.atSquat': (n: number) =>
+    n === 1
+      ? 'um alvo possível, colocado quando o atleta agachar por baixo dele, ou toque nele'
+      : `${n} alvos possíveis, o primeiro agachamento do atleta escolhe o seu, ou toque num`,
+  'board.atSquatBanner': (n: number) =>
+    n === 1
+      ? 'Agache por baixo do alvo, ou toque nele'
+      : `${n} alvos possíveis: agache por baixo do seu, ou toque nele`,
+  'board.picked': 'alvo colocado por cima do atleta, arraste uma linha para ajustar',
   'board.noTarget': (best: string | null) =>
     `nenhum alvo encontrado${best ? ` (melhor palpite ${best})` : ''}, toque nele no ecrã`,
   'board.noTargetBanner': 'Nenhum alvo encontrado: toque nele',
@@ -530,6 +556,9 @@ const ptPT: Texts = {
   'settings.judging': 'Julgamento',
   'settings.ballCheck': 'Verificar a bola no alvo',
   'settings.ballCheckOff': 'Desligado, o painel julga só o agachamento.',
+  'settings.divisionByHit': 'Escolher a divisão pelo primeiro acerto',
+  'settings.divisionByHitOn':
+    'Ligado, o primeiro lançamento de cada série que acerta na marca dos homens ou das mulheres escolhe a divisão.',
   'settings.ballInput': 'Entrada do modelo da bola',
   'settings.pixels': (n: number) => `${n} px`,
   'settings.ballInputHint':

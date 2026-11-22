@@ -1,6 +1,6 @@
 /**
- * The overlay's layout, which both apps paint: a mirrored picture's marks, where a line's label goes, and how the
- * plates are named.
+ * The overlay's layout, which both apps paint: a mirrored picture's marks, where a line's label goes, how the plates
+ * are named, and how the search's stations are numbered.
  *
  * Run: npm test
  */
@@ -20,6 +20,7 @@ function target(change: Partial<TargetFrame> = {}): TargetFrame {
     plates: [],
     ball: null,
     candidates: [],
+    stations: [],
     ...change,
   };
 }
@@ -95,4 +96,25 @@ it('names two plates by division, the higher the men’s, and a single disc only
     [t('overlay.womensTarget'), true],
   ]);
   expect(disc.map((p) => [p.name, p.active])).toEqual([[t('overlay.target'), true]]);
+});
+
+it('numbers each station of the search once, in one box round its plates, as the notice counts them', () => {
+  // A preview numbering each plate would offer four targets where the notice says two.
+  const plate = (x: number, y: number) => ({ x, y, w: 40, h: 40, score: 0.9, name: 'target' });
+  const candidates = [plate(100, 100), plate(600, 160), plate(600, 100), plate(100, 40)];
+  const { candidates: marks } = layoutOverlay(
+    frame({
+      target: target({
+        candidates,
+        stations: [
+          [3, 0],
+          [2, 1],
+        ],
+      }),
+    }),
+  );
+  expect(marks).toEqual([
+    { box: { x: 100, y: 40, w: 40, h: 100 }, label: '1' },
+    { box: { x: 600, y: 100, w: 40, h: 100 }, label: '2' },
+  ]);
 });

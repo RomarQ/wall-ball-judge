@@ -7,7 +7,7 @@
  * keeps its own counters and its own audio.
  */
 import { type TargetCheck, type Target, type Verdict } from './ball';
-import { Board } from './board';
+import { Board, type SearchOutcome } from './board';
 import { ballModelInUse, config, modelsInUse, type PoseQuality } from './config';
 import type { Presence, RepCounter } from './depth';
 import { createBallDetector, type Detector } from './detector';
@@ -17,13 +17,13 @@ import { createPose, createStillPose, type Delegate, type Pose, type StillPose }
 import { SessionRecorder, type Recording } from './record';
 import { t, warningText } from './i18n';
 import { unitFor } from './phone-check';
-import { ballCheckOn, storedRequired, storeRequired } from './settings';
+import { ballCheckOn, requiredAtStart, storeRequired } from './settings';
 import { athleteFrom, LINE_GAP, MAX_GAP, searchClip, type Look, type Seen } from './placement';
 import { TargetFinder } from './target-finder';
 import type { LookTicket } from './frame-judge';
 import type { RepTimes } from './tally';
 import type { Frame } from './frame';
-import type { Box, Landmark, Unit } from './types';
+import type { Landmark, Unit } from './types';
 import { flatLandmarks, JudgeLog, loggedVerdict, type LoggedTarget } from './judge-log';
 import type { Rect } from './reach';
 
@@ -83,6 +83,8 @@ export interface SessionOptions {
   onFrame?: (tick: FrameTick) => void;
   /** After any stop, with the recording or null. */
   onStopped?: (result: Recording | null) => void;
+  /** The board placed the station the athlete squats under. */
+  onPicked?: () => void;
   /**
    * How the ball check gets its detector on `unit`: the app's own, from the
    * config, by default. A tool passes another to judge a different model, or
@@ -164,6 +166,7 @@ export class Session {
   onStatus: (text: string) => void;
   onFrame: (tick: FrameTick) => void;
   onStopped: (result: Recording | null) => void;
+  onPicked: () => void;
   readonly record: () => boolean;
   recorder: SessionRecorder | null = null;
 
@@ -175,6 +178,10 @@ export class Session {
     depth: config.depth,
     ball: { bite: config.ball.bite },
     onVerdict: (verdict, times) => this.#counted(verdict, times),
+    onPicked: () => {
+      this.#placed();
+      this.onPicked();
+    },
   });
   finder: TargetFinder | null = null;
   /** The target search's own pose; see createStillPose. */
@@ -205,6 +212,7 @@ export class Session {
     onStatus = noop,
     onFrame = noop,
     onStopped = noop,
+    onPicked = noop,
   }: SessionOptions) {
     this.video = video;
     this.canvas = canvas;
@@ -214,13 +222,14 @@ export class Session {
     this.onStatus = onStatus;
     this.onFrame = onFrame;
     this.onStopped = onStopped;
+    this.onPicked = onPicked;
     this.record = record;
 
     const upper = stored('targetUpper') ?? config.ball.defaultLines.upper;
     const gap = config.ball.defaultLines.lower - config.ball.defaultLines.upper;
     const lower = stored('targetLower') ?? upper + gap;
     this.target.lines = { upper, lower: Math.min(Math.max(lower, upper + LINE_GAP), upper + MAX_GAP, 0.98) };
-    this.board.setRequired(storedRequired());
+    this.board.setRequired(requiredAtStart());
     this.board.targetX = stored('targetX');
     this.ballCheck = ballCheckOn();
     this.facingMode = localStorage.getItem('facingMode') === 'environment' ? 'environment' : 'user';
@@ -294,9 +303,11 @@ export class Session {
   }
 
   /**
-   * Looks for the target plate in the picture. One sure plate is
-   * placed at once; otherwise the plates found stay as candidates, drawn on
-   * the overlay, until `placeTarget` picks one or `clearCandidates` runs.
+   * Looks for the target plate in the picture. The board places the only
+   * sure station at once, or picks the athlete's at their first squat;
+   * otherwise the plates found stay as candidates, drawn on the overlay,
+   * until `placeTarget` picks one or `clearCandidates` runs. See
+   * `Board.searched`.
    *
    * Searching again means the target already placed was the wrong one, so
    * every plate found then goes up for a tap however sure the model is of
@@ -308,7 +319,7 @@ export class Session {
    * so a gym the model does not know costs one tap rather than a hunt for a
    * line that starts at the height the last gym needed.
    */
-  async findTargets(): Promise<{ placed: boolean; candidates: Box[] }> {
+  async findTargets(): Promise<SearchOutcome> {
     this.finder ??= new TargetFinder();
     let seen: Seen;
     try {
@@ -318,16 +329,14 @@ export class Session {
       this.fps.frames = 0;
       this.fps.since = 0;
     }
-    const index = this.board.searched(seen, this.finder.cfg);
-    if (!this.placed && index >= 0) {
-      this.placeTarget(index);
-      return { placed: true, candidates: [] };
+    const outcome = this.board.searched(seen, this.finder.cfg);
+    if (outcome === 'placed') this.#placed();
+    else {
+      this.tapToPlace = this.board.candidates.length === 0;
+      // The search runs before the set starts, when no frame loop is drawing.
+      this.#renderIdle();
     }
-    const { candidates } = this.board;
-    this.tapToPlace = candidates.length === 0;
-    // The search runs before the set starts, when no frame loop is drawing.
-    this.#renderIdle();
-    return { placed: false, candidates };
+    return outcome;
   }
 
   /**
@@ -515,7 +524,7 @@ export class Session {
   }
 
   clearCandidates(): void {
-    this.board.candidates = [];
+    this.board.clearCandidates();
     this.#renderIdle();
   }
 
@@ -662,7 +671,7 @@ export class Session {
     this.running = false;
     // A clip plays on by itself; the view keeps the frame the set stopped on.
     if (this.source === 'file') this.video.pause();
-    this.board.candidates = [];
+    this.board.clearCandidates();
     // Judging ends here, so a throw that has not hit by now never will.
     const tMs = this.#judgingMs(performance.now());
     const last = this.board.end(tMs);
@@ -701,6 +710,7 @@ export class Session {
     this.board.height = h;
     this.board.plates = this.#storedPlates();
     this.board.reset();
+    this.board.setRequired(requiredAtStart());
     this.stats = this.#freshStats();
     this.notice = null;
     this.#held = null;
@@ -725,6 +735,7 @@ export class Session {
       plates: board.plates,
       ball: board.ball,
       candidates: board.candidates,
+      stations: board.stations,
       single: board.singleTarget,
     };
   }

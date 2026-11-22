@@ -35,7 +35,8 @@ export interface Replayed {
   board: Board;
 }
 
-export function replay(log: Excerpt, until = log.frames.length): Replayed {
+/** Replays `log` up to frame `until`, judging the division `required` in place of the logged one when it is given. */
+export function replay(log: Excerpt, until = log.frames.length, required?: Target | null): Replayed {
   const config = log.config as { depth: DepthOptions; ball: { bite: number; windows: boolean } };
   let valid = 0;
   let noRep = 0;
@@ -49,6 +50,7 @@ export function replay(log: Excerpt, until = log.frames.length): Replayed {
     },
   });
   const { judge } = board;
+  if (required !== undefined) board.setRequired(required);
   const answers = new Map<number, LoggedLook[]>();
   for (const look of log.looks) {
     if (look.after === undefined) continue;
@@ -71,7 +73,7 @@ export function replay(log: Excerpt, until = log.frames.length): Replayed {
     const f = log.frames[i];
     if (f.target) {
       judge.target.lines = { ...f.target.lines };
-      board.setRequired(f.target.required as Target);
+      if (required === undefined) board.setRequired(f.target.required);
       board.targetX = f.target.x;
       board.plates = f.target.plates;
     }

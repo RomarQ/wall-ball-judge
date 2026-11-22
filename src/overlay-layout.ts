@@ -55,7 +55,8 @@ export type NoticeTone = 'ok' | 'warn' | 'plain';
 /** The target as the board holds it, and what the ball check saw. */
 export interface TargetFrame {
   lines: Record<Target, number | null>;
-  required: Target;
+  /** The target this athlete must reach, or null until the first hit picks it. */
+  required: Target | null;
   /** The spot on the wall the ball hits, as a fraction of the frame width, or null until it is placed. */
   x: number | null;
   /** The plates the target was placed from, in frame units, the higher first. Empty for lines on bare wall. */
@@ -63,6 +64,8 @@ export interface TargetFrame {
   ball: BallView | null;
   /** The search's plates, in pixels, for a tap to choose from. */
   candidates: Box[];
+  /** The candidates grouped into stations, as indices into `candidates`: each station takes one number. */
+  stations: number[][];
   /** Whether the target is one mark that both divisions throw to, as the hit rule weighs it. */
   single?: boolean;
 }
@@ -162,6 +165,18 @@ function targetName(which: Target, single: boolean): string {
   return single ? t('overlay.target') : t(TARGET_NAME[which]);
 }
 
+/** The smallest box holding every one of `boxes`. */
+function around(boxes: Rect[]): Rect {
+  const x = Math.min(...boxes.map((b) => b.x));
+  const y = Math.min(...boxes.map((b) => b.y));
+  return {
+    x,
+    y,
+    w: Math.max(...boxes.map((b) => b.x + b.w)) - x,
+    h: Math.max(...boxes.map((b) => b.y + b.h)) - y,
+  };
+}
+
 export function layoutOverlay(frame: OverlayFrame): OverlayLayout {
   const { width: w, height: h, mirror, landmarks, depth, target } = frame;
   const across = (x: number) => (mirror ? 1 - x : x) * w;
@@ -197,14 +212,14 @@ export function layoutOverlay(frame: OverlayFrame): OverlayLayout {
   if (target && !target.candidates.length) {
     const { required, single = false } = target;
     // The plates the judge picked are the target, so they show and the lines do not. Two plates take a name each,
-    // the higher the men's; one plate holding both marks is named for the height this athlete needs.
+    // the higher the men's; one plate holding both marks is named for the height this athlete needs, once known.
     target.plates.forEach((p, i) => {
       const which = target.plates.length > 1 ? TARGETS[i] : required;
       const left = mirror ? w / h - (p.x + p.w) : p.x;
       plates.push({
         box: { x: left * h, y: p.y * h, w: p.w * h, h: p.h * h },
-        name: targetName(which, single),
-        active: which === required,
+        name: which === null ? t('overlay.target') : targetName(which, single),
+        active: target.plates.length === 1 || which === required,
       });
     });
     if (!plates.length) {
@@ -227,6 +242,9 @@ export function layoutOverlay(frame: OverlayFrame): OverlayLayout {
     }
   }
 
+  const stations = target
+    ? target.stations.map((station) => around(station.map((i) => target.candidates[i])))
+    : [];
   const ball = target?.ball ?? null;
   const { flash } = frame;
   return {
@@ -236,7 +254,7 @@ export function layoutOverlay(frame: OverlayFrame): OverlayLayout {
     depthBar,
     plates,
     lines,
-    candidates: (target?.candidates ?? []).map((c, i) => ({ box: box(c), label: `${i + 1}` })),
+    candidates: stations.map((station, i) => ({ box: box(station), label: `${i + 1}` })),
     ball: ball
       ? {
           box: box(ball),
