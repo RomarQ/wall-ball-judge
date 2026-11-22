@@ -22,6 +22,7 @@ import { Camera, useCameraDevice, useCameraPermission, useFrameOutput, useVideoO
 import { scheduleOnRN } from 'react-native-worklets';
 import { ClipView, wallballVision, type PoseFrame } from 'wallball-vision';
 import { PipelineBoard } from '../board';
+import type { TrainedFile } from '../detect';
 import { ballCheckOn, clockText, decimal, FINDER, grabPlate, type NoticeTone, LIT_MS, paceOf, REP_TARGET, t, Tally, type LitPart, type PlateGrab, type Rect, type Target } from '../core';
 import type { DisplaySender } from '../pair';
 import { judgeOptions, judgeRecording } from '../run';
@@ -101,6 +102,7 @@ interface Said {
 export function BoardScreen({
   source,
   ballUnit,
+  ballModel,
   liveTally,
   sender,
   onHome,
@@ -111,6 +113,8 @@ export function BoardScreen({
 }: {
   source: BoardSource;
   ballUnit: string;
+  /** The ball model this board judges with, as the settings chose it when the board opened. */
+  ballModel: TrainedFile;
   /** The live board's tally, kept across sets; a replay gets its own. */
   liveTally: Tally;
   /** The link to a display, which gets this board's tally while the board is open. */
@@ -123,7 +127,7 @@ export function BoardScreen({
 }) {
   // A replay's counts are no part of the live totals, and the live totals no part of a replay's.
   const tally = useMemo(() => (source.kind === 'recording' ? new Tally(tallySounds) : liveTally), [source.kind, liveTally]);
-  const board = useMemo(() => new PipelineBoard(ballCheckOn() && ballUnit !== 'off', tally), [ballUnit, tally]);
+  const board = useMemo(() => new PipelineBoard(ballCheckOn() && ballUnit !== 'off', tally, ballModel), [ballUnit, ballModel, tally]);
   const [phase, setPhase] = useState<Phase>('searching');
   const [, setTick] = useState(0);
   const redraw = useCallback(() => setTick((n) => n + 1), []);
@@ -216,7 +220,7 @@ export function BoardScreen({
   // The camera's pipeline opens once for the board, so a flip of the camera keeps the pose's tracking.
   useEffect(() => {
     if (source.kind !== 'camera') return undefined;
-    wallballVision.openCamera(judgeOptions(ballUnit));
+    wallballVision.openCamera(judgeOptions(ballUnit, board.ballModel.input));
     setCameraReady(true);
     let lastDraw = 0;
     let frames = 0;
@@ -382,7 +386,7 @@ export function BoardScreen({
     judgeRecording(
       board,
       source.uri,
-      judgeOptions(ballUnit),
+      judgeOptions(ballUnit, board.ballModel.input),
       (done, total) => {
         frames += 1;
         const now = wallballVision.nowMs();
@@ -773,6 +777,7 @@ function saveSet(board: PipelineBoard, name: string, ballUnit: string): void {
     name,
     required: board.required,
     ballUnit,
+    ballInput: board.ballModel.input,
     valid: verdicts.filter((v) => v.valid).length,
     targetFaults: verdicts.filter((v) => !v.valid && v.reason !== 'depth').length,
     moveFaults: verdicts.filter((v) => !v.valid && v.reason === 'depth').length,

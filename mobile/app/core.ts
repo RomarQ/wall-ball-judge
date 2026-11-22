@@ -1,5 +1,6 @@
 /** The PWA's judging core and texts, which the app runs unchanged. The only file that imports from the repository's `src`. */
 export { TARGETS, type Target, type Verdict } from '../../src/ball';
+export { ballFileAt, ballInputs } from '../../src/ball-model';
 export { CUT_WIDTH, cutScale, cutSize, decode, fromArea, IOU_MAX, letterbox, MAX_BOXES, MIN_SCORE } from '../../src/boxes';
 export { clockText, paceOf, SetClock } from '../../src/clock';
 export { sceneAt, STILL_MS, type Division, type Point, type StationScene } from '../../src/demo-scene';
@@ -62,8 +63,10 @@ export {
   poseConfidence,
   SEARCH_CONFIDENCE,
   setBallCheckOn,
+  setBallInput,
   setLanguage,
   setPoseConfidence,
+  storedBallInput,
   storedRequired,
   storeRequired,
   type LanguageChoice,

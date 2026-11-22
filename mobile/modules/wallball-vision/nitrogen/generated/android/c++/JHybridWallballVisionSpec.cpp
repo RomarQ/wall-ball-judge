@@ -94,9 +94,9 @@ namespace margelo::nitro::wallballvision {
     auto __result = method(_javaPart);
     return __result;
   }
-  std::shared_ptr<Promise<std::vector<std::string>>> JHybridWallballVisionSpec::ballUnits() {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("ballUnits");
-    auto __result = method(_javaPart);
+  std::shared_ptr<Promise<std::vector<std::string>>> JHybridWallballVisionSpec::ballUnits(double input) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(double /* input */)>("ballUnits");
+    auto __result = method(_javaPart, input);
     return [&]() {
       auto __promise = Promise<std::vector<std::string>>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
@@ -119,9 +119,9 @@ namespace margelo::nitro::wallballvision {
       return __promise;
     }();
   }
-  std::shared_ptr<Promise<PhoneCheck>> JHybridWallballVisionSpec::checkPhone(double cutWidth) {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(double /* cutWidth */)>("checkPhone");
-    auto __result = method(_javaPart, cutWidth);
+  std::shared_ptr<Promise<PhoneCheck>> JHybridWallballVisionSpec::checkPhone(double cutWidth, double input) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(double /* cutWidth */, double /* input */)>("checkPhone");
+    auto __result = method(_javaPart, cutWidth, input);
     return [&]() {
       auto __promise = Promise<PhoneCheck>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {

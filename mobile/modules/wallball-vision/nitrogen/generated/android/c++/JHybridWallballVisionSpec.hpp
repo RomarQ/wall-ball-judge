@@ -55,8 +55,8 @@ namespace margelo::nitro::wallballvision {
   public:
     // Methods
     double nowMs() override;
-    std::shared_ptr<Promise<std::vector<std::string>>> ballUnits() override;
-    std::shared_ptr<Promise<PhoneCheck>> checkPhone(double cutWidth) override;
+    std::shared_ptr<Promise<std::vector<std::string>>> ballUnits(double input) override;
+    std::shared_ptr<Promise<PhoneCheck>> checkPhone(double cutWidth, double input) override;
     ClipInfo openClip(const std::string& source, const JudgeOptions& options) override;
     std::optional<PoseFrame> nextPoseFrame(bool look, const std::optional<LookWindow>& window) override;
     void closeClip() override;

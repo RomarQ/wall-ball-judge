@@ -1,6 +1,6 @@
 # Models
 
-The app runs three models on the phone: MediaPipe's pose landmarker, a ball detector and a target-plate detector. The last two are the same trained weights exported at two input sizes, 320 for the ball check that runs through every throw, on a window of the frame centred on the target at the scale training drew the frames at, and 640 for the finder that runs once on a tap, and each names its boxes ball or target. Both exports are LiteRT files (`.tflite`) that LiteRT.js runs. The last two are trained on wall-ball footage and versioned on the Hugging Face Hub. This page is the contract between the Hub and the app.
+The app runs three models on the phone: MediaPipe's pose landmarker, a ball detector and a target-plate detector. The last two are the same trained weights exported at three input sizes: 320 or 416, as the settings choose, for the ball check that runs through every throw, on a window of the frame centred on the target at the scale training drew the frames at, and 640 for the finder that runs once on a tap. Each names its boxes ball or target. All the exports are LiteRT files (`.tflite`) that LiteRT.js runs. The last two are trained on wall-ball footage and versioned on the Hugging Face Hub. This page is the contract between the Hub and the app.
 
 ## Where each model comes from
 
@@ -8,11 +8,12 @@ The app runs three models on the phone: MediaPipe's pose landmarker, a ball dete
 | -------------------------------------------------------- | ----------------------------------------------- | -------------- |
 | `pose_landmarker_full.task`, `pose_landmarker_lite.task` | Google's storage, the published MediaPipe files | 9.4 MB, 5.8 MB |
 | `detector-320.tflite`                                    | the Hub's `v11` tag                             | 9.8 MB         |
+| `detector-416.tflite`                                    | the Hub's `v11` tag                             | 9.8 MB         |
 | `detector-640.tflite`                                    | the Hub's `v11` tag                             | 9.8 MB         |
 
 The WASM runtimes for MediaPipe and LiteRT.js ship in the npm packages and are copied beside the app at build time, under `vendor/`. They are not models and have no version of their own beyond `package-lock.json`.
 
-A revision names its ball check's file in the manifest's `ball` and its search's file in `finder`.
+A revision names its ball check's file in the manifest's `ball` and its search's file in `finder`. Its `balls` lists the ball check's files a person may choose from, each at its own input size, `ball` among them. [`src/ball-model.ts`](../src/ball-model.ts) gives both apps the file at the size the settings chose, and `ball` for a size the revision does not offer.
 
 ## The manifest
 
@@ -33,13 +34,19 @@ The choice is stored on the phone and read at the board's next start, which drop
 
 To offer a revision, add its two files' entries under `offered.<revision>.files`, copied from the manifest that shipped it, with its `ball` and `finder` beside them, and check that the Hub's tag still serves files with those checksums. Both files must be LiteRT exports: the app runs no other kind. To withdraw one, remove its entry.
 
+## Choosing the ball check's input size
+
+The settings offer each input size in the revision's `balls`: 320, the default, and 416 for v11. The ball check reads a window of that many input pixels at the training scale, so the size sets how much of the frame around the target the window takes in. At 320 the window is half the frame's long side, and at 416 about two thirds. The model then reads 1.7 times the pixels on each look, and takes more time for it.
+
+The choice is stored on the device under `ballInput` and read at the board's next start, which drops a ball detector of the other size first. The phone check's result holds for one ball model, so a change of size asks for the check again, and **Check this device** downloads the ball model of the size chosen at the time. The Android app ships both sizes, each with its own TPU file, probe frame and unit check (see [mobile/README.md](../mobile/README.md)).
+
 ## Trying a candidate on a phone
 
-Before a candidate ships, a page can load it in place of the shipped pair: put its two exports, named as the shipped revision names its files (`detector-320.tflite` and `detector-640.tflite`), in a folder under `public/models/candidates/`, which git ignores, and add `?models=candidates/<folder>` to the page's address, such as the judge board. The files sit at a new path, so the service worker fetches them rather than serve the shipped detectors from its model cache. Nothing else changes, and a page without the option loads the shipped models.
+Before a candidate ships, a page can load it in place of the shipped pair: put its exports, named as the shipped revision names its files (`detector-320.tflite` and `detector-640.tflite`, with `detector-416.tflite` for a device set to 416), in a folder under `public/models/candidates/`, which git ignores, and add `?models=candidates/<folder>` to the page's address, such as the judge board. The files sit at a new path, so the service worker fetches them rather than serve the shipped detectors from its model cache. Nothing else changes, and a page without the option loads the shipped models.
 
 ## Shipping a revision
 
-The Hub holds each revision under a tag: its two LiteRT files, their ONNX exports and the PyTorch weights. To ship one, push its files to the Hub, tag that commit, and set `revision` and the two files' entries in the manifest in one commit. A tag may gain a file, but a file never changes under a tag: a phone keeps the bytes it cached under the revision's name.
+The Hub holds each revision under a tag: its two LiteRT files, their ONNX exports and the PyTorch weights. To ship one, push its files to the Hub, tag that commit, and set `revision` and the files' entries in the manifest in one commit. A tag may gain a file, but a file never changes under a tag: a phone keeps the bytes it cached under the revision's name.
 
 ## The LiteRT files
 
@@ -47,6 +54,7 @@ In a set on a Pixel 6a, LiteRT.js takes about a third less time per look than ON
 
 ```sh
 python -c "from ultralytics import YOLO; YOLO('last.pt').export(format='tflite', imgsz=320)"
+python -c "from ultralytics import YOLO; YOLO('last.pt').export(format='tflite', imgsz=416)"
 python -c "from ultralytics import YOLO; YOLO('last.pt').export(format='tflite', imgsz=640)"
 ```
 

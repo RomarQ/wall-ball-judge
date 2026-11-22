@@ -7,13 +7,14 @@ import type { LookAsk, PipelineBoard } from './board';
 const MAX_BUSY_MS = 50;
 
 /**
- * How the pipeline judges: the own pose on the CPU, and the ball on `ballUnit` when the settings check the ball.
- * The judging pose finds the athlete at the PWA's judging figure and tracks them at the settings' confidence.
+ * How the pipeline judges: the own pose on the CPU, and the ball model at `ballInput` pixels on `ballUnit` when the
+ * settings check the ball. The judging pose finds the athlete at the PWA's judging figure and tracks them at the
+ * settings' confidence.
  */
-export function judgeOptions(ballUnit: string): JudgeOptions {
+export function judgeOptions(ballUnit: string, ballInput: number): JudgeOptions {
   return {
     pose: 'OWN_CPU',
-    ball: { unit: ballCheckOn() ? ballUnit : 'off', minScore: MIN_SCORE, cutWidth: CUT_WIDTH },
+    ball: { unit: ballCheckOn() ? ballUnit : 'off', input: ballInput, minScore: MIN_SCORE, cutWidth: CUT_WIDTH },
     detection: JUDGING_DETECTION,
     presence: poseConfidence(),
     tracking: poseConfidence(),

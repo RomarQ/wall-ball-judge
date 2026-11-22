@@ -30,10 +30,12 @@ export interface Look {
   runMs: number
 }
 
-/** The ball model's unit and the PWA's thresholds for reading its output. */
+/** The ball model's unit and input size, and the PWA's thresholds for reading its output. */
 export interface BallOptions {
   /** TPU, CPU or off. */
   unit: string
+  /** The model's square input side in pixels, which picks the model file: one of the sizes the app ships. */
+  input: number
   /** The lowest class score a box needs, as the PWA's boxes.ts gives it. */
   minScore: number
   /** The width a frame is shrunk to before the letterbox, as the PWA's boxes.ts gives it. */
@@ -117,16 +119,17 @@ export interface WallballVision
   /** Milliseconds on the phone's monotonic clock, which every thread and runtime shares. */
   nowMs(): number
   /**
-   * The ball units this phone runs, the fastest first: TPU when the model compiled for a TPU loads here and answers as
-   * the CPU does, then CPU. The first call per system build runs the check, a few seconds; later calls read its result.
+   * The ball units this phone runs the ball model at `input` pixels on, the fastest first: TPU when the model compiled
+   * for a TPU loads here and answers as the CPU does, then CPU. The first call per system build and input size runs the
+   * check, a few seconds; later calls read its result.
    */
-  ballUnits(): Promise<string[]>
+  ballUnits(input: number): Promise<string[]>
   /**
-   * Times each part of the judge on this phone, on the search thread: the ball model's look as the unit check timed it,
-   * and a frame of the pose and a look of the target search, timed now. A look shrinks the frame to `cutWidth` first,
-   * as the board's looks do. A few seconds.
+   * Times each part of the judge on this phone, on the search thread: a look of the ball model at `input` pixels as the
+   * unit check timed it, and a frame of the pose and a look of the target search, timed now. A look shrinks the frame to
+   * `cutWidth` first, as the board's looks do. A few seconds.
    */
-  checkPhone(cutWidth: number): Promise<PhoneCheck>
+  checkPhone(cutWidth: number, input: number): Promise<PhoneCheck>
 
   /** Opens a video to judge frame by frame: a `content://` address or a file in the app's `clips` folder. */
   openClip(source: string, options: JudgeOptions): ClipInfo

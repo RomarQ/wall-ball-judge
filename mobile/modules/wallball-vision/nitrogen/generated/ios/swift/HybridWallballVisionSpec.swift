@@ -14,8 +14,8 @@ public protocol HybridWallballVisionSpec_protocol: HybridObject {
 
   // Methods
   func nowMs() throws -> Double
-  func ballUnits() throws -> Promise<[String]>
-  func checkPhone(cutWidth: Double) throws -> Promise<PhoneCheck>
+  func ballUnits(input: Double) throws -> Promise<[String]>
+  func checkPhone(cutWidth: Double, input: Double) throws -> Promise<PhoneCheck>
   func openClip(source: String, options: JudgeOptions) throws -> ClipInfo
   func nextPoseFrame(look: Bool, window: LookWindow?) throws -> PoseFrame?
   func closeClip() throws -> Void

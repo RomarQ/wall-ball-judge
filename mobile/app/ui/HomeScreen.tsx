@@ -15,6 +15,7 @@ import {
   type Parts,
   type Readiness,
 } from '../core';
+import { ballModel } from '../detect';
 import { phoneCheck } from '../phone';
 import { CONDENSED, page, Spec } from './controls';
 import { Demo } from './Demo';
@@ -43,17 +44,20 @@ export function HomeScreen({
   const [width, setWidth] = useState(0);
   const cameras = useCameraDevices();
   const [check, setCheck] = useState<PhoneCheck | null>(null);
+  // Read at each drawing: the settings, which lie over this screen, may choose another ball model.
+  const ballInput = ballModel().input;
 
   useEffect(() => {
     let shown = true;
-    phoneCheck().then(
+    setCheck(null);
+    phoneCheck(ballInput).then(
       (answer) => shown && setCheck(answer),
       () => shown && setCheck({ ballUnit: 'CPU' }),
     );
     return () => {
       shown = false;
     };
-  }, []);
+  }, [ballInput]);
 
   // A time the check did not give is a part that did not run; before the check answers, nothing is known.
   const measured = (ms: number | undefined): Measured => (check ? (ms ?? 'failed') : null);

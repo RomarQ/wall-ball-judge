@@ -1,13 +1,13 @@
 /**
  * The settings view: the spoken language and a button to hear it, the ball
- * check, which revision of the detection models runs, how sure the pose model
- * must be, whether the board keeps the camera's video, and the versions this
- * phone runs.
+ * check and its model's input size, which revision of the detection models
+ * runs, how sure the pose model must be, whether the board keeps the camera's
+ * video, and the versions this phone runs.
  *
  * Each change is stored at once, and the board reads it at its next start.
  */
 import { chosenVoice, say } from './audio';
-import { modelRevisions, modelsInUse } from './config';
+import { ballInputChoices, modelRevisions, modelsInUse } from './config';
 import { $ } from './dom';
 import { changeLanguage, decimal, onLanguage, t } from './i18n';
 import { canRecordVideo } from './record';
@@ -20,6 +20,7 @@ import {
   poseConfidence,
   recordVideo,
   setBallCheckOn,
+  setBallInput,
   type LanguageChoice,
   type LanguageTag,
   setModels,
@@ -83,6 +84,25 @@ export function bindSettings(): void {
   ball.checked = ballCheckOn();
   ball.addEventListener('change', () => setBallCheckOn(ball.checked));
 
+  const listBallInputs = () => {
+    const { inputs, inUse } = ballInputChoices();
+    $('ball-input').replaceChildren(
+      ...inputs.map((input) => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'choice';
+        pill.textContent = t('settings.pixels')(input);
+        pill.setAttribute('aria-pressed', String(input === inUse));
+        pill.addEventListener('click', () => {
+          setBallInput(input);
+          listBallInputs();
+        });
+        return pill;
+      }),
+    );
+  };
+  listBallInputs();
+
   const models = $<HTMLSelectElement>('models');
   const [shipped] = modelRevisions();
   for (const { revision } of modelRevisions()) models.add(new Option(revision, revision));
@@ -113,6 +133,8 @@ export function bindSettings(): void {
   models.addEventListener('change', () => {
     setModels(models.value);
     showModels();
+    // Another revision may offer other sizes.
+    listBallInputs();
   });
 
   const confidence = $<HTMLInputElement>('confidence');

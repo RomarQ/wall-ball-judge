@@ -137,9 +137,9 @@ open class HybridWallballVisionSpec_cxx {
   }
   
   @inline(__always)
-  public final func ballUnits() -> bridge.Result_std__shared_ptr_Promise_std__vector_std__string____ {
+  public final func ballUnits(input: Double) -> bridge.Result_std__shared_ptr_Promise_std__vector_std__string____ {
     do {
-      let __result = try self.__implementation.ballUnits()
+      let __result = try self.__implementation.ballUnits(input: input)
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__vector_std__string___ in
         let __promise = bridge.create_std__shared_ptr_Promise_std__vector_std__string___()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__vector_std__string___(__promise)
@@ -162,9 +162,9 @@ open class HybridWallballVisionSpec_cxx {
   }
   
   @inline(__always)
-  public final func checkPhone(cutWidth: Double) -> bridge.Result_std__shared_ptr_Promise_PhoneCheck___ {
+  public final func checkPhone(cutWidth: Double, input: Double) -> bridge.Result_std__shared_ptr_Promise_PhoneCheck___ {
     do {
-      let __result = try self.__implementation.checkPhone(cutWidth: cutWidth)
+      let __result = try self.__implementation.checkPhone(cutWidth: cutWidth, input: input)
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_PhoneCheck__ in
         let __promise = bridge.create_std__shared_ptr_Promise_PhoneCheck__()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_PhoneCheck__(__promise)

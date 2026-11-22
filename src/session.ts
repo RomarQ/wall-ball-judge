@@ -8,7 +8,7 @@
  */
 import { type TargetCheck, type Target, type Verdict } from './ball';
 import { Board } from './board';
-import { config, modelsInUse, type PoseQuality } from './config';
+import { ballModelInUse, config, modelsInUse, type PoseQuality } from './config';
 import type { Presence, RepCounter } from './depth';
 import { createBallDetector, type Detector } from './detector';
 import { render, type Mode, type Notice, type Stats } from './overlay';
@@ -488,8 +488,10 @@ export class Session {
   #poseMs = 0;
   /** The landmarks of the frame a paused clip is holding, read once. */
   #held: { tMs: number; landmarks: Landmark[] | null } | null = null;
-  /** The revision the loaded ball and target detectors came from. */
+  /** The revision the loaded target detector came from. */
   #detectorsOf: string | null = null;
+  /** The ball model the loaded ball detector runs, as `ballModelInUse` names it. */
+  #ballModelOf: string | null = null;
   /** The unit the open pose was asked for, which a fallback can leave apart from the one it runs on. */
   #poseUnit: Unit | null = null;
   /** The unit the loaded ball detector was asked for. */
@@ -744,16 +746,22 @@ export class Session {
   }
 
   /**
-   * Drops the ball and target detectors when the settings now choose another
-   * revision of them, so the loads that follow take the chosen one.
+   * Drops the ball detector when the settings now choose another ball model,
+   * and the target detector when they choose another revision, so the loads
+   * that follow take the chosen ones.
    */
   #followModels(): void {
-    const wanted = modelsInUse();
-    if (wanted === this.#detectorsOf) return;
-    this.detector?.close();
-    this.detector = null;
-    this.finder?.close();
-    this.#detectorsOf = wanted;
+    const ball = ballModelInUse();
+    if (ball !== this.#ballModelOf) {
+      this.detector?.close();
+      this.detector = null;
+      this.#ballModelOf = ball;
+    }
+    const revision = modelsInUse();
+    if (revision !== this.#detectorsOf) {
+      this.finder?.close();
+      this.#detectorsOf = revision;
+    }
   }
 
   /**

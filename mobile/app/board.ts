@@ -4,7 +4,7 @@
  */
 import type { Look, LookWindow, PoseFrame } from 'wallball-vision';
 import { Board, DEPTH, MIN_SCORE, REACH, storedRequired, storeRequired, t, type Landmark, type LookTicket, type Tally, type Target, type Verdict } from './core';
-import { BALL_MODEL, boxesOf } from './detect';
+import { boxesOf, type TrainedFile } from './detect';
 import { trackingLost } from './sound';
 
 const VALUES_PER_LANDMARK = 4;
@@ -32,10 +32,14 @@ export class PipelineBoard extends Board {
   /** The looks the judge asked for, by the index of the frame that started each. */
   #tickets = new Map<number, LookTicket>();
 
-  /** `ballCheck` says whether the ball is judged: the setting is on and a ball model runs. Verdicts count on `tally`. */
+  /**
+   * `ballCheck` says whether the ball is judged: the setting is on and a ball model runs. `ballModel` is the model that
+   * reads the looks, whose input sets the window's side. Verdicts count on `tally`.
+   */
   constructor(
     readonly ballCheck: boolean,
     readonly tally: Tally,
+    readonly ballModel: TrainedFile,
   ) {
     super({
       depth: DEPTH,
@@ -75,7 +79,7 @@ export class PipelineBoard extends Board {
       landmarks: landmarksOf(frame.landmarks),
       armed: this.armed,
       ballCheck: this.ballCheck,
-      windowSide: BALL_MODEL.input,
+      windowSide: this.ballModel.input,
     });
     if (judged.event?.type === 'abort') trackingLost();
     if (judged.look) {
@@ -86,7 +90,7 @@ export class PipelineBoard extends Board {
     if (judged.verdict) this.verdicts.push(judged.verdict);
     return {
       wanted: this.ballCheck && this.judge.target.detecting,
-      window: this.lookWindow(frame.width, frame.height, BALL_MODEL.input) ?? undefined,
+      window: this.lookWindow(frame.width, frame.height, this.ballModel.input) ?? undefined,
     };
   }
 
@@ -104,6 +108,6 @@ export class PipelineBoard extends Board {
     if (!ticket) return;
     this.#tickets.delete(look.frameIndex);
     // Read with the window the pipeline drew, which the window on the ticket equals unless the target moved between.
-    this.answer(ticket, boxesOf(look.rows, look.count, BALL_MODEL, frame.width, frame.height, MIN_SCORE, 'ball', look.window));
+    this.answer(ticket, boxesOf(look.rows, look.count, this.ballModel, frame.width, frame.height, MIN_SCORE, 'ball', look.window));
   }
 }

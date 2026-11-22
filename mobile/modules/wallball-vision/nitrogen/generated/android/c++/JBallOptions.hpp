@@ -33,12 +33,15 @@ namespace margelo::nitro::wallballvision {
       static const auto clazz = javaClassStatic();
       static const auto fieldUnit = clazz->getField<jni::JString>("unit");
       jni::local_ref<jni::JString> unit = this->getFieldValue(fieldUnit);
+      static const auto fieldInput = clazz->getField<double>("input");
+      double input = this->getFieldValue(fieldInput);
       static const auto fieldMinScore = clazz->getField<double>("minScore");
       double minScore = this->getFieldValue(fieldMinScore);
       static const auto fieldCutWidth = clazz->getField<double>("cutWidth");
       double cutWidth = this->getFieldValue(fieldCutWidth);
       return BallOptions(
         unit->toStdString(),
+        input,
         minScore,
         cutWidth
       );
@@ -50,12 +53,13 @@ namespace margelo::nitro::wallballvision {
      */
     [[maybe_unused]]
     static jni::local_ref<JBallOptions::javaobject> fromCpp(const BallOptions& value) {
-      using JSignature = JBallOptions(jni::alias_ref<jni::JString>, double, double);
+      using JSignature = JBallOptions(jni::alias_ref<jni::JString>, double, double, double);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         jni::make_jstring(value.unit),
+        value.input,
         value.minScore,
         value.cutWidth
       );

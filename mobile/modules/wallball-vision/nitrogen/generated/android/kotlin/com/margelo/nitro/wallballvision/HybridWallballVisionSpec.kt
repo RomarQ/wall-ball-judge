@@ -37,11 +37,11 @@ abstract class HybridWallballVisionSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun ballUnits(): Promise<Array<String>>
+  abstract fun ballUnits(input: Double): Promise<Array<String>>
   
   @DoNotStrip
   @Keep
-  abstract fun checkPhone(cutWidth: Double): Promise<PhoneCheck>
+  abstract fun checkPhone(cutWidth: Double, input: Double): Promise<PhoneCheck>
   
   @DoNotStrip
   @Keep

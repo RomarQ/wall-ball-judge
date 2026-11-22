@@ -12,6 +12,7 @@
  * a gym with no signal.
  */
 import manifest from '../models/manifest.json';
+import { ballFileAt, ballInputs, type BallModels } from './ball-model';
 import { IOU_MAX, MIN_SCORE } from './boxes';
 import { DEFAULTS as DEPTH } from './depth';
 import { DEFAULTS as REACH } from './reach';
@@ -20,12 +21,14 @@ import {
   JUDGING_DETECTION,
   poseConfidence,
   SEARCH_CONFIDENCE,
+  storedBallInput,
   storedModels,
 } from './settings';
 import type { Unit } from './types';
 
 /** A trained file as the manifest describes it. */
 interface TrainedFile {
+  input?: number;
   classes?: string[];
   trained?: string;
 }
@@ -33,9 +36,8 @@ interface TrainedFile {
 type Files = Record<string, TrainedFile>;
 
 /** A revision as the manifest describes it: its files, and the ones the ball check and the target search run. */
-interface Revision {
+interface Revision extends BallModels {
   files: Files;
-  ball: string;
   finder: string;
 }
 
@@ -68,8 +70,9 @@ const revisionInUse = (): Revision =>
 /** The files of the revision in use. */
 const filesInUse = (): Files => revisionInUse().files;
 
-/** The file the ball check runs, in the revision in use. */
-const ballFile = (): string => revisionInUse().ball;
+/** The file the ball check runs: the revision in use's model at the input size the settings chose. */
+const ballFile = (): string =>
+  ballFileAt(revisionInUse(), typeof localStorage === 'undefined' ? null : storedBallInput());
 /** The file the target search runs, in the revision in use. */
 const finderFile = (): string => revisionInUse().finder;
 
@@ -118,6 +121,11 @@ export function modelsInUse(): string {
 /** The ball check's model in use, as the detectors and the file, which a phone check's figure belongs to. */
 export function ballModelInUse(): string {
   return `${modelsInUse()}/${ballFile()}`;
+}
+
+/** The input sizes the settings offer for the ball model, in pixels, and the one in use. */
+export function ballInputChoices(): { inputs: number[]; inUse: number | undefined } {
+  return { inputs: ballInputs(revisionInUse()), inUse: filesInUse()[ballFile()]?.input };
 }
 
 /** The stored confidence, which one page may override for a test. */

@@ -134,3 +134,15 @@ export function storedModels(): string | null {
 export function setModels(revision: string): void {
   localStorage.setItem(MODELS_KEY, revision);
 }
+
+const BALL_INPUT_KEY = 'ballInput';
+
+/** The ball model's input size the person chose, in pixels, or null when they chose none; ball-model.ts checks it is offered. */
+export function storedBallInput(): number | null {
+  const value = Number(localStorage.getItem(BALL_INPUT_KEY));
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
+
+export function setBallInput(input: number): void {
+  localStorage.setItem(BALL_INPUT_KEY, String(input));
+}

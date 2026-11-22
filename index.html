@@ -643,6 +643,15 @@
             <input id="ball-check" type="checkbox" role="switch" />
           </label>
           <div class="setting">
+            <span id="ball-input-label" data-i18n="settings.ballInput">Ball model input</span>
+            <div class="choices" id="ball-input" role="group" aria-labelledby="ball-input-label"></div>
+          </div>
+          <p class="hint" data-i18n="settings.ballInputHint">
+            The ball check reads a square of this many pixels around the target, at the scale of the training
+            frames. At 416 it reads more of the frame around the target, and it needs more time for each frame
+            it checks. A change applies at the board&#8217;s next start.
+          </p>
+          <div class="setting">
             <label for="models" data-i18n="settings.models">Detection models</label>
             <select id="models"></select>
           </div>

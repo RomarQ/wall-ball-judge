@@ -40,12 +40,13 @@ namespace margelo::nitro::wallballvision {
   struct BallOptions final {
   public:
     std::string unit     SWIFT_PRIVATE;
+    double input     SWIFT_PRIVATE;
     double minScore     SWIFT_PRIVATE;
     double cutWidth     SWIFT_PRIVATE;
 
   public:
     BallOptions() = default;
-    explicit BallOptions(std::string unit, double minScore, double cutWidth): unit(unit), minScore(minScore), cutWidth(cutWidth) {}
+    explicit BallOptions(std::string unit, double input, double minScore, double cutWidth): unit(unit), input(input), minScore(minScore), cutWidth(cutWidth) {}
 
   public:
     friend bool operator==(const BallOptions& lhs, const BallOptions& rhs) = default;
@@ -62,6 +63,7 @@ namespace margelo::nitro {
       jsi::Object obj = arg.asObject(runtime);
       return margelo::nitro::wallballvision::BallOptions(
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "unit"))),
+        JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "input"))),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "minScore"))),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "cutWidth")))
       );
@@ -69,6 +71,7 @@ namespace margelo::nitro {
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::wallballvision::BallOptions& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "unit"), JSIConverter<std::string>::toJSI(runtime, arg.unit));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "input"), JSIConverter<double>::toJSI(runtime, arg.input));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "minScore"), JSIConverter<double>::toJSI(runtime, arg.minScore));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "cutWidth"), JSIConverter<double>::toJSI(runtime, arg.cutWidth));
       return obj;
@@ -82,6 +85,7 @@ namespace margelo::nitro {
         return false;
       }
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "unit")))) return false;
+      if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "input")))) return false;
       if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "minScore")))) return false;
       if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "cutWidth")))) return false;
       return true;

@@ -18,13 +18,18 @@ public extension BallOptions {
   /**
    * Create a new instance of `BallOptions`.
    */
-  init(unit: String, minScore: Double, cutWidth: Double) {
-    self.init(std.string(unit), minScore, cutWidth)
+  init(unit: String, input: Double, minScore: Double, cutWidth: Double) {
+    self.init(std.string(unit), input, minScore, cutWidth)
   }
 
   @inline(__always)
   var unit: String {
     return String(self.__unit)
+  }
+  
+  @inline(__always)
+  var input: Double {
+    return self.__input
   }
   
   @inline(__always)

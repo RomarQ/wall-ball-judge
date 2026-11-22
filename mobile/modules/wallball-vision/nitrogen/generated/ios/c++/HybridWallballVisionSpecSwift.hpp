@@ -110,16 +110,16 @@ namespace margelo::nitro::wallballvision {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline std::shared_ptr<Promise<std::vector<std::string>>> ballUnits() override {
-      auto __result = _swiftPart.ballUnits();
+    inline std::shared_ptr<Promise<std::vector<std::string>>> ballUnits(double input) override {
+      auto __result = _swiftPart.ballUnits(std::forward<decltype(input)>(input));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline std::shared_ptr<Promise<PhoneCheck>> checkPhone(double cutWidth) override {
-      auto __result = _swiftPart.checkPhone(std::forward<decltype(cutWidth)>(cutWidth));
+    inline std::shared_ptr<Promise<PhoneCheck>> checkPhone(double cutWidth, double input) override {
+      auto __result = _swiftPart.checkPhone(std::forward<decltype(cutWidth)>(cutWidth), std::forward<decltype(input)>(input));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

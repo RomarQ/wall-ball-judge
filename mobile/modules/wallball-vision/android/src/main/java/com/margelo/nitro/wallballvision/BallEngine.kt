@@ -12,21 +12,24 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
-/** The model's square input side. */
-const val BALL_INPUT = 320
-
 /** The long side training drew each frame at, the repository's `TRAINED_INPUT` in boxes.ts. */
 private const val TRAINED_INPUT = 640
 
 private const val CLOSE_WAIT_S = 5L
 
 object BallModel {
-  /** The PWA's ball model as LiteRT runs it on `unit`: the plain file on the CPU or the GPU, the file the phone compiled for its TPU on the NPU. */
-  fun on(unit: String): Pair<String, Accelerator> = when (unit) {
-    "TPU" -> "models/detector-320-g6.tflite" to Accelerator.NPU
-    "GPU" -> "models/detector-320.tflite" to Accelerator.GPU
-    "CPU" -> "models/detector-320.tflite" to Accelerator.CPU
-    else -> error("no ball unit $unit")
+  /**
+   * The PWA's ball model at `input` pixels as LiteRT opens it on `unit`: the plain file on the CPU or the GPU, the file
+   * the phone compiled for its TPU on the NPU. The GPU keeps each size's compiled programs apart.
+   */
+  fun on(context: Context, unit: String, input: Int): Pair<String, CompiledModel.Options> {
+    val (asset, accelerator) = when (unit) {
+      "TPU" -> "models/detector-$input-g6.tflite" to Accelerator.NPU
+      "GPU" -> "models/detector-$input.tflite" to Accelerator.GPU
+      "CPU" -> "models/detector-$input.tflite" to Accelerator.CPU
+      else -> error("no ball unit $unit")
+    }
+    return asset to Litert.options(context, accelerator, "ball-$input")
   }
 }
 
@@ -41,16 +44,16 @@ object Letterbox {
   )
 
   /**
-   * The median time of `runs` drawings of a blank frame into the ball model's input, as a look draws its frame: through
-   * a window of the input's side at the training scale, in the middle of the frame.
+   * The median time of `runs` drawings of a blank frame into the ball model's input of `size` pixels, as a look draws its
+   * frame: through a window of the input's side at the training scale, in the middle of the frame.
    */
-  fun drawMs(width: Int, height: Int, cutWidth: Int, runs: Int): Double {
+  fun drawMs(width: Int, height: Int, cutWidth: Int, size: Int, runs: Int): Double {
     val blank = ByteBuffer.allocateDirect(width * height * 4)
-    val input = FloatArray(3 * BALL_INPUT * BALL_INPUT)
-    val side = BALL_INPUT * maxOf(width, height).toDouble() / TRAINED_INPUT
+    val input = FloatArray(3 * size * size)
+    val side = size * maxOf(width, height).toDouble() / TRAINED_INPUT
     val times = DoubleArray(runs) {
       val start = SystemClock.elapsedRealtimeNanos()
-      drawWindow(blank, width, height, cutWidth, (width - side) / 2, (height - side) / 2, side, side, BALL_INPUT, input)
+      drawWindow(blank, width, height, cutWidth, (width - side) / 2, (height - side) / 2, side, side, size, input)
       (SystemClock.elapsedRealtimeNanos() - start) / 1e6
     }
     times.sort()
@@ -68,7 +71,8 @@ class BallEngine(context: Context, options: BallOptions) : AutoCloseable {
   private val inputs: List<TensorBuffer>
   private val outputs: List<TensorBuffer>
   private val thread: ExecutorService = Executors.newSingleThreadExecutor()
-  private val input = FloatArray(3 * BALL_INPUT * BALL_INPUT)
+  private val size = options.input.toInt()
+  private val input = FloatArray(3 * size * size)
   private var running: Future<*>? = null
   private val finished = ConcurrentLinkedQueue<Look>()
   private val minScore = options.minScore.toFloat()
@@ -76,8 +80,8 @@ class BallEngine(context: Context, options: BallOptions) : AutoCloseable {
   @Volatile private var reading: ByteBuffer? = null
 
   init {
-    val (asset, accelerator) = BallModel.on(options.unit)
-    model = CompiledModel.create(context.assets, asset, Litert.options(context, accelerator, "ball"), Litert.environment(context))
+    val (asset, opening) = BallModel.on(context, options.unit, size)
+    model = CompiledModel.create(context.assets, asset, opening, Litert.environment(context))
     inputs = model.createInputBuffers()
     outputs = model.createOutputBuffers()
   }
@@ -93,8 +97,8 @@ class BallEngine(context: Context, options: BallOptions) : AutoCloseable {
     running = thread.submit {
       val preparing = SystemClock.elapsedRealtimeNanos()
       try {
-        if (window == null) Letterbox.draw(rgba, width, height, cutWidth, BALL_INPUT, input)
-        else Letterbox.drawWindow(rgba, width, height, cutWidth, window.x, window.y, window.w, window.h, BALL_INPUT, input)
+        if (window == null) Letterbox.draw(rgba, width, height, cutWidth, size, input)
+        else Letterbox.drawWindow(rgba, width, height, cutWidth, window.x, window.y, window.w, window.h, size, input)
       } finally {
         reading = null
       }
@@ -104,7 +108,7 @@ class BallEngine(context: Context, options: BallOptions) : AutoCloseable {
       model.run(inputs, outputs)
       val raw = outputs[0].readFloat()
       val runMs = (SystemClock.elapsedRealtimeNanos() - start) / 1e6
-      val rows = Anchors.scored(raw, minScore, BALL_INPUT)
+      val rows = Anchors.scored(raw, minScore, size)
       finished.add(Look(frameIndex.toDouble(), rows, (rows.size / Anchors.ROWS).toDouble(), window, prepMs, runMs))
     }
     return true

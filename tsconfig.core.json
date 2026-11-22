@@ -12,6 +12,7 @@
     "src/placement.ts",
     "src/judge-log.ts",
     "src/agreement.ts",
+    "src/ball-model.ts",
     "src/readiness.ts",
     "src/scoreboard-wire.ts",
     "src/set-record.ts",

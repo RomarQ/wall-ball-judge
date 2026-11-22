@@ -73,8 +73,8 @@ namespace margelo::nitro::wallballvision {
     public:
       // Methods
       virtual double nowMs() = 0;
-      virtual std::shared_ptr<Promise<std::vector<std::string>>> ballUnits() = 0;
-      virtual std::shared_ptr<Promise<PhoneCheck>> checkPhone(double cutWidth) = 0;
+      virtual std::shared_ptr<Promise<std::vector<std::string>>> ballUnits(double input) = 0;
+      virtual std::shared_ptr<Promise<PhoneCheck>> checkPhone(double cutWidth, double input) = 0;
       virtual ClipInfo openClip(const std::string& source, const JudgeOptions& options) = 0;
       virtual std::optional<PoseFrame> nextPoseFrame(bool look, const std::optional<LookWindow>& window) = 0;
       virtual void closeClip() = 0;

@@ -1,6 +1,6 @@
 /**
  * The settings, laid out as the PWA's settings page and kept under its keys: the language and its spoken count, the
- * ball check and the pose confidence, the two phones' roles, and what the app runs.
+ * ball check, its model's input size and the pose confidence, the two phones' roles, and what the app runs.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { PanResponder, Pressable, ScrollView, StyleSheet, Text, View, type PanResponderGestureState } from 'react-native';
@@ -16,12 +16,14 @@ import {
   LANGUAGES,
   poseConfidence,
   setBallCheckOn,
+  setBallInput,
   setPoseConfidence,
   SPEECH_RATE,
   t,
   type LanguageChoice,
   type LanguageTag,
 } from '../core';
+import { BALL_INPUTS, ballModel } from '../detect';
 import type { DisplaySender } from '../pair';
 import { keptSets, saveSetsOn, saveVideoOn, setSaveSets, setSaveVideo } from '../sets';
 import { setSummary, setWhen } from './SetsScreen';
@@ -112,6 +114,24 @@ export function SettingsScreen({
               }}
             />
           </View>
+          <View style={styles.switchRow}>
+            <Text style={page.text}>{t('settings.ballInput')}</Text>
+            <View style={styles.pills}>
+              {BALL_INPUTS.map((input) => (
+                <Pressable
+                  key={input}
+                  style={[styles.pill, ballModel().input === input && styles.pillOn]}
+                  onPress={() => {
+                    setBallInput(input);
+                    redraw();
+                  }}
+                >
+                  <Text style={[styles.pillText, ballModel().input === input && styles.pillTextOn]}>{t('settings.pixels')(input)}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+          <Text style={page.hint}>{t('settings.ballInputHint')}</Text>
           <View style={styles.range}>
             <View style={styles.rangeHead}>
               <Text style={page.text}>{t('settings.confidence')}</Text>

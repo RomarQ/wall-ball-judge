@@ -3,6 +3,10 @@
   "repo": "RodrigoQuelhas/hyrox-wallballs-detection",
   "revision": "v11",
   "ball": "detector-320.tflite",
+  "balls": [
+    "detector-320.tflite",
+    "detector-416.tflite"
+  ],
   "finder": "detector-640.tflite",
   "files": {
     "detector-320.tflite": {
@@ -16,6 +20,18 @@
       "trained": "2026-11-16",
       "bytes": 9759611,
       "sha256": "53dcf89de48425288677abf527db5292e3007b60477449a1fe57b71ead197364"
+    },
+    "detector-416.tflite": {
+      "task": "the ball check at a larger input, when the settings choose it, with LiteRT.js: the same window scale, so the window takes in more of the frame around the target",
+      "architecture": "YOLO26n",
+      "input": 416,
+      "classes": [
+        "ball",
+        "target"
+      ],
+      "trained": "2026-11-16",
+      "bytes": 9776997,
+      "sha256": "8a5a0f2f45f134c67a697070c3abefdf2e4cc62a25e17ea8b81a86674ee4ff8e"
     },
     "detector-640.tflite": {
       "task": "the FIND TARGET search, with LiteRT.js; the same weights at a larger input, so a small mark on the wall carries more pixels",

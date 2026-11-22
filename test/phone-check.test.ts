@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import manifest from '../models/manifest.json';
 import { saveTimes, savedTimes, unitFor } from '../src/phone-check';
-import { ballCheckOn, setBallCheckOn } from '../src/settings';
+import { ballCheckOn, setBallCheckOn, setBallInput } from '../src/settings';
 
 beforeEach(() => {
   const held = new Map<string, string>();
@@ -21,6 +21,14 @@ describe('the stored phone check', () => {
       'phoneCheck',
       JSON.stringify({ models: `${manifest.revision}-before`, ball: { gpu: 30, cpu: 90 } }),
     );
+
+    expect(savedTimes('ball')).toBeNull();
+  });
+
+  it('measured at one ball input size is not shown at the other', () => {
+    setBallInput(320);
+    saveTimes('ball', { gpu: 30, cpu: 90 });
+    setBallInput(416);
 
     expect(savedTimes('ball')).toBeNull();
   });

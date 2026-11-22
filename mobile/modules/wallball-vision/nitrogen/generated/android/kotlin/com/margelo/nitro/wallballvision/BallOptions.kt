@@ -23,6 +23,9 @@ data class BallOptions(
   val unit: String,
   @DoNotStrip
   @Keep
+  val input: Double,
+  @DoNotStrip
+  @Keep
   val minScore: Double,
   @DoNotStrip
   @Keep
@@ -34,6 +37,7 @@ data class BallOptions(
     if (this === other) return true
     if (other !is BallOptions) return false
     return Objects.deepEquals(this.unit, other.unit)
+      && Objects.deepEquals(this.input, other.input)
       && Objects.deepEquals(this.minScore, other.minScore)
       && Objects.deepEquals(this.cutWidth, other.cutWidth)
   }
@@ -41,6 +45,7 @@ data class BallOptions(
   override fun hashCode(): Int {
     return arrayOf<Any?>(
       unit,
+      input,
       minScore,
       cutWidth
     ).contentDeepHashCode()
@@ -54,8 +59,8 @@ data class BallOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(unit: String, minScore: Double, cutWidth: Double): BallOptions {
-      return BallOptions(unit, minScore, cutWidth)
+    private fun fromCpp(unit: String, input: Double, minScore: Double, cutWidth: Double): BallOptions {
+      return BallOptions(unit, input, minScore, cutWidth)
     }
   }
 }

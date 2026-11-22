@@ -27,7 +27,6 @@ import kotlin.math.abs
 import kotlin.math.max
 import org.json.JSONObject
 
-private const val FRAME = "probe/frame.raw"
 private const val WARMUP_RUNS = 10
 private const val TIMED_RUNS = 100
 private const val TONE_VALUES = 5
@@ -85,12 +84,13 @@ class HybridWallballVision : HybridWallballVisionSpec() {
 
   override fun nowMs(): Double = SystemClock.elapsedRealtimeNanos() / 1e6
 
-  override fun ballUnits(): Promise<Array<String>> = onSearchThread { checkBallUnits(context, prefs) }
+  override fun ballUnits(input: Double): Promise<Array<String>> = onSearchThread { checkBallUnits(context, prefs, input.toInt()) }
 
-  override fun checkPhone(cutWidth: Double): Promise<PhoneCheck> = onSearchThread {
-    val unit = checkBallUnits(context, prefs).first()
+  override fun checkPhone(cutWidth: Double, input: Double): Promise<PhoneCheck> = onSearchThread {
+    val size = input.toInt()
+    val unit = checkBallUnits(context, prefs, size).first()
     val cut = cutWidth.toInt()
-    val ballMs = ballRunMs(context, prefs, unit)?.let { it + Letterbox.drawMs(CHECK_WIDTH, CHECK_HEIGHT, cut, CHECK_RUNS) }
+    val ballMs = ballRunMs(context, prefs, unit, size)?.let { it + Letterbox.drawMs(CHECK_WIDTH, CHECK_HEIGHT, cut, size, CHECK_RUNS) }
     val poseMs = runCatching {
       OwnPose(context, "CPU", CHECK_THRESHOLD, CHECK_THRESHOLD).use { it.trackedFrameMs(CHECK_WIDTH, CHECK_HEIGHT, CHECK_RUNS) }
     }.getOrNull()
@@ -287,30 +287,34 @@ private class Timed(val output: FloatArray, val summary: JSONObject)
 /** The thresholds the check's pose opens with: they decide what a frame finds, not what it costs. */
 private const val CHECK_THRESHOLD = 0.5
 
-/** The scope of a stored ball-unit check: this system build and this install, since a new install may ship another ball model. */
-private fun unitScope(context: Context) = "${Build.FINGERPRINT}@${Litert.installed(context)}"
+/**
+ * The scope of a stored ball-unit check: this system build, this install and the ball model's input size, since a new
+ * install may ship another ball model, and each size is a model of its own.
+ */
+private fun unitScope(context: Context, input: Int) = "${Build.FINGERPRINT}@${Litert.installed(context)}@$input"
 
-private fun ballRunKey(context: Context, unit: String) = "ballRunMs3@${unitScope(context)}@$unit"
+private fun ballRunKey(context: Context, unit: String, input: Int) = "ballRunMs3@${unitScope(context, input)}@$unit"
 
-/** Times the ball model on `unit` as a set opens it, on the probe frame, and keeps its median run for the phone check. */
-private fun timeBall(context: Context, prefs: Prefs, unit: String, frame: FloatArray, warmups: Int = WARMUP_RUNS, runs: Int = TIMED_RUNS): Timed {
-  val (asset, accelerator) = BallModel.on(unit)
-  val timed = timeModel(context, Litert.environment(context), asset, Litert.options(context, accelerator, "ball"), frame, warmups, runs)
-  prefs.set(ballRunKey(context, unit), timed.summary.getDouble("medianMs").toString())
+/** Times the ball model at `input` pixels on `unit` as a set opens it, on the probe frame, and keeps its median run for the phone check. */
+private fun timeBall(context: Context, prefs: Prefs, unit: String, input: Int, frame: FloatArray, warmups: Int = WARMUP_RUNS, runs: Int = TIMED_RUNS): Timed {
+  val (asset, opening) = BallModel.on(context, unit, input)
+  val timed = timeModel(context, Litert.environment(context), asset, opening, frame, warmups, runs)
+  prefs.set(ballRunKey(context, unit, input), timed.summary.getDouble("medianMs").toString())
   return timed
 }
 
-/** The median run of the ball model on `unit`, as the unit check timed it, timed now when it did not; null when it does not run. */
-private fun ballRunMs(context: Context, prefs: Prefs, unit: String): Double? {
-  prefs.get(ballRunKey(context, unit))?.toDoubleOrNull()?.let { return it }
+/** The median run of the ball model at `input` pixels on `unit`, as the unit check timed it, timed now when it did not; null when it does not run. */
+private fun ballRunMs(context: Context, prefs: Prefs, unit: String, input: Int): Double? {
+  prefs.get(ballRunKey(context, unit, input))?.toDoubleOrNull()?.let { return it }
   return runCatching {
-    timeBall(context, prefs, unit, readFrame(context), CHECK_WARMUPS, CHECK_RUNS).summary.getDouble("medianMs")
+    timeBall(context, prefs, unit, input, readFrame(context, input), CHECK_WARMUPS, CHECK_RUNS).summary.getDouble("medianMs")
   }.getOrNull()
 }
 
 
-private fun readFrame(context: Context): FloatArray {
-  val bytes = context.assets.open(FRAME).use { it.readBytes() }
+/** The probe frame of the ball model at `input` pixels, `[1, 3, input, input]` float32. */
+private fun readFrame(context: Context, input: Int): FloatArray {
+  val bytes = context.assets.open("probe/frame-$input.raw").use { it.readBytes() }
   val frame = FloatArray(bytes.size / 4)
   ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(frame)
   return frame
@@ -377,48 +381,49 @@ private fun compare(cpu: FloatArray, tpu: FloatArray): JSONObject {
 }
 
 /**
- * The ball units this phone runs, the fastest first, checked once per `unitScope` on the probe frame: the TPU when the
- * model compiled for it loads and answers within the agreement limit of the CPU's; else the GPU when it does so and runs
- * faster than the CPU; then the CPU. The GPU is tried only without a TPU, which beats it on every phone that has one.
+ * The ball units this phone runs the ball model at `input` pixels on, the fastest first, checked once per `unitScope` on
+ * the probe frame: the TPU when the model compiled for it loads and answers within the agreement limit of the CPU's;
+ * else the GPU when it does so and runs faster than the CPU; then the CPU. The GPU is tried only without a TPU, which
+ * beats it on every phone that has one.
  */
-private fun checkBallUnits(context: Context, prefs: Prefs): Array<String> {
-  val key = "ballUnits3@${unitScope(context)}"
+private fun checkBallUnits(context: Context, prefs: Prefs, input: Int): Array<String> {
+  val key = "ballUnits3@${unitScope(context, input)}"
   prefs.get(key)?.let { return it.split(",").toTypedArray() }
   // For checks over adb: each unit tried, its median run and its distance from the CPU's answer.
   val seen = mutableListOf<String>()
   val units = runCatching {
-    val frame = readFrame(context)
-    val cpu = timeBall(context, prefs, "CPU", frame)
+    val frame = readFrame(context, input)
+    val cpu = timeBall(context, prefs, "CPU", input, frame)
     seen.add("CPU %.1f ms".format(Locale.ROOT, cpu.summary.getDouble("medianMs")))
     val agrees = { unit: String, timed: Timed ->
       val apart = compare(cpu.output, timed.output).getDouble("apartOverScale")
       seen.add("$unit %.1f ms, %.1e apart".format(Locale.ROOT, timed.summary.getDouble("medianMs"), apart))
       apart < AGREEMENT_LIMIT
     }
-    val tpu = if (BuiltinNpuAcceleratorProvider(context).isDeviceSupported()) tryBallUnit(context, prefs, "TPU", frame) else null
+    val tpu = if (BuiltinNpuAcceleratorProvider(context).isDeviceSupported()) tryBallUnit(context, prefs, "TPU", input, frame) else null
     when {
       tpu != null && agrees("TPU", tpu) -> listOf("TPU", "CPU")
       else -> {
-        val gpu = tryBallUnit(context, prefs, "GPU", frame)
+        val gpu = tryBallUnit(context, prefs, "GPU", input, frame)
         val faster = gpu != null && agrees("GPU", gpu) && gpu.summary.getDouble("medianMs") < cpu.summary.getDouble("medianMs")
         if (faster) listOf("GPU", "CPU") else listOf("CPU")
       }
     }
   }.getOrElse { listOf("CPU") }
   prefs.set(key, units.joinToString(","))
-  Log.i("WallballVision", "ball units on ${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}: ${units.joinToString(",")} (${seen.joinToString("; ")})")
+  Log.i("WallballVision", "ball units on ${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL} at $input: ${units.joinToString(",")} (${seen.joinToString("; ")})")
   return units.toTypedArray()
 }
 
 /**
- * Times the ball model on `unit`, or null when it failed. A unit whose try crashed the process takes no try with it, so
- * a try that never came back marks the unit, and later checks skip it.
+ * Times the ball model at `input` pixels on `unit`, or null when it failed. A unit whose try crashed the process takes no
+ * try with it, so a try that never came back marks the unit, and later checks skip it.
  */
-private fun tryBallUnit(context: Context, prefs: Prefs, unit: String, frame: FloatArray): Timed? {
-  val tried = "ballUnitCrashed@${unitScope(context)}@$unit"
+private fun tryBallUnit(context: Context, prefs: Prefs, unit: String, input: Int, frame: FloatArray): Timed? {
+  val tried = "ballUnitCrashed@${unitScope(context, input)}@$unit"
   if (prefs.get(tried) != null) return null
   prefs.setNow(tried, Build.SOC_MODEL)
-  val timed = runCatching { timeBall(context, prefs, unit, frame) }.getOrNull()
+  val timed = runCatching { timeBall(context, prefs, unit, input, frame) }.getOrNull()
   prefs.remove(tried)
   return timed
 }

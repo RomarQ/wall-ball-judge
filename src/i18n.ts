@@ -255,6 +255,10 @@ const en = {
   'settings.judging': 'Judging',
   'settings.ballCheck': 'Check the ball on the target',
   'settings.ballCheckOff': 'Off, the board judges the squat alone.',
+  'settings.ballInput': 'Ball model input',
+  'settings.pixels': (n: number) => `${n} px`,
+  'settings.ballInputHint':
+    'The ball check reads a square of this many pixels around the target, at the scale of the training frames. At 416 it reads more of the frame around the target, and it needs more time for each frame it checks. A change applies at the board’s next start.',
   'settings.models': 'Detection models',
   'settings.modelsAsked': (revision: string) =>
     `This page's address asks for ${revision}, which takes the place of this choice.`,
@@ -520,6 +524,10 @@ const ptPT: Texts = {
   'settings.judging': 'Julgamento',
   'settings.ballCheck': 'Verificar a bola no alvo',
   'settings.ballCheckOff': 'Desligado, o painel julga só o agachamento.',
+  'settings.ballInput': 'Entrada do modelo da bola',
+  'settings.pixels': (n: number) => `${n} px`,
+  'settings.ballInputHint':
+    'A verificação da bola lê um quadrado com este número de píxeis à volta do alvo, à escala das imagens de treino. Com 416 lê mais da imagem à volta do alvo e precisa de mais tempo para cada imagem que verifica. Uma mudança aplica-se no próximo arranque do painel.',
   'settings.models': 'Modelos de deteção',
   'settings.modelsAsked': (revision: string) =>
     `O endereço desta página pede ${revision}, que toma o lugar desta escolha.`,

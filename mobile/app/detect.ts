@@ -1,17 +1,25 @@
 /** The detectors' rows as boxes in frame pixels, read as the PWA's litert-detector.ts reads them. */
 import manifest from '../../models/manifest.json';
-import { cutScale, cutSize, decode, fromArea, IOU_MAX, letterbox, MAX_BOXES, type Box, type Rect } from './core';
+import { ballFileAt, ballInputs, cutScale, cutSize, decode, fromArea, IOU_MAX, letterbox, MAX_BOXES, storedBallInput, type Box, type Rect } from './core';
 
-interface TrainedFile {
+/** A detector as the manifest describes it. */
+export interface TrainedFile {
   input: number;
   classes: string[];
 }
 
 const files = manifest.files as Record<string, TrainedFile>;
 
-/** The ball model the app runs, and the search model, as the manifest describes them. */
-export const BALL_MODEL = files[manifest.ball];
+/** The search model, as the manifest describes it. */
 export const SEARCH_MODEL = files[manifest.finder];
+
+/** The input sizes the app ships a ball model at, in pixels, the smallest first. */
+export const BALL_INPUTS = ballInputs(manifest);
+
+/** The ball model at the input size the settings chose, as the manifest describes it. */
+export function ballModel(): TrainedFile {
+  return files[ballFileAt(manifest, storedBallInput())];
+}
 
 /**
  * Boxes in a `width` by `height` frame from a look's rows: `[4 + classes, count]`, channel first, boxes in the input

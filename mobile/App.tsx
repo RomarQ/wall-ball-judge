@@ -4,6 +4,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { scoreLink, wallballVision, type VideoItem } from 'wallball-vision';
 import { DisplaySender, readyBluetooth } from './app/pair';
 import { storedRequired, storeRequired, Tally } from './app/core';
+import { ballModel, type TrainedFile } from './app/detect';
 import { liveTallyStore, tallySounds } from './app/sound';
 import { BoardScreen, type AutoSet, type BoardSource } from './app/ui/BoardScreen';
 import { DisplayScreen } from './app/ui/DisplayScreen';
@@ -38,7 +39,7 @@ type Screen =
   | { name: 'home' }
   | { name: 'display' }
   | { name: 'sets' }
-  | { name: 'board'; source: BoardSource; open: number };
+  | { name: 'board'; source: BoardSource; open: number; ballModel: TrainedFile };
 
 const recordingOf = (video: VideoItem): BoardSource => ({ kind: 'recording', uri: video.uri, name: video.name, durationMs: video.durationMs });
 
@@ -49,7 +50,7 @@ function Main({ board, auto, display, linkFirst }: { board?: string; auto?: Auto
   // The launch's own board: the launch's auto-start applies to it alone, not to a board opened later.
   const [launched] = useState<Screen | null>(() => {
     const video = board ? wallballVision.videoAt(board) : undefined;
-    return video ? { name: 'board', source: recordingOf(video), open: 0 } : null;
+    return video ? { name: 'board', source: recordingOf(video), open: 0, ballModel: ballModel() } : null;
   });
   const [screen, setScreen] = useState<Screen>(launched ?? (display ? { name: 'display' } : { name: 'home' }));
   // Settings open over the screen below, so a board keeps its picture, its target and its set.
@@ -57,7 +58,10 @@ function Main({ board, auto, display, linkFirst }: { board?: string; auto?: Auto
   const [tally] = useState(() => new Tally(tallySounds, liveTallyStore));
   // The link to a display outlives a board, so the next set goes to the same display.
   const [sender] = useState(() => new DisplaySender({ tally, required: storedRequired, setRequired: storeRequired }));
-  const [ballUnit, setBallUnit] = useState<string | null>(null);
+  const [ballUnits, setBallUnits] = useState<Record<number, string>>({});
+  // A board keeps the size it opened with; the next board takes the size the settings chose, which the check runs ahead for.
+  const ballInput = screen.name === 'board' ? screen.ballModel.input : ballModel().input;
+  const ballUnit = ballUnits[ballInput] ?? null;
 
   useEffect(() => {
     if (!linkFirst) return;
@@ -71,11 +75,13 @@ function Main({ board, auto, display, linkFirst }: { board?: string; auto?: Auto
   }, [linkFirst, sender]);
 
   useEffect(() => {
-    wallballVision.ballUnits().then(
-      (units) => setBallUnit(units[0] ?? 'CPU'),
-      () => setBallUnit('CPU'),
+    if (ballUnit) return;
+    const known = (unit: string) => setBallUnits((units) => ({ ...units, [ballInput]: unit }));
+    wallballVision.ballUnits(ballInput).then(
+      (units) => known(units[0] ?? 'CPU'),
+      () => known('CPU'),
     );
-  }, []);
+  }, [ballInput, ballUnit]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -95,7 +101,7 @@ function Main({ board, auto, display, linkFirst }: { board?: string; auto?: Auto
   const opens = useRef(0);
   const openBoard = (source: BoardSource) => {
     opens.current += 1;
-    setScreen({ name: 'board', source, open: opens.current });
+    setScreen({ name: 'board', source, open: opens.current, ballModel: ballModel() });
   };
   const live = () => openBoard({ kind: 'camera' });
   // Android's picker opens over the screen below, which a cancel leaves as it was.
@@ -116,6 +122,7 @@ function Main({ board, auto, display, linkFirst }: { board?: string; auto?: Auto
             key={screen.open}
             source={screen.source}
             ballUnit={ballUnit}
+            ballModel={screen.ballModel}
             liveTally={tally}
             sender={sender}
             onHome={home}
