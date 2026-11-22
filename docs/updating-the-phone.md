@@ -4,7 +4,7 @@ The runbook for the case where the phone must run what is on this machine right 
 
 ## Which origin the phone is on
 
-An installed app belongs to the origin it was installed from. `http://localhost:8000` over USB, `https://wallballs.hotrunners.fun` and `https://wallballs.app` are three different apps to the phone, each with its own service worker, its own caches and its own home-screen icon. Updating one does nothing to the others.
+An installed app belongs to the origin it was installed from. `http://localhost:8000` over USB and `https://wallballs.app` are two different apps to the phone, each with its own service worker, its own caches and its own home-screen icon. Updating one does nothing to the others.
 
 So decide first which copy is being tested. For a candidate that is not committed, use USB. For anything a person other than you will open, publish it ([pages.md](pages.md)).
 

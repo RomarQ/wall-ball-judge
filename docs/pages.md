@@ -20,8 +20,6 @@ GitHub Pages serves a private repository only on a paid plan, such as GitHub Pro
 4. Once GitHub shows the domain's certificate, tick **Enforce HTTPS**. Every `.app` domain is HTTPS only, so the site does not open before that, which can take up to an hour.
 5. In **Settings → Secrets and variables → Actions → Variables**, set `DEPLOY_PAGES` to `true`. Until then the workflow builds but does not deploy.
 
-## What differs from the home server
+## Caching
 
-- A push to `main` publishes the site. The home server changes only when a build is copied to it.
-- GitHub Pages lets a browser cache every file for 10 minutes and sends no other headers. The app needs none: a phone still checks for a new service worker each time it opens the app.
-- The browser keeps each address's data apart. A phone that used `wallballs.hotrunners.fun` installs the app again at `wallballs.app` and checks the device again, and its saved sets and settings stay with the old address.
+GitHub Pages lets a browser cache every file for 10 minutes and sends no other headers. The app needs none: a phone still checks for a new service worker each time it opens the app.

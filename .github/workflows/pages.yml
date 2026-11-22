@@ -24,7 +24,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # The site serves the pose models itself, as the home server does, so it runs with no third party.
+      # The site serves the pose models itself, so it runs with no third party.
       - run: npm run models:fetch
       - run: npm run build
         env:
