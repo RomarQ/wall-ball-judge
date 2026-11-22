@@ -7,6 +7,7 @@ import { playDemo } from './demo';
 import { cameraBlocker } from './diagnostics';
 import { $ } from './dom';
 import { onLanguage, t } from './i18n';
+import { LINKS } from './links';
 import { confirmDownload, keepStored, readOfflineState, storedKept, type OfflineState } from './offline';
 import { savedFinder, savedTimes, unitFor, type UnitTimes } from './phone-check';
 import { STEPS, modelFiles, preload } from './preload';
@@ -279,6 +280,9 @@ export function homeShown(shown: boolean): void {
 
 export function bindHome(start: { live: () => void; recording: (file: File) => void }): void {
   demo = playDemo($<SVGSVGElement>('home-demo'));
+  $<HTMLAnchorElement>('link-contact').href = LINKS.contact;
+  $<HTMLAnchorElement>('link-github').href = LINKS.github;
+  $<HTMLAnchorElement>('link-hugging-face').href = LINKS.huggingFace;
 
   const live = $<HTMLButtonElement>('home-live');
   const blocked = cameraBlocker();

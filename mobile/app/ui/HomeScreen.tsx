@@ -3,11 +3,12 @@
  * a set, whether this device runs the app, where to stand the phone, and the note that the video stays on the device.
  */
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useCameraDevices } from 'react-native-vision-camera';
 import { wallballVision, type PhoneCheck } from 'wallball-vision';
 import {
   ballReadiness,
+  LINKS,
   phoneReadiness,
   poseReadiness,
   t,
@@ -17,14 +18,19 @@ import {
 } from '../core';
 import { ballModel } from '../detect';
 import { phoneCheck } from '../phone';
-import { CONDENSED, page, Spec } from './controls';
+import { Button, CONDENSED, page, Spec } from './controls';
 import { Demo } from './Demo';
-import { Film, Gear } from './icons';
+import { Film, Gear, GitHub, HuggingFace, Mail } from './icons';
 import { Plan } from './Plan';
 import { COLOURS, REM } from './theme';
 
 const ANSWER = { good: 'home.yes', slow: 'home.maybe', bad: 'home.no' } as const;
 const WHY = { slow: 'home.readySlow', bad: 'home.readyBad' } as const;
+
+/** Opens a footer link. A phone with no app for the address opens nothing. */
+function open(url: string): void {
+  Linking.openURL(url).catch(() => {});
+}
 
 /** The demo's corner radius, the PWA's 1.1rem. */
 const SCENE_CORNER = 1.1 * REM;
@@ -131,6 +137,11 @@ export function HomeScreen({
 
       <View style={styles.footer}>
         <Text style={styles.private}>{t('home.private')}</Text>
+        <View style={styles.links}>
+          <Button label={t('home.contact')} onPress={() => open(LINKS.contact)} quiet icon={<Mail />} />
+          <Button label={t('home.github')} onPress={() => open(LINKS.github)} quiet icon={<GitHub />} />
+          <Button label={t('home.huggingFace')} onPress={() => open(LINKS.huggingFace)} quiet icon={<HuggingFace />} />
+        </View>
         <Text style={styles.footText}>{t('home.version')(wallballVision.appVersion())}</Text>
       </View>
     </ScrollView>
@@ -219,5 +230,6 @@ const styles = StyleSheet.create({
   noteText: { flex: 1 },
   footer: { marginTop: 2 * REM, paddingTop: REM, borderTopWidth: 1, borderTopColor: COLOURS.rule, gap: 0.4 * REM },
   private: { color: COLOURS.chalk, fontSize: REM, fontWeight: '600' },
+  links: { flexDirection: 'row', flexWrap: 'wrap', gap: 0.5 * REM },
   footText: { color: COLOURS.steel, fontSize: 0.85 * REM },
 });
