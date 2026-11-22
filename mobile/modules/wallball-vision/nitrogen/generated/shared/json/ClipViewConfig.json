@@ -1,0 +1,10 @@
+{
+  "uiViewClassName": "ClipView",
+  "supportsRawText": false,
+  "bubblingEventTypes": {},
+  "directEventTypes": {},
+  "validAttributes": {
+    "vision": true,
+    "hybridRef": true
+  }
+}

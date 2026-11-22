@@ -1,0 +1,40 @@
+{
+  "name": "wallball-vision",
+  "version": "0.0.1",
+  "description": "The camera plugin: pose and ball models on native units",
+  "main": "src/index",
+  "module": "src/index",
+  "types": "src/index.ts",
+  "react-native": "src/index",
+  "source": "src/index",
+  "files": [
+    "src",
+    "react-native.config.js",
+    "lib",
+    "nitrogen",
+    "android/build.gradle",
+    "android/gradle.properties",
+    "android/fix-prefab.gradle",
+    "android/CMakeLists.txt",
+    "android/src",
+    "cpp",
+    "ios/**/*.h",
+    "ios/**/*.m",
+    "ios/**/*.mm",
+    "ios/**/*.cpp",
+    "ios/**/*.swift",
+    "app.plugin.js",
+    "nitro.json",
+    "*.podspec",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-nitro-modules": "*"
+  },
+  "private": true,
+  "scripts": {
+    "specs": "nitrogen"
+  }
+}

@@ -1,0 +1,482 @@
+.home {
+  max-width: 30rem;
+  padding-top: env(safe-area-inset-top);
+}
+.title {
+  margin: 1.25rem 0 1rem;
+}
+.home h1 {
+  margin: 0 0 0.4rem;
+}
+.title p {
+  margin: 0;
+  color: #d9d8d3;
+  font-size: 1.05rem;
+  line-height: 1.5rem;
+}
+.home section + section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+/* The viewfinder: the camera's picture with the board's overlay drawn on it. */
+.viewfinder {
+  margin: 0;
+}
+.scene {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 1.1rem;
+}
+/* As the board's overlay draws: chalk marks, amber for the depth reading, green and red for the verdicts. See src/overlay.ts. */
+.scene text {
+  font-family: var(--condensed);
+  font-stretch: 75%;
+  font-weight: 600;
+}
+.scene .seam {
+  stroke: #2f353a;
+  stroke-width: 2;
+}
+.scene .floor {
+  fill: #1a1d20;
+}
+.scene .floor-edge {
+  stroke: #3d4449;
+  stroke-width: 1.5;
+}
+.scene .plate {
+  fill: #1f2326;
+  stroke: #5a6369;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+.scene .ball circle {
+  fill: #1c1e20;
+  stroke: #4a4f53;
+  stroke-width: 1.5;
+}
+.scene .ball path {
+  fill: none;
+  stroke: #4a4f53;
+  stroke-width: 1.2;
+}
+.scene .athlete {
+  fill: #131517;
+  stroke: #131517;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.scene .athlete .leg {
+  fill: none;
+  stroke-width: 19;
+}
+.scene .athlete .arm {
+  fill: none;
+  stroke-width: 11;
+}
+.scene .target-box {
+  fill: var(--rep);
+  fill-opacity: 0;
+  stroke: var(--chalk);
+  stroke-width: 2.5;
+}
+.scene .handle,
+.scene .target-tag {
+  fill: var(--chalk);
+}
+.scene .target-tag {
+  font-size: 9px;
+}
+/* As the board draws the target that this athlete need not reach. */
+.scene .other-target {
+  opacity: 0.45;
+}
+.scene .other-target .target-box {
+  stroke-width: 1.6;
+}
+.scene .miss-box {
+  fill: var(--norep);
+  fill-opacity: 0.35;
+  stroke: var(--norep);
+  stroke-width: 2.5;
+  opacity: 0;
+}
+.scene .parallel line {
+  stroke: var(--tape);
+  stroke-width: 1.6;
+  stroke-dasharray: 6 4.5;
+}
+.scene .parallel rect {
+  fill: var(--tape);
+}
+.scene .parallel text {
+  fill: #000;
+  font-size: 7.5px;
+}
+.scene .bone {
+  fill: none;
+  stroke: var(--chalk);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+.scene .joint {
+  fill: var(--tape);
+}
+.scene .ball-box rect {
+  fill: none;
+  stroke: var(--chalk);
+  stroke-width: 1.6;
+}
+.scene .ball-box text {
+  fill: var(--chalk);
+  font-size: 7.5px;
+}
+.scene .banner rect {
+  fill: var(--rep);
+}
+.scene .banner.fault rect {
+  fill: var(--norep);
+}
+.scene .banner-title {
+  fill: #000;
+  font-size: 12px;
+  font-weight: 800;
+}
+.scene .banner-detail {
+  fill: #000;
+  font-size: 8px;
+}
+
+/* The two parts of the rule that the drawn reps show. */
+.rule {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: rule;
+  font-family: var(--condensed);
+  font-stretch: 75%;
+  font-weight: 400;
+}
+.rule li {
+  counter-increment: rule;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.rule li::before {
+  content: counter(rule);
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* The start controls sit as a camera's do: the shutter in the middle, the gallery to its left. */
+.controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  margin-top: 1.25rem;
+}
+.control {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  font: inherit;
+  font-family: var(--condensed);
+  font-stretch: 75%;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--chalk);
+  background: none;
+  border: 0;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.control .key {
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  margin-top: 0.9rem;
+  border-radius: 0.9rem;
+  background: var(--graphite);
+  border: 1px solid var(--rule);
+}
+.control .key svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.control .key .solid {
+  fill: currentColor;
+  stroke: none;
+}
+/* The input covers the control, so a tap anywhere on it opens the picker. */
+.control input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.control:focus-within {
+  outline: 2px solid var(--chalk);
+  outline-offset: 4px;
+  border-radius: 0.9rem;
+}
+.shutter .key {
+  width: 5.25rem;
+  height: 5.25rem;
+  margin-top: 0;
+  border-radius: 50%;
+  background: var(--chalk);
+  border: 0;
+  box-shadow:
+    0 0 0 4px var(--black),
+    0 0 0 7px var(--chalk);
+  transition: transform 0.1s;
+}
+.shutter:active .key {
+  transform: scale(0.92);
+}
+.shutter .name {
+  margin-top: 0.4rem;
+  font-weight: 700;
+}
+.shutter:disabled {
+  color: var(--steel);
+  cursor: default;
+}
+.shutter:disabled .key {
+  background: var(--rule);
+  box-shadow:
+    0 0 0 4px var(--black),
+    0 0 0 7px var(--rule);
+}
+.blocked {
+  margin: 1rem 0 0;
+  color: var(--tape);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* This phone: what it can do, read from the browser and from the last check. The list itself is in base.css. */
+.specs .install {
+  padding: 0.3rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  min-height: 2.25rem;
+  color: var(--on-chalk);
+  background: var(--chalk);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.check-phone {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  text-align: left;
+  color: var(--chalk);
+  background: none;
+  border: 1.5px solid var(--chalk);
+  border-radius: 0.75rem;
+  cursor: pointer;
+}
+.check-phone strong {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.check-phone span {
+  color: var(--steel);
+  font-size: 0.9rem;
+}
+.check-phone:active {
+  background: var(--graphite);
+}
+.phone progress {
+  width: 100%;
+  height: 0.4rem;
+  margin-top: 1rem;
+  accent-color: var(--chalk);
+}
+.phone .status {
+  margin: 0.5rem 0 0;
+  color: var(--steel);
+  font-size: 0.9rem;
+}
+.phone .status:empty {
+  display: none;
+}
+.phone .status.failed {
+  color: var(--tape);
+}
+.link {
+  margin-top: 0.75rem;
+  padding: 0;
+  font: inherit;
+  color: var(--chalk);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+/* Where to stand the phone, seen from above. */
+.plan {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+.plan .wall {
+  fill: url(#home-hatch);
+}
+.plan pattern line {
+  stroke: #4a4a4a;
+  stroke-width: 1.5;
+}
+.plan .wall-face {
+  stroke: #8a8a8a;
+  stroke-width: 2;
+}
+.plan .target {
+  fill: var(--chalk);
+}
+.plan .cone {
+  fill: var(--chalk);
+  fill-opacity: 0.06;
+  stroke: var(--chalk);
+  stroke-opacity: 0.3;
+  stroke-dasharray: 3 3;
+}
+.plan .body {
+  fill: #3b4146;
+}
+.plan .head {
+  fill: #5d666c;
+}
+.plan .held {
+  fill: #1c1e20;
+  stroke: #6b7378;
+}
+.plan .phone-spot rect {
+  fill: var(--chalk);
+}
+.plan .phone-spot.bad rect {
+  fill: #6b6b6b;
+}
+.plan .mark circle {
+  fill: var(--rep);
+}
+.plan .mark.bad circle {
+  fill: var(--norep);
+}
+.plan .mark path {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.plan .label {
+  fill: var(--steel);
+  font-family: var(--condensed);
+  font-stretch: 75%;
+  font-size: 11px;
+  font-weight: 600;
+}
+.plan .label.bad {
+  fill: var(--norep);
+}
+.notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+.notes li {
+  display: flex;
+  gap: 0.5rem;
+}
+.notes li::before {
+  content: '•';
+}
+
+.home footer {
+  display: grid;
+  justify-items: start;
+  gap: 0.4rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  color: var(--steel);
+  font-size: 0.85rem;
+}
+.home footer p {
+  margin: 0;
+  line-height: inherit;
+}
+.private {
+  color: var(--chalk);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .home {
+    max-width: 64rem;
+    padding-inline: 2rem;
+    display: grid;
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    column-gap: 4.5rem;
+    align-items: start;
+  }
+  .title {
+    margin-top: 2rem;
+  }
+  .home h1 {
+    font-size: 3.25rem;
+  }
+  .stage {
+    grid-row: 1 / span 3;
+    position: sticky;
+    top: 0;
+    padding-bottom: 1.5rem;
+  }
+  /* The whole stage, controls included, fits the height of a laptop screen. */
+  .scene {
+    width: min(100%, calc((100dvh - 24rem) * 3 / 4));
+    margin-inline: auto;
+  }
+  .home section.phone {
+    margin-top: 1.75rem;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .home footer {
+    grid-column: 2;
+  }
+}

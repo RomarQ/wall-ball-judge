@@ -1,0 +1,7 @@
+dist
+node_modules
+public/models
+models
+fixtures
+package-lock.json
+mobile

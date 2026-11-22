@@ -1,0 +1,26 @@
+node_modules/
+dist/
+dev-dist/
+*.log
+.DS_Store
+.claude/*
+!.claude/skills
+
+# `npm run models:fetch` fills public/models: the pose models from Google, the trained
+# detectors from the Hugging Face Hub; see docs/models.md
+public/models/*.task
+public/models/*.tflite
+public/models/candidates/
+models/*.onnx
+models/*.pt
+
+# Recorded sessions and test frames
+fixtures/*
+!fixtures/README.md
+
+# Local development pages and certificates
+tools/
+
+# The home server's set-up, kept on this machine
+docs/server.md
+deploy/

@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": [],
+  "files": [
+    "src/board.ts",
+    "src/frame-judge.ts",
+    "src/boxes.ts",
+    "src/placement.ts",
+    "src/judge-log.ts",
+    "src/agreement.ts",
+    "src/readiness.ts",
+    "src/scoreboard-wire.ts",
+    "src/set-record.ts",
+    "src/tally.ts"
+  ]
+}

@@ -1,0 +1,172 @@
+/* The settings view: a page of labelled controls, one setting a row. A column, so the title's margin and the first section's add up, as in the Android app. */
+.settings {
+  display: flex;
+  flex-direction: column;
+}
+.settings section {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+.setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3rem;
+}
+.setting select {
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  font: inherit;
+  color: var(--chalk);
+  background: var(--graphite);
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+}
+.setting.range {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 0.25rem;
+  margin-top: 1rem;
+}
+/* The range as the Android app draws it: a thin track, chalk up to a chalk thumb. `--share` is the value's place along it, from 0 to 1. */
+.setting.range input {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 2.75rem;
+  margin: 0;
+  appearance: none;
+  background: none;
+  cursor: pointer;
+}
+.setting.range input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--chalk), var(--chalk)) 0 / calc(0.75rem + (100% - 1.5rem) * var(--share, 0)) 100%
+      no-repeat,
+    var(--rule);
+}
+.setting.range input::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: calc(2px - 0.75rem);
+  border: 0;
+  border-radius: 50%;
+  background: var(--chalk);
+}
+.setting.range input::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule);
+}
+.setting.range input::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--chalk);
+}
+.setting.range input::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--chalk);
+}
+.setting output {
+  font-family: var(--condensed);
+  font-stretch: 75%;
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* The language choices: a pill each, chalk for the chosen one. */
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.choice {
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--steel);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.choice[aria-pressed='true'] {
+  color: var(--on-chalk);
+  background: var(--chalk);
+  border-color: var(--chalk);
+}
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3rem;
+  cursor: pointer;
+}
+.switch span {
+  display: grid;
+  gap: 0.1rem;
+}
+.switch small {
+  color: var(--steel);
+  font-size: 0.9rem;
+}
+/* Drawn as a switch: the setting is on or off, not a choice in a list. */
+.switch input {
+  appearance: none;
+  flex-shrink: 0;
+  position: relative;
+  width: 3.1rem;
+  height: 1.85rem;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--rule);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.switch input::before {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 50%;
+  background: var(--steel);
+  transition: transform 0.15s;
+}
+.switch input:checked {
+  background: var(--chalk);
+}
+.switch input:checked::before {
+  background: var(--black);
+  transform: translateX(1.25rem);
+}
+.switch input:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.hint {
+  margin: 0.6rem 0 0;
+  color: var(--steel);
+  font-size: 0.9rem;
+}
+.hint:empty {
+  display: none;
+}
+.hint.warn {
+  color: var(--tape);
+}
+.settings .say {
+  margin-top: 0.75rem;
+}

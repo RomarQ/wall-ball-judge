@@ -1,0 +1,358 @@
+/*
+ * The Android app's narrowed text: Roboto at three quarters of its width.
+ * Chrome on Android draws `sans-serif-condensed` at full width and ignores
+ * font-stretch on a system face, but a face over the local Roboto lets
+ * font-stretch reach its width axis.
+ */
+@font-face {
+  font-family: 'Phone Condensed';
+  src: local('Roboto Condensed'), local('Roboto');
+  font-weight: 100 900;
+  font-stretch: 75% 100%;
+}
+
+/*
+ * Chalk on black. Colour is the verdict: green only for a counted rep, red
+ * only for a no-rep, amber only for the parallel line and a warning. The rest
+ * is chalk, steel and graphite, so a colour seen from across the gym means
+ * one thing. The overlay and the home view's drawing use the same values;
+ * see src/palette.ts.
+ */
+:root {
+  color-scheme: dark;
+  --black: #000;
+  --graphite: #141618;
+  --graphite-up: #1f2225;
+  --rule: #2b2f33;
+  --steel: #8f969c;
+  --chalk: #f3f2ee;
+  --rep: #3ee281;
+  --norep: #ff5248;
+  --tape: #ffb321;
+  --on-chalk: #000;
+
+  /* The phone's own faces, as the Android app uses them. With no Roboto, font-stretch narrows the system face where it can. */
+  --face: system-ui, sans-serif;
+  --condensed: 'Phone Condensed', system-ui, sans-serif;
+  /* The size a phone's own buttons have: a gym thumb, sometimes chalked, needs it. */
+  --tap: 3rem;
+}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--black);
+  color: var(--chalk);
+  font-family: var(--face);
+  font-size: 1rem;
+  /* The line Android gives one line of Roboto; paragraphs keep 1.45 below. */
+  line-height: 1.36;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+p,
+ul {
+  line-height: 1.45;
+}
+:focus-visible {
+  outline: 2px solid var(--chalk);
+  outline-offset: 3px;
+}
+a {
+  color: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Until src/main.ts writes the page in its language; see the script in index.html. */
+html.translating body {
+  visibility: hidden;
+}
+
+/* The symbols the page draws its icons from. */
+.symbols {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* A class that sets `display` must not show an element the page hides. */
+[hidden] {
+  display: none !important;
+}
+
+/* One view shows at a time; src/views.ts picks it from the address. */
+.view {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+/* The home view paints before the script runs, except at an address that names another view. */
+html:has(#judge:target, #settings:target) #home {
+  display: none;
+}
+
+/* The header of every view but home: the way home, then the view's own tools. */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3.25rem;
+  padding: env(safe-area-inset-top) max(0.75rem, env(safe-area-inset-right)) 0
+    max(0.75rem, env(safe-area-inset-left));
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: var(--tap);
+  padding-right: 0.5rem;
+  font-family: var(--condensed);
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-stretch: 75%;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.brand svg {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+}
+.brand span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bar .tools {
+  margin-left: auto;
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* Buttons. One that starts something is chalk; one beside it is an outline; one that is only a glyph is a square. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--tap);
+  padding: 0 1.125rem;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  color: var(--chalk);
+  background: none;
+  border: 1.5px solid var(--chalk);
+  border-radius: 0.625rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 80ms;
+}
+.button.primary {
+  color: var(--on-chalk);
+  background: var(--chalk);
+}
+.button.quiet {
+  color: var(--chalk);
+  border-color: var(--rule);
+  background: var(--graphite);
+}
+.button:active,
+.icon-button:active {
+  transform: scale(0.97);
+}
+.button:disabled {
+  color: var(--steel);
+  background: var(--graphite);
+  border-color: var(--rule);
+  cursor: default;
+}
+.button svg,
+.icon-button svg {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.button svg .solid,
+.icon-button svg .solid {
+  fill: currentColor;
+  stroke: none;
+}
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  font: inherit;
+  color: var(--chalk);
+  background: var(--graphite);
+  border: 1px solid var(--rule);
+  border-radius: 0.625rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 80ms;
+}
+.icon-button.small {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+/* A text button in the header. */
+.tool {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.8125rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--chalk);
+  text-decoration: none;
+  background: var(--graphite);
+  border: 1px solid var(--rule);
+  border-radius: 0.625rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* A warning across the top of every view. src/desktop-site.ts zooms it to the size the phone gives the app. */
+.desktop-hint {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: calc(0.75rem + env(safe-area-inset-top)) 1rem 0.75rem;
+  color: var(--on-chalk);
+  background: var(--tape);
+}
+.desktop-hint p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+.desktop-hint .button {
+  flex-shrink: 0;
+  color: var(--on-chalk);
+  border-color: var(--on-chalk);
+}
+
+/* The pages of text: home and settings. */
+.page {
+  width: 100%;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0 max(1.1rem, env(safe-area-inset-right)) calc(2rem + env(safe-area-inset-bottom))
+    max(1.1rem, env(safe-area-inset-left));
+}
+.page h1 {
+  margin: 1.25rem 0 0.5rem;
+  font-family: var(--condensed);
+  font-size: 2.75rem;
+  font-stretch: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-wrap: balance;
+}
+.page h1:focus {
+  outline: none;
+}
+.page h2 {
+  margin: 0 0 0.75rem;
+  font-family: var(--condensed);
+  font-size: 1.5rem;
+  font-stretch: 75%;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.quiet {
+  color: var(--steel);
+  font-size: 0.9rem;
+}
+
+/* A list of facts: a label at the left, its value at the right. */
+.specs {
+  margin: 0;
+}
+.specs div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.specs div:first-child {
+  border-top: 1px solid var(--rule);
+}
+.specs dt {
+  color: var(--steel);
+}
+.specs dd {
+  margin: 0;
+  text-align: right;
+}
+.specs dd small {
+  display: block;
+  color: var(--steel);
+  font-size: 0.85rem;
+}
+.specs dd.note {
+  flex-basis: 100%;
+  margin-top: -0.2rem;
+  text-align: left;
+  color: var(--steel);
+  font-size: 0.9rem;
+}
+/* A state's text takes a paragraph's line, as in the Android app. */
+.specs [data-state] {
+  line-height: 1.45;
+}
+/* A state dot: facts about the phone, not verdicts, so a chalk dot for yes, an amber one for a warning, a ring for unknown. */
+.specs [data-state]::before {
+  content: '';
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.45rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--steel);
+  vertical-align: 0.05em;
+}
+.specs [data-state='good']::before {
+  background: var(--chalk);
+  border-color: var(--chalk);
+}
+.specs [data-state='slow']::before,
+.specs [data-state='bad']::before {
+  background: var(--tape);
+  border-color: var(--tape);
+}

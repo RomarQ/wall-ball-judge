@@ -1,0 +1,38 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": [
+    "wallballvision"
+  ],
+  "ios": {
+    "iosModuleName": "WallballVision"
+  },
+  "android": {
+    "androidNamespace": [
+      "wallballvision"
+    ],
+    "androidCxxLibName": "WallballVision"
+  },
+  "autolinking": {
+    "WallballVision": {
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridWallballVision"
+      }
+    },
+    "ClipView": {
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridClipView"
+      }
+    },
+    "ScoreLink": {
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridScoreLink"
+      }
+    }
+  },
+  "ignorePaths": [
+    "**/node_modules"
+  ]
+}
