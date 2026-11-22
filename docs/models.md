@@ -29,7 +29,7 @@ The manifest is the only place the app learns a model's identity, so a model cha
 
 The settings offer the shipped revision and every revision under `offered` in the manifest, each with its two detectors' sizes, checksums, classes and training date. An offered revision loads from its tag on the Hub, `https://huggingface.co/<repo>/resolve/<revision>/<file>`, in every build, `VITE_MODELS=local` included, so its first start needs a network. The service worker keeps its files in the model cache with the shipped ones, and **Check this device** downloads the revision chosen at the time, so a phone that ran the check after the choice judges with it offline.
 
-The choice is stored on the phone and read at the board's next start, which drops the detectors of another revision first. A stored revision that the manifest no longer offers falls back to the shipped one. The board's footer and the settings name the revision in use, and the phone check's result holds for that revision only.
+The choice is stored on the phone and read at the board's next start, which drops the detectors of another revision first. A stored revision that the manifest no longer offers falls back to the shipped one. The settings name the revision in use, and the phone check's result holds for that revision only.
 
 To offer a revision, add its two files' entries under `offered.<revision>.files`, copied from the manifest that shipped it, with its `ball` and `finder` beside them, and check that the Hub's tag still serves files with those checksums. Both files must be LiteRT exports: the app runs no other kind. To withdraw one, remove its entry.
 

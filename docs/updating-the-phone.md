@@ -33,11 +33,11 @@ A new build waits in its service worker until the page can reload without losing
 
 - **In a browser tab:** pull down to reload on the home view. A few seconds later the page reloads once by itself, on the new build.
 - **Installed from the home screen:** close it from the recent-apps list, then open it again. Backgrounding is not enough. On the home view it then reloads once by itself.
-- **When it still runs the old one:** the version in the footer is reported by the worker in control of that page, not by the server, so it is the honest answer. If it will not move, the phone is holding a worker that failed to update. Clear it at `chrome://serviceworker-internals` or, faster, uninstall the app from the home screen and reinstall it.
+- **When it still runs the old one:** the version beside the logo is reported by the worker in control of that page, not by the server, so it is the honest answer. If it will not move, the phone is holding a worker that failed to update. Clear it at `chrome://serviceworker-internals` or, faster, uninstall the app from the home screen and reinstall it.
 
 ## Bump the version, every time
 
-The footer shows the version the worker in control reports, which is the only honest answer to "what is this phone running". That answer is worth nothing if two different builds both call themselves the same thing.
+The version beside the logo is the one the worker in control reports, which is the only honest answer to "what is this phone running". That answer is worth nothing if two different builds both call themselves the same thing.
 
 So raise `version` in [package.json](../package.json) in the same commit as the change. It is injected at build time and the service worker hands it back on request. The Android app's build takes it as the app's version name, which its home screen and settings show, so a change to either app raises it. Any increase does the job. A patch for a fix, a minor for a change to the judging or the board.
 
@@ -55,7 +55,7 @@ After that, the **Ready for offline use** row on the home view reads "Not yet". 
 
 ## Checking what the phone is actually running
 
-The judge board's footer shows the installed version, which comes from the worker rather than the page, so it survives a stale cache. After it comes the revision of the detectors the page runs, such as `models v10`, or the candidate folder that `?models=` names. To read the phone from this machine:
+The version beside the logo comes from the worker rather than the page, so it survives a stale cache. **About**, in the settings, names the revision of the detectors the page runs, such as `v11`, or the candidate folder that `?models=` names. To read the phone from this machine:
 
 ```sh
 adb forward tcp:9222 localabstract:chrome_devtools_remote

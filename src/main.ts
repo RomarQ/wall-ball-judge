@@ -12,6 +12,7 @@ import { bindHome, checkRunning, homeShown } from './home';
 import { translatePage } from './i18n';
 import { $ } from './dom';
 import { bindSettings } from './settings-view';
+import { watchVersion } from './version';
 import { go, watchViews } from './views';
 
 translatePage();
@@ -100,6 +101,10 @@ bindHome({
 });
 bindSettings();
 bindDesktopHint();
+watchVersion((version) => {
+  for (const label of document.querySelectorAll('.bar .version'))
+    label.textContent = version ? `v${version}` : '';
+});
 
 watchViews(async (view, from) => {
   // The settings offer the way back to the board only when they were opened from it, as the Android app's do.

@@ -27,7 +27,7 @@ The app is installable, and the installed app opens full screen from the home sc
 
 For the runbook that puts a build from this machine onto the phone over USB, and what to do when the phone keeps running the old one, see [docs/updating-the-phone.md](updating-the-phone.md).
 
-The service worker precaches the app shell by content hash, so a new build replaces the old one whole. An installed app checks for a new build every time it opens, installs it in the background, and runs it on the next open. The footer of the judge board shows the version the phone runs, whatever the server holds.
+The service worker precaches the app shell by content hash, so a new build replaces the old one whole. An installed app checks for a new build every time it opens and installs it in the background. The page then takes it with one reload, on the home view or the settings, never on the judge board ([updating-the-phone.md](updating-the-phone.md)). The version beside the logo shows the build the phone runs, whatever the server holds.
 
 ## Offline
 

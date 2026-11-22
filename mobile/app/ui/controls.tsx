@@ -1,6 +1,7 @@
 /** The PWA's shared pieces: the header bar, its buttons, and the type of its pages. */
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { wallballVision } from 'wallball-vision';
 import { t } from '../core';
 import { Mark } from './icons';
 import { COLOURS, REM, TAP } from './theme';
@@ -18,6 +19,7 @@ export function Bar({ onHome, children }: { onHome: () => void; children?: React
           Wall Ball Judge
         </Text>
       </Pressable>
+      <Text style={styles.version}>v{wallballVision.appVersion()}</Text>
       <View style={styles.tools}>{children}</View>
     </View>
   );
@@ -140,6 +142,7 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 12 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: TAP, paddingRight: 8, flexShrink: 1 },
   brandText: { color: COLOURS.chalk, fontFamily: CONDENSED, fontSize: 18.5, fontWeight: '800' },
+  version: { flexShrink: 0, color: COLOURS.steel, fontSize: 0.8 * REM, fontVariant: ['tabular-nums'] },
   tools: { marginLeft: 'auto', flexDirection: 'row', gap: 6, flexShrink: 0 },
   tool: {
     minHeight: 44,

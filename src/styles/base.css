@@ -140,6 +140,12 @@ html:has(#judge:target, #settings:target) #home {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.bar .version {
+  flex-shrink: 0;
+  color: var(--steel);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
 .bar .tools {
   margin-left: auto;
   display: flex;
