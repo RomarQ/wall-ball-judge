@@ -10,6 +10,7 @@
  * delegate when the one asked for does not load, and the ball check leaves a
  * GPU that computes other numbers than the CPU for the CPU (see agreement.ts).
  */
+import athleteFrameUrl from './athlete.jpg';
 import { ballModelInUse, config } from './config';
 import type { Detector } from './detector';
 import type { Frame } from './frame';
@@ -44,13 +45,6 @@ const FRAME_WAIT_MS = 100;
 /** The camera's frame size that a session asks for, so a look here costs what a look in a set costs. */
 const FRAME = { width: 1280, height: 720 };
 
-/**
- * A camera frame of an athlete. The pose finds the athlete in the first frame
- * and tracks them in the next ones, as in a set; with no one in the frame it
- * runs its person search on every frame, which costs another figure.
- */
-const ATHLETE_FRAME = 'check/athlete.jpg';
-
 function ballFrame(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = FRAME.width;
@@ -66,9 +60,14 @@ function ballFrame(): HTMLCanvasElement {
   return canvas;
 }
 
+/**
+ * A camera frame of an athlete, at the portrait frame size a phone's camera gives. The pose finds the athlete in the
+ * first frame and tracks them in the next ones, as in a set; with no one in the frame it runs its person search on
+ * every frame, which costs another figure.
+ */
 async function athleteFrame(): Promise<HTMLImageElement | null> {
   const image = new Image();
-  image.src = new URL(import.meta.env.BASE_URL + ATHLETE_FRAME, document.baseURI).href;
+  image.src = athleteFrameUrl;
   try {
     await image.decode();
     return image;
