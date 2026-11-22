@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The PWA's icon (public/icons/icon.svg): its 34-unit square fills the adaptive icon's visible 72 of 108 dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="51"
+    android:viewportHeight="51">
+    <group
+        android:translateX="13.5"
+        android:translateY="13">
+        <path
+            android:pathData="M5.3 2.5h13.4l1.8 18.6a1.4 1.4 0 0 1-1.4 1.4H4.9a1.4 1.4 0 0 1-1.4-1.4z"
+            android:strokeColor="#F3F2EE"
+            android:strokeLineJoin="round"
+            android:strokeWidth="2.1" />
+        <path
+            android:fillColor="#3EE281"
+            android:pathData="M7.4 12.5a4.6 4.6 0 1 0 9.2 0a4.6 4.6 0 1 0 -9.2 0z" />
+    </group>
+</vector>
