@@ -1,6 +1,6 @@
 /**
  * The home screen, laid out as the PWA's home view: the title and the drawn demo with the rule, the controls that start
- * a set, whether this device runs the app, where to stand the phone, and the note that the video stays on the phone.
+ * a set, whether this device runs the app, where to stand the phone, and the note that the video stays on the device.
  */
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
