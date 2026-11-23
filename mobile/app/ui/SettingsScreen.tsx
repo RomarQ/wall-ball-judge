@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: REM, minHeight: 3 * REM },
   switchText: { flex: 1, gap: 2 },
   strong: { color: COLOURS.chalk, fontSize: REM, fontWeight: '700' },
-  small: { color: COLOURS.steel, fontSize: 0.9 * REM },
+  small: { color: COLOURS.steel, fontSize: 0.9 * REM, lineHeight: 1.22 * REM },
   linked: { color: COLOURS.rep },
   range: { marginTop: REM, gap: 4 },
   rangeHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
