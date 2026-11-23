@@ -106,7 +106,7 @@ export function SettingsScreen({
           <View style={styles.switchRow}>
             <View style={styles.switchText}>
               <Text style={styles.strong}>{t('settings.ballCheck')}</Text>
-              <Text style={styles.small}>{t('settings.ballCheckOff')}</Text>
+              <Text style={styles.small}>{t('settings.ballCheckHint')}</Text>
             </View>
             <Switch
               label={t('settings.ballCheck')}
@@ -120,7 +120,7 @@ export function SettingsScreen({
           <View style={styles.switchRow}>
             <View style={styles.switchText}>
               <Text style={styles.strong}>{t('settings.divisionByHit')}</Text>
-              <Text style={styles.small}>{t('settings.divisionByHitOn')}</Text>
+              <Text style={styles.small}>{t('settings.divisionByHitHint')}</Text>
             </View>
             <Switch
               label={t('settings.divisionByHit')}

@@ -267,10 +267,10 @@ const en = {
     }`,
   'settings.judging': 'Judging',
   'settings.ballCheck': 'Check the ball on the target',
-  'settings.ballCheckOff': 'Off, the board judges the squat alone.',
+  'settings.ballCheckHint': 'When off, the board judges the squat alone.',
   'settings.divisionByHit': 'Pick the division from the first hit',
-  'settings.divisionByHitOn':
-    'On, each set’s first throw that hits the men’s or the women’s mark picks the division.',
+  'settings.divisionByHitHint':
+    'When on, each set’s first throw that hits the men’s or the women’s mark picks the division.',
   'settings.ballInput': 'Ball model input',
   'settings.pixels': (n: number) => `${n} px`,
   'settings.ballInputHint':
@@ -551,10 +551,10 @@ const ptPT: Texts = {
     }`,
   'settings.judging': 'Julgamento',
   'settings.ballCheck': 'Verificar a bola no alvo',
-  'settings.ballCheckOff': 'Desligado, o painel julga só o agachamento.',
+  'settings.ballCheckHint': 'Quando desligado, o painel julga só o agachamento.',
   'settings.divisionByHit': 'Escolher a divisão pelo primeiro acerto',
-  'settings.divisionByHitOn':
-    'Ligado, o primeiro lançamento de cada série que acerta na marca dos homens ou das mulheres escolhe a divisão.',
+  'settings.divisionByHitHint':
+    'Quando ligado, o primeiro lançamento de cada série que acerta na marca dos homens ou das mulheres escolhe a divisão.',
   'settings.ballInput': 'Entrada do modelo da bola',
   'settings.pixels': (n: number) => `${n} px`,
   'settings.ballInputHint':
