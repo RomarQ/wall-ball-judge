@@ -2,7 +2,7 @@
 export { TARGETS, type Target, type Verdict } from '../../src/ball';
 export { ballFileAt, ballInputs } from '../../src/ball-model';
 export { CUT_WIDTH, cutScale, cutSize, decode, fromArea, IOU_MAX, letterbox, MAX_BOXES, MIN_SCORE } from '../../src/boxes';
-export { clockText, paceOf, SetClock } from '../../src/clock';
+export { clockText, paceOf, SetClock, STATION_REPS } from '../../src/clock';
 export { sceneAt, STILL_MS, type Division, type Point, type StationScene } from '../../src/demo-scene';
 export { DEFAULTS as DEPTH, LM, type Depth } from '../../src/depth';
 export { Board, type Flash, type SearchOutcome } from '../../src/board';
@@ -79,7 +79,6 @@ export {
 export { ATTACK_MS, FLOOR, SPEECH_RATE, TONES, type Tone } from '../../src/tones';
 export {
   LIT_MS,
-  REP_TARGET,
   Tally,
   TALLY_KEY,
   type LitPart,

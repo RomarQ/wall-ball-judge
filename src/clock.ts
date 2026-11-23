@@ -11,7 +11,6 @@
 export interface ClockJSON {
   startedAt: number | null;
   lastAt: number | null;
-  done: boolean;
 }
 
 export class SetClock {
@@ -19,19 +18,15 @@ export class SetClock {
   /** When the last rep was judged. The clock holds here while it does not run. */
   lastAt: number | null = null;
   running = false;
-  /** The set is complete. */
-  done = false;
 
   reset(): void {
     this.startedAt = null;
     this.lastAt = null;
     this.running = false;
-    this.done = false;
   }
 
   /** A rep that started at `startAt` and was judged at `at`. The first one starts the clock. */
   rep(startAt: number, at: number): void {
-    if (this.done) return;
     this.startedAt ??= startAt;
     this.lastAt = at;
     this.running = true;
@@ -46,22 +41,9 @@ export class SetClock {
     this.rep(at, at);
   }
 
-  /** The set is complete at `at`, the verdict of its last rep. A held clock keeps the end it has. */
-  finish(at: number): void {
-    if (this.startedAt === null || this.done) return;
-    if (this.running) this.lastAt = at;
-    this.running = false;
-    this.done = true;
-  }
-
   /** Nothing watches the set any more, so the clock holds at the last verdict. */
   hold(): void {
     this.running = false;
-  }
-
-  /** The set is not complete after all. The clock holds until the next rep. */
-  reopen(): void {
-    this.done = false;
   }
 
   elapsedMs(now: number): number {
@@ -72,8 +54,8 @@ export class SetClock {
 
   /** `running` stays out: a reloaded board watches nothing until a rep comes. */
   toJSON(): ClockJSON {
-    const { startedAt, lastAt, done } = this;
-    return { startedAt, lastAt, done };
+    const { startedAt, lastAt } = this;
+    return { startedAt, lastAt };
   }
 
   static from(json: (Partial<ClockJSON> & { finishedAt?: number | null }) | null | undefined): SetClock {
@@ -86,7 +68,6 @@ export class SetClock {
     if (end === null) return clock;
     clock.startedAt = json.startedAt;
     clock.lastAt = end;
-    clock.done = json.done === true || finite(json.finishedAt);
     return clock;
   }
 }
@@ -100,18 +81,19 @@ export function clockText(ms: number): string {
 /** The fewest reps a pace is read from: the first few say more about the start than the set. */
 const PACE_MIN_REPS = 3;
 
+/** The reps of a HYROX wall-ball station, which the pace projects to. A set may go on past them. */
+export const STATION_REPS = 100;
+
 /**
  * The set's pace for the station screen: the milliseconds a rep takes, and
- * while the set is open, the time at which `target` reps fall at that pace.
- * Null until a few reps count.
+ * the time at which the set reaches `STATION_REPS` at that pace, until the
+ * count reaches them. Null until a few reps count.
  */
 export function paceOf(
   elapsedMs: number,
   reps: number,
-  target: number,
-  done: boolean,
 ): { msPerRep: number; targetAtMs: number | null } | null {
   if (reps < PACE_MIN_REPS || elapsedMs <= 0) return null;
   const msPerRep = elapsedMs / reps;
-  return { msPerRep, targetAtMs: done ? null : msPerRep * target };
+  return { msPerRep, targetAtMs: reps < STATION_REPS ? msPerRep * STATION_REPS : null };
 }

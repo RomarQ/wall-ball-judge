@@ -17,13 +17,12 @@ import {
   type Call,
   type DisplayCommand,
   type Flash,
-  REP_TARGET,
   Tally,
   type Score,
   type TallyChange,
   type Target,
 } from './core';
-import { callOnDisplay, repNoRep, repValid, sessionDone, tallySounds } from './sound';
+import { callOnDisplay, repNoRep, repValid, tallySounds } from './sound';
 
 /** The judge's link to a display: none, connecting, connected, or dropped and connecting again. */
 export type LinkState = 'none' | 'linking' | 'linked' | 'lost';
@@ -162,7 +161,6 @@ export class DisplaySender extends Changes {
       moveFaults: tally.moveFaults,
       elapsedMs: tally.clock.elapsedMs(Date.now()),
       running: tally.clock.running,
-      done: tally.clock.done,
       required: required(),
       flash: this.#last.banner,
     };
@@ -224,7 +222,7 @@ export class DisplayMirror extends Changes {
     if (which === '6504') {
       const next = decodeBoard(bytes);
       if (!next) return;
-      const calls = callsFor(this.#last, next, REP_TARGET);
+      const calls = callsFor(this.#last, next);
       this.#last = next;
       this.full = true;
       this.#draw(next.count, next.targetFaults, next.moveFaults, next);
@@ -232,7 +230,7 @@ export class DisplayMirror extends Changes {
       this.#call(calls);
     } else if (which === '6503' && !this.full && bytes.length >= 4) {
       const score = { count: bytes[0] | (bytes[1] << 8), noRep: bytes[2] | (bytes[3] << 8) };
-      const calls = scoreCalls(this.#lastScore, score, REP_TARGET);
+      const calls = scoreCalls(this.#lastScore, score);
       this.#lastScore = score;
       this.#draw(score.count, 0, score.noRep, null);
       if (calls.length > 0) this.tally.lit.set(calls[0].kind === 'noRep' ? 'moveFault' : 'count', { at: Date.now(), good: calls[0].kind !== 'noRep' });
@@ -258,7 +256,6 @@ export class DisplayMirror extends Changes {
     clock.startedAt = now - board.elapsedMs;
     clock.lastAt = now;
     clock.running = board.running;
-    clock.done = board.done;
   }
 
   /** Lights what the change numbered `board.seq` lit, and shows its banner. */
@@ -276,8 +273,7 @@ export class DisplayMirror extends Changes {
     for (const call of calls) {
       console.log(`CALL ${JSON.stringify(call)}`);
       if (call.kind === 'rep') repValid(call.count);
-      else if (call.kind === 'noRep') repNoRep();
-      else sessionDone();
+      else repNoRep();
     }
   }
 }

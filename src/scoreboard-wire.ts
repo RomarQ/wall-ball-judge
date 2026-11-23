@@ -55,7 +55,6 @@ export interface BoardState {
   /** The set clock's reading when written. A display runs it on from there while `running`. */
   elapsedMs: number;
   running: boolean;
-  done: boolean;
   /** The target the athlete must reach, or null until the set's first hit picks it. */
   required: Target | null;
   /** The banner of the change numbered `seq`. */
@@ -68,7 +67,8 @@ const BOARD_VERSION = 1;
 const EVENTS: (BoardEvent | null)[] = [null, 'rep', 'targetFault', 'moveFault'];
 const PLATES: (Target | null)[] = [null, 'upper', 'lower'];
 const REASONS: BoardFlash['reason'][] = [null, 'depth', 'target'];
-const FLAG = { running: 1, done: 2, lower: 4, flash: 8, valid: 16, ballSeen: 32, unpicked: 64 } as const;
+// Bit 2 stays unset: the contract in docs/scoreboard.md reserves it.
+const FLAG = { running: 1, lower: 4, flash: 8, valid: 16, ballSeen: 32, unpicked: 64 } as const;
 /** `maxDepth` crosses in tenths. */
 const DEPTH_SCALE = 10;
 
@@ -79,7 +79,6 @@ export function encodeBoard(state: BoardState): Uint8Array {
   const { flash } = state;
   let flags = 0;
   if (state.running) flags |= FLAG.running;
-  if (state.done) flags |= FLAG.done;
   if (state.required === 'lower') flags |= FLAG.lower;
   if (state.required === null) flags |= FLAG.unpicked;
   if (flash) flags |= FLAG.flash;
@@ -122,7 +121,6 @@ export function decodeBoard(bytes: ArrayLike<number>): BoardState | null {
     moveFaults: view.getUint16(8, true),
     elapsedMs: view.getUint32(10, true),
     running: on(FLAG.running),
-    done: on(FLAG.done),
     required: on(FLAG.unpicked) ? null : on(FLAG.lower) ? 'lower' : 'upper',
     flash: on(FLAG.flash)
       ? {
@@ -135,11 +133,8 @@ export function decodeBoard(bytes: ArrayLike<number>): BoardState | null {
   };
 }
 
-/** What a display plays: a rep's beep and its count spoken, a no-rep's tone, or the end of the set. */
-export type Call = { kind: 'rep'; count: number } | { kind: 'noRep' } | { kind: 'done' };
-
-const repCalls = (count: number, repTarget: number): Call[] =>
-  count === repTarget ? [{ kind: 'rep', count }, { kind: 'done' }] : [{ kind: 'rep', count }];
+/** What a display plays: a rep's beep and its count spoken, or a no-rep's tone. */
+export type Call = { kind: 'rep'; count: number } | { kind: 'noRep' };
 
 /**
  * The calls a display makes when `next` arrives after `last`, the board it
@@ -147,9 +142,9 @@ const repCalls = (count: number, repTarget: number): Call[] =>
  * happened before the display started. A board sent again after a dropped
  * link keeps its number, so nothing is called twice.
  */
-export function callsFor(last: BoardState | null, next: BoardState, repTarget: number): Call[] {
+export function callsFor(last: BoardState | null, next: BoardState): Call[] {
   if (!last || next.seq === last.seq) return [];
-  if (next.event === 'rep') return repCalls(next.count, repTarget);
+  if (next.event === 'rep') return [{ kind: 'rep', count: next.count }];
   if (next.event === 'targetFault' || next.event === 'moveFault') return [{ kind: 'noRep' }];
   return [];
 }
@@ -159,9 +154,9 @@ export function callsFor(last: BoardState | null, next: BoardState, repTarget: n
  * rep, and no-reps that rise are a no-rep. A cleared or corrected count calls
  * nothing, nor does the first score of a link.
  */
-export function scoreCalls(last: Score | null, next: Score, repTarget: number): Call[] {
+export function scoreCalls(last: Score | null, next: Score): Call[] {
   if (!last) return [];
-  if (next.count > last.count) return repCalls(next.count, repTarget);
+  if (next.count > last.count) return [{ kind: 'rep', count: next.count }];
   if (next.noRep > last.noRep) return [{ kind: 'noRep' }];
   return [];
 }

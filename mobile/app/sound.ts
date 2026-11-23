@@ -30,13 +30,8 @@ export function trackingLost(): void {
   play(TONES.trackingLost);
 }
 
-export function sessionDone(): void {
-  if (callsElsewhere) return;
-  play(TONES.done);
-}
-
 /** What a tally plays on this phone. */
-export const tallySounds: TallySounds = { rep: repValid, noRep: repNoRep, done: sessionDone };
+export const tallySounds: TallySounds = { rep: repValid, noRep: repNoRep };
 
 /** Where the live board's tally is kept across starts of the app: the settings, under the PWA's key. */
 export const liveTallyStore: TallyStore = {

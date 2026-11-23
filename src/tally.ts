@@ -7,9 +7,6 @@
 import { counts, type Target, type Verdict } from './ball';
 import { SetClock } from './clock';
 
-/** The count at which the set is done. */
-export const REP_TARGET = 100;
-
 /** How long a part stays lit after its change. */
 export const LIT_MS = 600;
 
@@ -57,11 +54,10 @@ export interface TallyChange {
   cleared: boolean;
 }
 
-/** What a tally plays: a counted rep's call with its count, a no-rep's tone, and the end of the set. */
+/** What a tally plays: a counted rep's call with its count, and a no-rep's tone. */
 export interface TallySounds {
   rep(count: number): void;
   noRep(): void;
-  done(): void;
 }
 
 /** Where a live tally keeps its numbers. Either call may throw, as a browser's storage does while it is blocked. */
@@ -142,10 +138,9 @@ export class Tally {
     this.#targetHit(which, counts(which, required), undefined, null);
   }
 
-  /** Takes back the last rep, as a correction: a set below its last rep is no longer done. */
+  /** Takes back the last rep, as a correction. */
   removeRep(): void {
     this.count = Math.max(0, this.count - 1);
-    if (this.count < REP_TARGET) this.clock.reopen();
     this.#changed({ event: null, plate: null, banner: null, at: Date.now(), startAt: null, cleared: false });
   }
 
@@ -173,10 +168,6 @@ export class Tally {
     const when = this.#mark(times);
     this.count += 1;
     this.sounds.rep(this.count);
-    if (this.count === REP_TARGET) {
-      this.clock.finish(times?.at ?? Date.now());
-      this.sounds.done();
-    }
     this.#light('count', true);
     this.#changed({ event: 'rep', plate, banner, cleared: false, ...when });
   }

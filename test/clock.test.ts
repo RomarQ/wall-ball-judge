@@ -20,28 +20,15 @@ const check = (name: string, actual: unknown, expected: unknown) => {
 }
 
 {
-  const c = new SetClock();
-  c.rep(1000, 2400);
-  c.rep(13000, 15000);
-  c.finish(15000);
-  c.rep(70000, 71000);
-  c.reopen();
-  check('a set reopened by removing a rep holds until the next rep', c.elapsedMs(80000), 14000);
-  c.rep(81000, 82000);
-  check('and the next rep runs it from the first start', c.elapsedMs(83000), 82000);
-}
-
-{
   // The judge walks to the phone and stops it eight seconds after the last throw.
   const c = new SetClock();
   c.rep(1000, 3000);
   c.rep(4000, 6000);
   c.hold();
   check('a stop holds the clock at the last verdict, not at the stop', c.elapsedMs(14000), 5000);
-  // Then the judge corrects the count by hand, up to the target.
+  // Then the judge corrects the count by hand.
   c.tap(20000);
-  c.finish(21000);
-  check('a tap on a held clock corrects the count, not the time', [c.elapsedMs(60000), c.done], [5000, true]);
+  check('a tap on a held clock corrects the count, not the time', c.elapsedMs(60000), 5000);
 }
 
 {
@@ -66,11 +53,7 @@ const check = (name: string, actual: unknown, expected: unknown) => {
   const copy = SetClock.from(JSON.parse(JSON.stringify(c)));
   check('a reload holds a running clock at its last verdict', copy.elapsedMs(60000), 4000);
   const old = SetClock.from({ startedAt: 1000, finishedAt: 15000 });
-  check(
-    'a board saved with finishedAt reads as a complete set',
-    [old.elapsedMs(60000), old.done],
-    [14000, true],
-  );
+  check('a board saved with finishedAt holds at that end', old.elapsedMs(60000), 14000);
   // That board's clock ran on until Reset, so it holds no end to stop at.
   const unended = SetClock.from({ startedAt: 1000, finishedAt: null });
   unended.rep(90000000, 90001000);
@@ -81,7 +64,7 @@ const check = (name: string, actual: unknown, expected: unknown) => {
 check('mm:ss', [clockText(0), clockText(65000), clockText(3599999)], ['00:00', '01:05', '59:59']);
 
 check(
-  'the pace projects the target from the reps so far, and waits for a few',
-  [paceOf(25000, 10, 100, false), paceOf(25000, 10, 100, true), paceOf(5000, 2, 100, false)],
-  [{ msPerRep: 2500, targetAtMs: 250000 }, { msPerRep: 2500, targetAtMs: null }, null],
+  "the pace projects the station's reps until the count reaches them, and waits for a few",
+  [paceOf(25000, 10), paceOf(150000, 100), paceOf(5000, 2)],
+  [{ msPerRep: 2500, targetAtMs: 250000 }, { msPerRep: 1500, targetAtMs: null }, null],
 );

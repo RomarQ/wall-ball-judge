@@ -25,5 +25,4 @@ export const TONES = {
   valid: [sine(0, 880, 120)],
   noRep: [{ atMs: 0, freq: 220, ms: 260, gain: 0.2, wave: 'square' }],
   trackingLost: [sine(0, 330, 90), sine(130, 330, 90)],
-  done: [sine(0, 660, 200), sine(160, 880, 200), sine(320, 1100, 200)],
 } satisfies Record<string, Tone[]>;

@@ -100,7 +100,3 @@ export function repNoRep(): void {
 export function trackingLost(): void {
   play(TONES.trackingLost);
 }
-
-export function sessionDone(): void {
-  play(TONES.done);
-}

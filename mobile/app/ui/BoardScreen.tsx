@@ -23,7 +23,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { ClipView, wallballVision, type PoseFrame } from 'wallball-vision';
 import { PipelineBoard } from '../board';
 import type { TrainedFile } from '../detect';
-import { ballCheckOn, clockText, decimal, FINDER, grabPlate, type NoticeTone, LIT_MS, paceOf, REP_TARGET, t, Tally, type LitPart, type PlateGrab, type Rect, type Target } from '../core';
+import { ballCheckOn, clockText, decimal, FINDER, grabPlate, type NoticeTone, LIT_MS, paceOf, STATION_REPS, t, Tally, type LitPart, type PlateGrab, type Rect, type Target } from '../core';
 import type { DisplaySender } from '../pair';
 import { judgeOptions, judgeRecording } from '../run';
 import { saveSetsOn, SetKeeper } from '../sets';
@@ -607,7 +607,7 @@ function Scoreboard({
   const now = Date.now();
   const lit = (part: LitPart) => tally.litAt(part, now);
   const elapsed = tally.clock.elapsedMs(now);
-  const pace = paceOf(elapsed, tally.count, REP_TARGET, tally.clock.done);
+  const pace = paceOf(elapsed, tally.count);
 
   // Two taps on the button itself, as the PWA asks: no dialog covers the count, and walking away undoes it.
   const askReset = () => {
@@ -682,10 +682,10 @@ function Scoreboard({
       <View style={styles.clockRow}>
         <View style={styles.clocks}>
           <Text style={styles.clockLabel}>{t('board.time')}</Text>
-          <Text style={[styles.clockValue, tally.clock.done && styles.clockDone]}>{clockText(elapsed)}</Text>
+          <Text style={styles.clockValue}>{clockText(elapsed)}</Text>
           {pace ? (
             <Text style={styles.pace}>
-              {t('board.pace')(decimal(pace.msPerRep / 1000, 1), REP_TARGET, pace.targetAtMs === null ? null : clockText(pace.targetAtMs))}
+              {t('board.pace')(decimal(pace.msPerRep / 1000, 1), STATION_REPS, pace.targetAtMs === null ? null : clockText(pace.targetAtMs))}
             </Text>
           ) : null}
         </View>
@@ -842,7 +842,6 @@ const styles = StyleSheet.create({
   clocks: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 10 },
   clockLabel: { color: COLOURS.steel, fontSize: 13 },
   clockValue: { color: COLOURS.chalk, fontFamily: CONDENSED, fontSize: 28, fontWeight: '800', lineHeight: 31 },
-  clockDone: { color: COLOURS.rep },
   pace: { flexBasis: '100%', color: COLOURS.steel, fontSize: 13, lineHeight: 16 },
   reset: {
     width: 136,

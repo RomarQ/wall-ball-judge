@@ -10,7 +10,7 @@
  */
 import * as audio from './audio';
 import { TARGETS, type Target } from './ball';
-import { clockText, paceOf } from './clock';
+import { clockText, paceOf, STATION_REPS } from './clock';
 import { $, setText } from './dom';
 import { decimal, onLanguage, t } from './i18n';
 import { downloadUrl, videoName } from './record';
@@ -18,13 +18,13 @@ import { Session, frameLine, type FrameTick } from './session';
 import { recordVideo } from './settings';
 import { bindTargetDrag, pointOnFrame } from './target-line';
 import { saveLastSet, SetTrace } from './trace';
-import { REP_TARGET, Tally, TALLY_KEY, type TallyChange } from './tally';
+import { Tally, TALLY_KEY, type TallyChange } from './tally';
 import type { Box } from './types';
 
 /** How far from a candidate's centre a tap still picks it, as a share of the frame height. */
 const TAP_REACH = 0.08;
 
-const sounds = { rep: audio.repValid, noRep: audio.repNoRep, done: audio.sessionDone };
+const sounds = { rep: audio.repValid, noRep: audio.repNoRep };
 
 /** The live board's tally, kept in the browser's storage across sets until Reset. */
 const liveTally = () =>
@@ -147,18 +147,17 @@ function renderClock(): void {
   const { clock } = tally;
   const elapsed = clock.elapsedMs(Date.now());
   setText('timer', clockText(elapsed));
-  const pace = paceOf(elapsed, tally.count, REP_TARGET, clock.done);
+  const pace = paceOf(elapsed, tally.count);
   setText(
     'pace',
     pace
       ? t('board.pace')(
           decimal(pace.msPerRep / 1000, 1),
-          REP_TARGET,
+          STATION_REPS,
           pace.targetAtMs === null ? null : clockText(pace.targetAtMs),
         )
       : '',
   );
-  $('clocks').classList.toggle('done', clock.done);
 }
 
 function render(): void {

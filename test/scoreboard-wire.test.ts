@@ -14,8 +14,6 @@ import {
   type BoardState,
 } from '../src/scoreboard-wire';
 
-const REP_TARGET = 100;
-
 const board = (change: Partial<BoardState> = {}): BoardState => ({
   seq: 7,
   event: 'targetFault',
@@ -25,7 +23,6 @@ const board = (change: Partial<BoardState> = {}): BoardState => ({
   moveFaults: 1,
   elapsedMs: 70_000,
   running: true,
-  done: false,
   required: 'lower',
   flash: { valid: false, reason: 'target', ballSeen: true, maxDepth: -12.3 },
   ...change,
@@ -45,11 +42,10 @@ const LAYOUTS: [BoardState, number[]][] = [
       moveFaults: 0,
       elapsedMs: 95_000,
       running: false,
-      done: true,
       required: 'upper',
       flash: { valid: true, reason: null, ballSeen: true, maxDepth: 25 },
     }),
-    [1, 8, 1, 1, 100, 0, 0, 0, 0, 0, 24, 115, 1, 0, 58, 0, 250, 0],
+    [1, 8, 1, 1, 100, 0, 0, 0, 0, 0, 24, 115, 1, 0, 56, 0, 250, 0],
   ],
   [
     board({
@@ -108,31 +104,25 @@ it('reads nothing from a board of another version', () => {
 });
 
 it('calls nothing for the first board a display receives, whose change came before it', () => {
-  expect(callsFor(null, board({ event: 'rep', seq: 9 }), REP_TARGET)).toEqual([]);
+  expect(callsFor(null, board({ event: 'rep', seq: 9 }))).toEqual([]);
 });
 
 it('calls nothing for a board whose change it has seen', () => {
-  expect(callsFor(board({ seq: 9 }), board({ seq: 9, count: 0, targetFaults: 0 }), REP_TARGET)).toEqual([]);
-});
-
-it('calls the last rep of the set and then the end', () => {
-  expect(
-    callsFor(board({ seq: 9 }), board({ seq: 10, event: 'rep', count: REP_TARGET }), REP_TARGET),
-  ).toEqual([{ kind: 'rep', count: REP_TARGET }, { kind: 'done' }]);
+  expect(callsFor(board({ seq: 9 }), board({ seq: 9, count: 0, targetFaults: 0 }))).toEqual([]);
 });
 
 it('calls a no-rep of either kind with the no-rep tone', () => {
   expect([
-    callsFor(board({ seq: 255 }), board({ seq: 0, event: 'moveFault' }), REP_TARGET),
-    callsFor(board({ seq: 3 }), board({ seq: 4, event: 'targetFault' }), REP_TARGET),
+    callsFor(board({ seq: 255 }), board({ seq: 0, event: 'moveFault' })),
+    callsFor(board({ seq: 3 }), board({ seq: 4, event: 'targetFault' })),
   ]).toEqual([[{ kind: 'noRep' }], [{ kind: 'noRep' }]]);
 });
 
 it('calls a judge that writes the score alone from its counts, and not its corrections', () => {
   const last = { count: 4, noRep: 1 };
-  expect(scoreCalls(last, { count: 5, noRep: 1 }, REP_TARGET)).toEqual([{ kind: 'rep', count: 5 }]);
-  expect(scoreCalls(last, { count: 4, noRep: 2 }, REP_TARGET)).toEqual([{ kind: 'noRep' }]);
-  expect(scoreCalls(last, { count: 0, noRep: 0 }, REP_TARGET)).toEqual([]);
+  expect(scoreCalls(last, { count: 5, noRep: 1 })).toEqual([{ kind: 'rep', count: 5 }]);
+  expect(scoreCalls(last, { count: 4, noRep: 2 })).toEqual([{ kind: 'noRep' }]);
+  expect(scoreCalls(last, { count: 0, noRep: 0 })).toEqual([]);
 });
 
 it('sends each command as the contract gives it, and reads it back as the same command', () => {

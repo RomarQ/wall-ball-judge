@@ -5,7 +5,7 @@
  */
 import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { clockText, decimal, flashText, LIT_MS, paceOf, REP_TARGET, t, type LitPart, type Target } from '../core';
+import { clockText, decimal, flashText, LIT_MS, paceOf, STATION_REPS, t, type LitPart, type Target } from '../core';
 import { DisplayMirror, readyBluetooth } from '../pair';
 import { CONDENSED } from './controls';
 import { Plate, SquatFault, TargetFault } from './icons';
@@ -60,7 +60,7 @@ export function DisplayScreen({ onLeave }: { onLeave: () => void }): React.JSX.E
   });
 
   const elapsed = tally.clock.elapsedMs(now);
-  const pace = paceOf(elapsed, tally.count, REP_TARGET, tally.clock.done);
+  const pace = paceOf(elapsed, tally.count);
   const status =
     trouble === null
       ? ''
@@ -164,10 +164,10 @@ export function DisplayScreen({ onLeave }: { onLeave: () => void }): React.JSX.E
 
       <View style={styles.clock}>
         <Text style={styles.label}>{t('board.time')}</Text>
-        <Text style={[styles.clockValue, tally.clock.done && styles.clockDone]}>{clockText(elapsed)}</Text>
+        <Text style={styles.clockValue}>{clockText(elapsed)}</Text>
         {pace ? (
           <Text style={styles.pace}>
-            {t('board.pace')(decimal(pace.msPerRep / 1000, 1), REP_TARGET, pace.targetAtMs === null ? null : clockText(pace.targetAtMs))}
+            {t('board.pace')(decimal(pace.msPerRep / 1000, 1), STATION_REPS, pace.targetAtMs === null ? null : clockText(pace.targetAtMs))}
           </Text>
         ) : null}
       </View>
@@ -214,6 +214,5 @@ const styles = StyleSheet.create({
   resetArmedText: { color: COLOURS.black },
   clock: { alignItems: 'center', marginTop: 1.5 * REM },
   clockValue: { color: COLOURS.chalk, fontSize: 64, fontFamily: CONDENSED, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  clockDone: { color: COLOURS.rep },
   pace: { color: COLOURS.steel, fontSize: 15, marginTop: 4 },
 });
