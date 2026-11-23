@@ -16,8 +16,8 @@ import type { Rect } from './reach';
 import type { Box, Landmark, Point } from './types';
 
 /**
- * The bones of the legs in MediaPipe's pose, in its order: hips 23 and 24, knees 25 and 26, ankles 27 and 28, heels
- * 29 and 30, toes 31 and 32. The judge reads the hips and knees, and the face and arms only clutter the picture.
+ * The bones of the legs in MediaPipe's pose, in its order: hips 23 and 24, knees 25 and 26, ankles 27 and 28. The
+ * judge reads the hips and knees, and the face, arms and feet only clutter the picture.
  */
 const LEG_BONES: [number, number][] = [
   [23, 24],
@@ -25,12 +25,6 @@ const LEG_BONES: [number, number][] = [
   [24, 26],
   [25, 27],
   [26, 28],
-  [27, 29],
-  [28, 30],
-  [29, 31],
-  [30, 32],
-  [27, 31],
-  [28, 32],
 ];
 
 /** The points of the depth reading, which take the parallel line's amber. */

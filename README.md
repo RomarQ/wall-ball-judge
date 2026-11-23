@@ -4,7 +4,7 @@ Wall Ball Judge judges wall balls with your device's camera. It counts a rep whe
 
 Try the app at [wallballs.app](https://wallballs.app/).
 
-[![The detectors box the targets and the ball during a set](docs/media/example.gif)](https://huggingface.co/RodrigoQuelhas/hyrox-wallballs-detection/blob/main/media/examples.mp4)
+![The judge board counts the reps of a wall-ball set on a phone](docs/media/judge-board.webp)
 
 ## Object-detection model
 
