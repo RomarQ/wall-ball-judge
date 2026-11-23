@@ -189,7 +189,7 @@ export function BoardScreen({
       );
       const took = t('board.searched')(FINDER_UNIT, decimal((wallballVision.nowMs() - started) / 1000, 1));
       if (outcome === 'placed') notice(t('board.placed') + took, t('board.placedBanner'), 'ok', 6000);
-      else if (outcome === 'squat') notice(t('board.atSquat')(n) + took, t('board.atSquatBanner')(n), 'ok', 15000);
+      else if (outcome === 'squat') notice(t('board.atSquat')(n) + took, t('board.atSquatBanner'), 'ok', 15000);
       else if (n === 1) notice(t('board.oneCandidate') + took, t('board.oneCandidateBanner'), 'ok', 15000);
       else if (n > 1) notice(t('board.candidates')(n) + took, t('board.candidatesBanner')(n), 'ok', 15000);
       else notice(t('board.noTarget')(found.best ? decimal(found.best, 2) : null) + took, t('board.noTargetBanner'), 'warn', 20000);

@@ -295,8 +295,7 @@ async function findTarget(): Promise<void> {
       decimal((performance.now() - started) / 1000, 1),
     );
     if (outcome === 'placed') notice(t('board.placed') + took, t('board.placedBanner'), 'ok');
-    else if (outcome === 'squat')
-      notice(t('board.atSquat')(n) + took, t('board.atSquatBanner')(n), 'ok', 15000);
+    else if (outcome === 'squat') notice(t('board.atSquat')(n) + took, t('board.atSquatBanner'), 'ok', 15000);
     else if (n === 1) {
       notice(t('board.oneCandidate') + took, t('board.oneCandidateBanner'), 'ok', 15000);
     } else if (n) {

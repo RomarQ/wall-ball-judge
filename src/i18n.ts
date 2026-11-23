@@ -154,8 +154,7 @@ const en = {
     n === 1
       ? 'one possible target, placed when the athlete squats under it, or tap it'
       : `${n} possible targets, the athlete's first squat picks theirs, or tap one`,
-  'board.atSquatBanner': (n: number) =>
-    n === 1 ? 'Squat under the target, or tap it' : `${n} possible targets: squat under yours, or tap it`,
+  'board.atSquatBanner': 'Squat under your target',
   'board.picked': 'target placed above the athlete, drag a line to adjust',
   'board.noTarget': (best: string | null) =>
     `no target found${best ? ` (best guess ${best})` : ''}, tap it on the screen`,
@@ -436,10 +435,7 @@ const ptPT: Texts = {
     n === 1
       ? 'um alvo possível, colocado quando o atleta agachar por baixo dele, ou toque nele'
       : `${n} alvos possíveis, o primeiro agachamento do atleta escolhe o seu, ou toque num`,
-  'board.atSquatBanner': (n: number) =>
-    n === 1
-      ? 'Agache por baixo do alvo, ou toque nele'
-      : `${n} alvos possíveis: agache por baixo do seu, ou toque nele`,
+  'board.atSquatBanner': 'Agache por baixo do seu alvo',
   'board.picked': 'alvo colocado por cima do atleta, arraste uma linha para ajustar',
   'board.noTarget': (best: string | null) =>
     `nenhum alvo encontrado${best ? ` (melhor palpite ${best})` : ''}, toque nele no ecrã`,
