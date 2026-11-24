@@ -312,7 +312,7 @@ const ptPT: Texts = {
 
   'home.lede': 'Use o seu dispositivo para avaliar os seus wall balls.',
   'home.demoTitle':
-    'Duas estações, vistas de trás. À esquerda, um homem lança para o alvo dos homens; à direita, uma mulher lança para o alvo das mulheres. Uma repetição conta quando a anca desce abaixo dos joelhos e depois a bola acerta no alvo do atleta. Um agachamento acima do paralelo, ou um lançamento de um homem que só chega ao alvo das mulheres, é um no rep.',
+    'Duas estações, vistas de trás. À esquerda, um homem lança para o alvo dos homens; à direita, uma mulher lança para o alvo das mulheres. Uma repetição conta quando a anca desce abaixo dos joelhos e depois a bola acerta no alvo do atleta. Um agachamento acima da paralela, ou um lançamento de um homem que só chega ao alvo das mulheres, é um no rep.',
   'home.ruleDepth': 'Anca abaixo dos joelhos',
   'home.ruleTarget': 'Bola no alvo do atleta',
   'home.recording': 'Rever um vídeo',
@@ -486,7 +486,7 @@ const ptPT: Texts = {
   'overlay.rep': (n: number) => `Repetição ${n}`,
   'overlay.noRep': 'No rep',
   'overlay.depth': (percent: string, below: boolean) =>
-    `Anca ${percent}% ${below ? 'abaixo' : 'acima'} do paralelo`,
+    `Anca ${percent}% ${below ? 'abaixo' : 'acima'} da paralela`,
   'overlay.noHit': 'Falhou o alvo',
   'overlay.hitWomens': 'Acertou no alvo das mulheres',
   'overlay.ballNotSeen': 'Bola não detetada',
