@@ -24,6 +24,10 @@ export const LINE_GAP = 0.02;
 export const MAX_GAP = 0.5;
 /** How tall a plate placed by hand starts, as a share of the frame height: most plates in the clips are 0.06 to 0.08. */
 export const HAND_PLATE = 0.07;
+/** The most plates a target holds: the men's mark and the women's, as the hit rule weighs them. */
+export const MAX_PLATES = 2;
+/** A fingertip on the screen, in points: how near a grab must land to a plate, and the size of a plate's controls. */
+export const FINGERTIP_PT = 24;
 /** How close to the frame's edge a line or the target's spot may go, as a share of the frame. */
 const EDGE = 0.02;
 
@@ -284,32 +288,6 @@ export function placePlates(boxes: Rect[], w: number, h: number): PlacedTarget {
 }
 
 /**
- * The lines with line `which` moved to `y`, a fraction of the frame height.
- * The lower target stays below the upper one, as on the wall, and no further
- * than `MAX_GAP` from it. A line not set yet starts at `defaultUpper`.
- */
-export function moveLine(
-  lines: Record<Target, number | null>,
-  which: Target,
-  y: number,
-  defaultUpper: number,
-): Record<Target, number | null> {
-  const at = Math.min(1 - EDGE, Math.max(EDGE, y));
-  const upper = lines.upper ?? defaultUpper;
-  const lower = lines.lower ?? upper + LINE_GAP;
-  if (which === 'lower') {
-    return { upper: lines.upper, lower: Math.min(Math.max(at, upper + LINE_GAP), upper + MAX_GAP) };
-  }
-  const moved = Math.min(at, lower - LINE_GAP);
-  return { upper: moved, lower: Math.min(lower, moved + MAX_GAP) };
-}
-
-/** The target's spot along the lines at `x`, a fraction of the frame width, kept off the edge. */
-export function spotAt(x: number): number {
-  return Math.min(1 - EDGE, Math.max(EDGE, x));
-}
-
-/**
  * A plate box in pixels of a `w` by `h` frame, centred on a tap at `x` and
  * `y`, fractions of the frame. It keeps the size of the plate placed already,
  * the `required` one of a pair, so the judge sizes it once at a gym; the first
@@ -446,19 +424,38 @@ function linesFromPair(a: Plate, b: Plate, frameWidth: number, frameHeight: numb
 
 /** The frame's height in pixels, the unit the detector's boxes are in. */
 
-/** A grab on plate `index`: `resize` at its lower right corner, `move` anywhere else on or near it. */
+/**
+ * A grab on plate `index`: `resize` at its lower right corner, `remove` on the
+ * button beside its top right corner, `move` anywhere else on or near it.
+ */
 export interface PlateGrab {
   index: number;
-  part: 'move' | 'resize';
+  part: 'move' | 'resize' | 'remove';
+}
+
+/**
+ * The centre of plate `b`'s remove button, a circle `size` across: beside the
+ * top right corner, clear of the plate's name above its top left corner and of
+ * the resize corner below. `b` and `size` are in one unit.
+ */
+export function removeSpot(b: Rect, size: number): { x: number; y: number } {
+  return { x: b.x + b.w + 0.7 * size, y: b.y + 0.5 * size };
 }
 
 /**
  * Which plate a grab at `p` takes, and how, or null for none. Plates, `p` and
- * `reach` are in frame units as the picture shows them. Every plate's corner
- * is tried before any plate's body, so the corner of one plate of a pair wins
- * over the edge of the other.
+ * `reach` are in frame units as the picture shows them; a remove button is
+ * `reach` across, and takes a grab only while `removable`. Every plate's
+ * corner is tried before any remove button, and both before any plate's body,
+ * so a small plate stays sizable and one plate of a pair cannot cover the
+ * other's controls.
  */
-export function grabPlate(plates: Rect[], p: { x: number; y: number }, reach: number): PlateGrab | null {
+export function grabPlate(
+  plates: Rect[],
+  p: { x: number; y: number },
+  reach: number,
+  removable = false,
+): PlateGrab | null {
   const near = (b: Rect, margin: number) =>
     p.x >= b.x - margin && p.x <= b.x + b.w + margin && p.y >= b.y - margin && p.y <= b.y + b.h + margin;
   // A fingertip round the corner would cover a small box, so inside the box
@@ -468,6 +465,12 @@ export function grabPlate(plates: Rect[], p: { x: number; y: number }, reach: nu
     (near(b, 0) ? Math.min(reach, 0.3 * Math.min(b.w, b.h)) : reach);
   const corner = plates.findIndex(onCorner);
   if (corner >= 0) return { index: corner, part: 'resize' };
+  const onRemove = (b: Rect) => {
+    const spot = removeSpot(b, reach);
+    return Math.hypot(p.x - spot.x, p.y - spot.y) <= 0.75 * reach;
+  };
+  const remove = removable ? plates.findIndex(onRemove) : -1;
+  if (remove >= 0) return { index: remove, part: 'remove' };
   const body = plates.findIndex((b) => near(b, reach));
   return body >= 0 ? { index: body, part: 'move' } : null;
 }

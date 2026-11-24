@@ -1,12 +1,12 @@
 /** What the board draws over the picture: the repository's src/overlay-layout.ts, painted in views placed by the frame's fit. */
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { layoutOverlay, t, warningText, type Colour, type NoticeTone, type OverlayLayout } from '../core';
+import { FINGERTIP_PT, layoutOverlay, t, warningText, type Colour, type NoticeTone, type OverlayLayout, type PlateMark } from '../core';
 import type { PipelineBoard } from '../board';
 import type { Fit } from './fit';
 import { COLOURS } from './theme';
 
-/** A line label's height, in view points, from its style below. */
+/** A label's line height, in view points. */
 const LABEL_PT = 18;
 
 const ROLE: Record<Colour, string> = {
@@ -49,10 +49,9 @@ export function Overlay({ fit, board, notice, showPose }: Props): React.JSX.Elem
     depth: showPose ? board.depth : null,
     target: board.ballCheck
       ? {
-          lines: board.judge.target.lines,
           required: board.required,
-          x: board.targetX,
           plates: board.plates,
+          editable: !board.armed,
           ball: board.ball,
           candidates: board.candidates,
           stations: board.stations,
@@ -62,7 +61,7 @@ export function Overlay({ fit, board, notice, showPose }: Props): React.JSX.Elem
     flash: board.flash,
     notice,
     warning: showPose && board.armed && board.warning ? warningText(board.warning) : null,
-    labelHeight: LABEL_PT / fit.scale,
+    controlSize: FINGERTIP_PT / fit.scale,
   });
   const frameWidth = place.size(fit.width);
   const frameHeight = place.size(fit.height);
@@ -76,15 +75,8 @@ export function Overlay({ fit, board, notice, showPose }: Props): React.JSX.Elem
         </>
       ) : null}
       <DepthBar layout={layout} place={place} />
-      {layout.plates.map(({ box, name, active }, i) => (
-        <Labelled key={`p${i}`} place={place} box={box} label={name} colour={COLOURS.tape} dim={!active} />
-      ))}
-      {layout.lines.map(({ y, label, active, above, spot }, i) => (
-        <View key={`l${i}`} style={[StyleSheet.absoluteFill, { opacity: active ? 1 : 0.55 }]}>
-          <View style={[styles.line, { top: place.y(y), left: fit.left, width: frameWidth }]} />
-          <Text style={[styles.label, { top: place.y(y) - (above ? LABEL_PT : 0), left: fit.left + 6 }]}>{label}</Text>
-          {spot !== null ? <View style={[styles.diamond, { left: place.x(spot) - 7, top: place.y(y) - 7 }]} /> : null}
-        </View>
+      {layout.plates.map((plate, i) => (
+        <PlateBox key={`p${i}`} place={place} plate={plate} layout={layout} />
       ))}
       {layout.candidates.map(({ box, label }, i) => (
         <Labelled key={`c${i}`} place={place} box={box} label={label} colour={COLOURS.tape} />
@@ -166,6 +158,29 @@ function DepthBar({ layout, place }: { layout: OverlayLayout; place: Place }) {
   );
 }
 
+/** A plate the judge picked, with its name, and while the target is editable its remove button and resize handle, as the PWA paints them. */
+function PlateBox({ place, plate, layout }: { place: Place; plate: PlateMark; layout: OverlayLayout }) {
+  const { box, name, active, remove, handle } = plate;
+  const side = place.size(layout.handleSide);
+  const r = place.size(layout.removeRadius);
+  const arm = 0.4 * r;
+  return (
+    <>
+      <Labelled place={place} box={box} label={name} colour={COLOURS.tape} dim={!active} />
+      {handle ? (
+        <View style={{ position: 'absolute', left: place.x(handle.x) - side / 2, top: place.y(handle.y) - side / 2, width: side, height: side, backgroundColor: COLOURS.tape }} />
+      ) : null}
+      {remove ? (
+        <>
+          <View style={{ position: 'absolute', left: place.x(remove.x) - r, top: place.y(remove.y) - r, width: 2 * r, height: 2 * r, borderRadius: r, backgroundColor: COLOURS.chalk }} />
+          <Segment from={{ x: place.x(remove.x) - arm, y: place.y(remove.y) - arm }} to={{ x: place.x(remove.x) + arm, y: place.y(remove.y) + arm }} width={2} colour={COLOURS.black} />
+          <Segment from={{ x: place.x(remove.x) + arm, y: place.y(remove.y) - arm }} to={{ x: place.x(remove.x) - arm, y: place.y(remove.y) + arm }} width={2} colour={COLOURS.black} />
+        </>
+      ) : null}
+    </>
+  );
+}
+
 function Labelled({ place, box, label, colour, dim = false }: { place: Place; box: { x: number; y: number; w: number; h: number }; label: string; colour: string; dim?: boolean }) {
   const left = place.x(box.x);
   const top = place.y(box.y);
@@ -179,9 +194,7 @@ function Labelled({ place, box, label, colour, dim = false }: { place: Place; bo
 
 const styles = StyleSheet.create({
   label: { position: 'absolute', color: COLOURS.chalk, fontSize: 13, lineHeight: LABEL_PT, fontWeight: '700', textShadowColor: 'black', textShadowRadius: 3 },
-  line: { position: 'absolute', height: 0, borderTopWidth: 2, borderStyle: 'dashed', borderColor: COLOURS.chalk },
   parallel: { position: 'absolute', height: 0, borderTopWidth: 2, borderStyle: 'dashed', borderColor: COLOURS.tape },
-  diamond: { position: 'absolute', width: 14, height: 14, backgroundColor: COLOURS.chalk, transform: [{ rotate: '45deg' }] },
   banner: { position: 'absolute', alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 4 },
   bannerTitle: { color: COLOURS.black, fontSize: 26, fontWeight: '800', textAlign: 'center' },
   bannerDetail: { color: COLOURS.black, fontSize: 16, fontWeight: '600', textAlign: 'center' },

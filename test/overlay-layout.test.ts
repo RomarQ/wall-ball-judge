@@ -1,6 +1,6 @@
 /**
- * The overlay's layout, which both apps paint: a mirrored picture's marks, where a line's label goes, how the plates
- * are named, and how the search's stations are numbered.
+ * The overlay's layout, which both apps paint: a mirrored picture's marks, when a plate shows its controls, how the
+ * plates are named, and how the search's stations are numbered.
  *
  * Run: npm test
  */
@@ -14,10 +14,9 @@ const H = 720;
 
 function target(change: Partial<TargetFrame> = {}): TargetFrame {
   return {
-    lines: { upper: 0.2, lower: 0.3 },
     required: 'upper',
-    x: 0.25,
     plates: [],
+    editable: false,
     ball: null,
     candidates: [],
     stations: [],
@@ -36,7 +35,7 @@ function frame(change: Partial<OverlayFrame> = {}): OverlayFrame {
     flash: null,
     notice: null,
     warning: null,
-    labelHeight: 30,
+    controlSize: 24,
     ...change,
   };
 }
@@ -58,28 +57,28 @@ it('reflects every mark of a mirrored picture across its width, boxes by their f
   };
   const plate = { x: 0.2, y: 0.1, w: 0.1, h: 0.08 };
   const of = (mirror: boolean) => ({
-    lines: layoutOverlay(frame({ mirror, landmarks, target: target({ ball }) })),
+    marks: layoutOverlay(frame({ mirror, landmarks, target: target({ ball }) })),
     plates: layoutOverlay(frame({ mirror, target: target({ plates: [plate] }) })),
   });
   const plain = of(false);
   const mirrored = of(true);
   const reflect = (b: { x: number; w: number }) => W - (b.x + b.w);
-  expect(mirrored.lines.ball!.box.x).toBeCloseTo(reflect(plain.lines.ball!.box));
+  expect(mirrored.marks.ball!.box.x).toBeCloseTo(reflect(plain.marks.ball!.box));
   expect(mirrored.plates.plates[0].box.x).toBeCloseTo(reflect(plain.plates.plates[0].box));
-  expect(mirrored.lines.lines[0].spot).toBeCloseTo(W - plain.lines.lines[0].spot!);
-  expect(mirrored.lines.joints[0].x).toBeCloseTo(W - plain.lines.joints[0].x);
+  expect(mirrored.marks.joints[0].x).toBeCloseTo(W - plain.marks.joints[0].x);
 });
 
-it("puts the upper line's label above it only when the lines are closer than a label", () => {
-  const above = (lower: number) =>
-    layoutOverlay(frame({ target: target({ lines: { upper: 0.2, lower } }) })).lines.map(
-      (line) => line.above,
-    );
-  // 30 px of label: 0.03 of the height apart leaves 21.6 px, 0.1 leaves 72.
-  expect([above(0.23), above(0.3)]).toEqual([
-    [true, false],
-    [false, false],
-  ]);
+it("shows a plate's remove button and resize handle only while the target is editable, beside the plate as shown", () => {
+  // The grab rule finds the button beside the plate as the picture shows it, so a mirrored picture must draw it there,
+  // and a set under way must offer no button for a stray tap to remove its target with.
+  const plate = { x: 0.2, y: 0.1, w: 0.1, h: 0.08 };
+  const shown = (mirror: boolean, editable: boolean) =>
+    layoutOverlay(frame({ mirror, target: target({ plates: [plate], editable }) })).plates[0];
+  const mirrored = shown(true, true);
+  expect(mirrored.remove!.x).toBeGreaterThan(mirrored.box.x + mirrored.box.w);
+  expect(mirrored.handle).toEqual({ x: mirrored.box.x + mirrored.box.w, y: mirrored.box.y + mirrored.box.h });
+  const running = shown(true, false);
+  expect([running.remove, running.handle]).toEqual([null, null]);
 });
 
 it('names two plates by division, the higher the men’s, and a single disc only the target', () => {

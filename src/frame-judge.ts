@@ -101,6 +101,20 @@ function ballWindow(
   return windowAround((x0 + x1) / 2, (y0 + y1) / 2, width, height, side);
 }
 
+/** The verdict of a rep judged by its squat alone: good when it reached depth. */
+function squatVerdict(event: RepEvent | null): Verdict | null {
+  return event?.type === 'rep'
+    ? {
+        type: 'verdict',
+        rep: event,
+        valid: event.depthPass,
+        reason: event.depthPass ? null : 'depth',
+        target: null,
+        ballSeen: false,
+      }
+    : null;
+}
+
 export class FrameJudge {
   readonly counter: RepCounter;
   readonly presence: Presence;
@@ -110,6 +124,11 @@ export class FrameJudge {
   readonly #ball: BallTuning;
   #pending: BallSighting | null = null;
   #open: LookTicket | null = null;
+  /**
+   * Whether a target was placed when the throw under way began. A throw is judged by the rule in force then: with a
+   * target, at its end by the ball; without one, at its squat's close by the squat alone, and its end calls nothing.
+   */
+  #aimed = false;
 
   constructor(depth: DepthOptions, ball: BallTuning) {
     this.#depth = depth;
@@ -149,31 +168,28 @@ export class FrameJudge {
       tMs,
     });
 
-    if (!input.ballCheck) {
-      const verdict: Verdict | null =
-        event?.type === 'rep'
-          ? {
-              type: 'verdict',
-              rep: event,
-              valid: event.depthPass,
-              reason: event.depthPass ? null : 'depth',
-              target: null,
-              ballSeen: false,
-            }
-          : null;
-      return { depth, present, event, verdict, look: null };
-    }
+    if (!input.ballCheck) return { depth, present, event, verdict: squatVerdict(event), look: null };
     const ball = this.#pending;
     this.#pending = null;
-    this.target.twoMarks = weighedMarks(this.target.lines, input.plates).length > 1;
+    const marks = weighedMarks(this.target.lines, input.plates);
+    this.target.twoMarks = marks.length > 1;
     const look = this.#ask(input);
-    const verdict = this.target.update({
+    const before = { window: this.target.window, aimed: this.#aimed };
+    const thrown = this.target.update({
       tMs,
       state: this.counter.state,
       squat: this.counter.current,
       repEvent: event,
       ball,
     });
+    // With no target placed every throw would end as a target no-rep, so the squat alone is judged. The check still
+    // follows the throws, so a target placed at the bottom of a squat judges the throw that follows it.
+    const placed = marks.length > 0 && input.x !== null;
+    if (this.target.window && this.target.window !== before.window) this.#aimed = placed;
+    let verdict = thrown;
+    if (thrown && thrown.reason !== 'depth' && !before.aimed) verdict = null;
+    const aimed = this.target.window ? this.#aimed : placed;
+    if (!verdict && event?.type === 'rep' && event.depthPass && !aimed) verdict = squatVerdict(event);
     return { depth, present, event, verdict, look };
   }
 
@@ -264,6 +280,7 @@ export class FrameJudge {
 
   /** The verdict on a throw still in the air when judging stops at `tMs`, or null. */
   end(tMs: number): Verdict | null {
-    return this.target.endThrow(tMs);
+    const verdict = this.target.endThrow(tMs);
+    return this.#aimed ? verdict : null;
   }
 }

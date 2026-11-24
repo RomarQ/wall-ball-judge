@@ -23,7 +23,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { ClipView, wallballVision, type PoseFrame } from 'wallball-vision';
 import { PipelineBoard } from '../board';
 import type { TrainedFile } from '../detect';
-import { ballCheckOn, clockText, decimal, FINDER, grabPlate, type NoticeTone, LIT_MS, paceOf, STATION_REPS, t, Tally, type LitPart, type PlateGrab, type Rect, type Target } from '../core';
+import { ballCheckOn, clockText, decimal, FINDER, FINGERTIP_PT, grabPlate, type NoticeTone, LIT_MS, paceOf, STATION_REPS, t, Tally, type LitPart, type PlateGrab, type Rect, type Target } from '../core';
 import type { DisplaySender } from '../pair';
 import { judgeOptions, judgeRecording } from '../run';
 import { saveSetsOn, SetKeeper } from '../sets';
@@ -48,10 +48,6 @@ type Phase = 'searching' | 'choosing' | 'counting' | 'done';
 
 /** How near a candidate a tap must land to pick it, as a share of the frame's height; the PWA board's TAP_REACH. */
 const TAP_REACH = 0.08;
-/** How near a line a grab must land to drag it, as a share of the frame's height, as the PWA's target-line.ts takes it. */
-const LINE_REACH = 0.08;
-/** How near a plate or its corner a grab must land, in screen points: a fingertip, the PWA's GRAB_PX. */
-const GRAB_POINTS = 24;
 /** The smallest a plate may be sized, in frame units, the PWA's MIN_PLATE. */
 const MIN_PLATE = 0.015;
 /** How far a touch may move and still be a tap, in screen points. */
@@ -73,11 +69,11 @@ const FACING_KEY = 'facingMode';
 
 type Facing = 'user' | 'environment';
 
-/** A touch on the picture: a tap so far, a line's drag, or a plate's move or resize, in frame units as shown. */
+/** A touch on the picture: a tap so far, a tap on a plate's remove button, or a plate's move or resize, in frame units as shown. */
 type Drag =
   | { kind: 'tap'; x: number; y: number }
-  | { kind: 'line'; which: Target }
-  | { kind: PlateGrab['part']; index: number; from: { x: number; y: number }; plate: Rect };
+  | { kind: 'remove'; index: number }
+  | { kind: Exclude<PlateGrab['part'], 'remove'>; index: number; from: { x: number; y: number }; plate: Rect };
 
 /** The camera's frames reach the board through these, as a worklet captures module functions and not React state. */
 const cameraHandlers = {
@@ -291,7 +287,7 @@ export function BoardScreen({
     [placedIn, board.width, board.height, source.kind, facing],
   );
 
-  /** A tap at `vx`, `vy` in view points: it picks the nearest candidate, or places a plate where it lands. */
+  /** A tap at `vx`, `vy` in view points: it picks the nearest candidate, or adds a plate where it lands. */
   const tapAt = (vx: number, vy: number) => {
     const at = fromView(fit, vx, vy);
     if (!at || !board.ballCheck) return;
@@ -311,8 +307,7 @@ export function BoardScreen({
         board.placeAt(at.x, at.y);
         notice(t('board.placedByTap'), t('board.placedBanner'), 'ok', 6000);
       }
-    } else if (!board.armed || !board.placed) {
-      board.placeAt(at.x, at.y);
+    } else if ((!board.armed || !board.placed) && board.addAt(at.x, at.y) >= 0) {
       notice(t('board.placedByTap'), t('board.placedBanner'), 'ok', 6000);
     }
     redraw();
@@ -334,43 +329,32 @@ export function BoardScreen({
       if (!board.ballCheck || board.candidates.length || !fit.scale) return;
       const p = shown(vx, vy);
       const plates = board.plates.map(mirror);
-      const grab = grabPlate(plates, p, GRAB_POINTS / (fit.height * fit.scale));
-      if (grab) {
-        drag.current = { kind: grab.part, index: grab.index, from: p, plate: plates[grab.index] };
-        return;
-      }
-      const { lines } = board.judge.target;
-      if (plates.length || !board.placed || lines.upper === null) return;
-      const which: Target = lines.lower !== null && Math.abs(p.y - lines.lower) < Math.abs(p.y - lines.upper) ? 'lower' : 'upper';
-      const line = lines[which];
-      if (line !== null && Math.abs(p.y - line) <= LINE_REACH) drag.current = { kind: 'line', which };
+      const grab = grabPlate(plates, p, FINGERTIP_PT / (fit.height * fit.scale), !board.armed);
+      if (grab?.part === 'remove') drag.current = { kind: 'remove', index: grab.index };
+      else if (grab) drag.current = { kind: grab.part, index: grab.index, from: p, plate: plates[grab.index] };
     },
-    move: (event: GestureResponderEvent, gesture: PanResponderGestureState) => {
+    move: (_event: GestureResponderEvent, gesture: PanResponderGestureState) => {
       const held = drag.current;
-      if (!held || held.kind === 'tap') return;
-      const { locationX: vx, locationY: vy } = event.nativeEvent;
-      if (held.kind === 'line') {
-        const at = fromView(fit, vx, vy);
-        if (at) {
-          board.moveLine(held.which, at.y);
-          board.moveSpot(at.x);
-        }
-      } else {
-        const dx = gesture.dx / (fit.height * fit.scale);
-        const dy = gesture.dy / (fit.height * fit.scale);
-        const { plate } = held;
-        const moved =
-          held.kind === 'move'
-            ? { ...plate, x: plate.x + dx, y: plate.y + dy }
-            : { ...plate, w: Math.max(MIN_PLATE, plate.w + dx), h: Math.max(MIN_PLATE, plate.h + dy) };
-        held.index = board.setPlate(held.index, mirror(moved));
-      }
+      if (!held || held.kind === 'tap' || held.kind === 'remove') return;
+      const dx = gesture.dx / (fit.height * fit.scale);
+      const dy = gesture.dy / (fit.height * fit.scale);
+      const { plate } = held;
+      const moved =
+        held.kind === 'move'
+          ? { ...plate, x: plate.x + dx, y: plate.y + dy }
+          : { ...plate, w: Math.max(MIN_PLATE, plate.w + dx), h: Math.max(MIN_PLATE, plate.h + dy) };
+      held.index = board.setPlate(held.index, mirror(moved));
       redraw();
     },
     release: (gesture: PanResponderGestureState) => {
       const held = drag.current;
       drag.current = null;
-      if (held?.kind === 'tap' && Math.hypot(gesture.dx, gesture.dy) <= TAP_SLOP) tapAt(held.x, held.y);
+      const still = Math.hypot(gesture.dx, gesture.dy) <= TAP_SLOP;
+      if (held?.kind === 'tap' && still) tapAt(held.x, held.y);
+      if (held?.kind === 'remove' && still) {
+        board.removePlate(held.index);
+        redraw();
+      }
     },
   };
   const latestTouch = useRef(touch);
@@ -387,7 +371,8 @@ export function BoardScreen({
   const go = () => {
     board.armed = true;
     setPhase('counting');
-    notice(t('board.counting'), t('board.goBanner'), 'ok', 2000);
+    if (board.ballCheck && !board.placed) notice(t('board.untargeted'), t('board.untargetedBanner'), 'warn', 4000);
+    else notice(t('board.counting'), t('board.goBanner'), 'ok', 2000);
     // Only a live set is kept; a judged video never is.
     if (source.kind === 'camera') keeper.current = new SetKeeper(tally, auto === undefined && saveSetsOn());
     if (source.kind !== 'recording') return;

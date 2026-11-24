@@ -18,10 +18,9 @@ import {
   athleteFrom,
   DEFAULTS as FINDER,
   handPlate,
-  moveLine,
+  MAX_PLATES,
   placeable,
   placePlates,
-  spotAt,
   stationsOf,
   stationUnder,
   sureStations,
@@ -77,7 +76,7 @@ export class Board {
   targetX: number | null = null;
   /**
    * The plates the target was placed from, in frame units, the higher first: two for a wall with the men's and the
-   * women's marks on separate plates, one for a plate holding both or a single disc, none for lines on bare wall.
+   * women's marks on separate plates, one for a plate holding both or a single disc, none before a target is placed.
    * The lines alone do not say which plate the judge chose, as a wall carries marks the set never uses.
    */
   plates: Rect[] = [];
@@ -123,6 +122,11 @@ export class Board {
     return weighedMarks(this.judge.target.lines, this.plates).length === 1;
   }
 
+  /** Whether a target is placed for the ball check to judge. Without one, the board judges the squat alone. */
+  get placed(): boolean {
+    return this.targetX !== null && weighedMarks(this.judge.target.lines, this.plates).length > 0;
+  }
+
   get warning(): Warning | null {
     if (!this.depth.ok) return this.depth.reason === 'no-pose' ? 'no-athlete' : 'hidden';
     return this.judge.presence.tooSmall ? 'too-far' : null;
@@ -165,10 +169,43 @@ export class Board {
     this.#atSquat = null;
   }
 
-  /** Places a plate centred where a tap landed, `x` and `y` fractions of the picture, sized as the plate placed before. */
+  /** Places one plate centred where a tap landed, `x` and `y` fractions of the picture, sized as the plate placed before. */
   placeAt(x: number, y: number): void {
     this.clearCandidates();
     this.placeBoxes([handPlate(x, y, this.width, this.height, this.plates, this.required ?? 'upper')]);
+  }
+
+  /**
+   * Adds a plate where a tap landed, `x` and `y` fractions of the picture, sized as the plate placed before, and
+   * returns its index; or returns -1 when the target already holds `MAX_PLATES`. A second plate takes the first one's
+   * lane: the hit rule judges both marks at one spot across, so a plate beside it would be judged where none is drawn.
+   */
+  addAt(x: number, y: number): number {
+    const h = this.height;
+    if (this.plates.length >= MAX_PLATES || !h || !this.width) return -1;
+    const [first] = this.plates;
+    const across = first ? ((first.x + first.w / 2) * h) / this.width : x;
+    const added = handPlate(across, y, this.width, h, this.plates, this.required ?? 'upper');
+    this.placeBoxes([...this.plates.map((p) => ({ x: p.x * h, y: p.y * h, w: p.w * h, h: p.h * h })), added]);
+    return this.plates.findIndex((p) => p.y === added.y / h);
+  }
+
+  /** Removes plate `index`. The last one to go leaves no target, and the board then judges the squat alone. */
+  removePlate(index: number): void {
+    const h = this.height;
+    if (!this.plates[index]) return;
+    const rest = this.plates.filter((_, i) => i !== index);
+    if (rest.length && h)
+      this.placeBoxes(rest.map((p) => ({ x: p.x * h, y: p.y * h, w: p.w * h, h: p.h * h })));
+    else this.clearTarget();
+  }
+
+  /** Leaves no target placed: no plates, no lines and no spot, so the board judges the squat alone. */
+  clearTarget(): void {
+    this.#atSquat = null;
+    Object.assign(this.judge.target.lines, { upper: null, lower: null });
+    this.targetX = null;
+    this.plates = [];
   }
 
   /** Places the target from plate boxes in pixels: one plate, or a pair holding a mark each. */
@@ -181,31 +218,21 @@ export class Board {
   }
 
   /**
-   * Moves or sizes plate `index` to `plate`, in frame units, and puts the lines where the plates now say. Returns the
-   * plate's index, which changes when it passes the other plate of a pair.
+   * Moves or sizes plate `index` to `plate`, in frame units, and puts the lines where the plates now say. A move
+   * across, which keeps the plate's size, takes the other plate of a pair with it, as the two marks of a rig share a
+   * lane. A resize leaves the other plate alone, though on a mirrored picture it moves this plate's left edge. Returns
+   * the plate's index, which changes when it passes the other plate of the pair.
    */
   setPlate(index: number, plate: Rect): number {
     const h = this.height;
-    if (!this.plates[index] || !h) return index;
-    this.plates[index] = plate;
-    const higher = this.plates.filter((p) => p !== plate && p.y < plate.y).length;
-    this.placeBoxes(this.plates.map((p) => ({ x: p.x * h, y: p.y * h, w: p.w * h, h: p.h * h })));
+    const was = this.plates[index];
+    if (!was || !h) return index;
+    const moved = plate.w === was.w && plate.h === was.h;
+    const across = moved ? plate.x - was.x : 0;
+    const plates = this.plates.map((p, i) => (i === index ? plate : { ...p, x: p.x + across }));
+    const higher = plates.filter((p) => p !== plate && p.y < plate.y).length;
+    this.placeBoxes(plates.map((p) => ({ x: p.x * h, y: p.y * h, w: p.w * h, h: p.h * h })));
     return higher;
-  }
-
-  /** Moves line `which` to `y`, a fraction of the picture's height. The plates go: the line now stands on bare wall. */
-  moveLine(which: Target, y: number): void {
-    this.#atSquat = null;
-    const { lines } = this.judge.target;
-    Object.assign(lines, moveLine(lines, which, y, lines.upper ?? y));
-    this.plates = [];
-  }
-
-  /** Moves the spot along the lines to `x`, a fraction of the picture's width. The plates go, as for a line. */
-  moveSpot(x: number): void {
-    this.#atSquat = null;
-    this.targetX = spotAt(x);
-    this.plates = [];
   }
 
   /** Judges one frame against the board's target. A verdict is counted, and its banner shows. */

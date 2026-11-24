@@ -1,10 +1,10 @@
 /**
- * Checks which touches name a point on the picture.
+ * Checks which touches name a point on the picture, and what a touch on the target takes.
  *
  * Run: npm test
  */
-import { grabPlate } from '../src/placement';
-import { pointOnFrame, tapPlaces } from '../src/target-line';
+import { grabPlate, removeSpot } from '../src/placement';
+import { pointOnFrame, tapPlaces } from '../src/target-drag';
 import { expect, it } from 'vitest';
 // Values are captured as the check is written, the way the old runner compared them at once.
 const check = (name: string, actual: unknown, expected: unknown) => {
@@ -28,12 +28,12 @@ check('the picture takes its own edges', pointOnFrame(portrait, 271, 197), { x: 
 
 // The finder placed the next lane's plate, and the judge taps the athlete's own.
 check(
-  'before the set starts, a tap away from placed lines places the target there',
+  'before the set starts, a tap away from the placed plates adds one there',
   tapPlaces({ armed: false, placed: true, tapToPlace: false }),
   true,
 );
 check(
-  'once the set runs, a stray tap moves nothing, until a search comes back empty',
+  'once the set runs, a stray tap adds nothing, until a search comes back empty',
   [
     tapPlaces({ armed: true, placed: true, tapToPlace: false }),
     tapPlaces({ armed: true, placed: true, tapToPlace: true }),
@@ -64,4 +64,15 @@ check(
   'a grab in the middle of a box smaller than a fingertip moves it',
   grabPlate([{ x: 0.3, y: 0.1, w: 0.03, h: 0.03 }], { x: 0.315, y: 0.115 }, reach),
   { index: 0, part: 'move' },
+);
+check(
+  'a remove button takes a grab only while the target is editable, and the plate moves otherwise',
+  [
+    grabPlate([men], removeSpot(men, reach), reach, true),
+    grabPlate([men], removeSpot(men, reach), reach, false),
+  ],
+  [
+    { index: 0, part: 'remove' },
+    { index: 0, part: 'move' },
+  ],
 );

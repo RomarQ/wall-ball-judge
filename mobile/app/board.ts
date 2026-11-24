@@ -61,14 +61,10 @@ export class PipelineBoard extends Board {
     if (which) storeRequired(which);
   }
 
-  get placed(): boolean {
-    return this.targetX !== null;
-  }
-
   /** What the line under the picture says while judging. */
   get mode(): string {
     if (!this.armed) return t('board.notCounting');
-    if (!this.ballCheck) return t('board.depthOnly');
+    if (!this.ballCheck || !this.placed) return t('board.depthOnly');
     return this.singleTarget ? t('board.judgingTarget') : t('board.judging')(this.required);
   }
 

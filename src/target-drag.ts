@@ -1,24 +1,23 @@
 /**
- * Placing the target on a video viewport: a plate box the judge moves and
- * sizes, or the two lines and the spot along them where the ball hits.
+ * Placing the target on a video viewport: plate boxes the judge adds, moves,
+ * sizes and removes.
  *
  * The canvas ignores pointers, so the drag is bound to the viewport and
  * measured against the video's painted area, which object-fit: contain
- * letterboxes inside it. A grab on a plate moves it, and on its lower right
- * corner sizes it; with no plate, a grab near a line drags the line. A tap
- * elsewhere places a plate where it lands while the judge is still choosing
- * the target; once the set runs, see `tapPlaces`.
+ * letterboxes inside it. A grab on a plate moves it, on its lower right corner
+ * sizes it, and a tap on its remove button removes it while the set has not
+ * started. A tap elsewhere adds a plate where it lands while the judge is
+ * still choosing the target; once the set runs, see `tapPlaces`.
  */
-import type { Target } from './ball';
-import { grabPlate, type PlateGrab } from './placement';
+import { FINGERTIP_PT, grabPlate, type PlateGrab } from './placement';
 import type { Rect } from './reach';
 import type { FrameRect, Session } from './session';
 import type { Point } from './types';
 
-/** How near a grab must land to a plate, or to its corner, to take it, in CSS pixels: about a fingertip. */
-const GRAB_PX = 24;
 /** The smallest a plate may be sized, in frame units. */
 const MIN_PLATE = 0.015;
+/** How far a pointer may travel, in CSS pixels, and still be a tap on a remove button. */
+const TAP_SLOP = 10;
 
 /**
  * Where a pointer landed on the painted frame, in fractions of it, or null
@@ -35,12 +34,12 @@ export function pointOnFrame(rect: FrameRect, clientX: number, clientY: number):
 }
 
 /**
- * True when a tap away from the target places it where it landed.
+ * True when a tap away from the target adds a plate where it landed.
  *
  * Until the set starts the judge is placing the target, and a tap is how a
  * mark the finder did not offer gets placed. Once the set runs, a stray touch
- * on the preview moves nothing, unless the target was never placed here or a
- * search came back with nothing to tap.
+ * on the preview adds nothing, unless no target is placed or a search came
+ * back with nothing to tap.
  */
 export function tapPlaces({
   armed,
@@ -51,8 +50,8 @@ export function tapPlaces({
 }
 
 type Drag =
-  | { id: number; kind: 'line'; which: Target }
-  | { id: number; kind: PlateGrab['part']; index: number; from: Point; plate: Rect };
+  | { id: number; kind: 'remove'; index: number; x: number; y: number }
+  | { id: number; kind: Exclude<PlateGrab['part'], 'remove'>; index: number; from: Point; plate: Rect };
 
 export function bindTargetDrag(viewport: HTMLElement, session: Session): void {
   let drag: Drag | null = null;
@@ -66,14 +65,14 @@ export function bindTargetDrag(viewport: HTMLElement, session: Session): void {
     const r = session.frameRect();
     const at = r ? pointOnFrame(r, e.clientX, e.clientY) : null;
     return r && at
-      ? { at, unit: { x: (at.x * r.width) / r.height, y: at.y }, reach: GRAB_PX / r.height }
+      ? { at, unit: { x: (at.x * r.width) / r.height, y: at.y }, reach: FINGERTIP_PT / r.height }
       : null;
   };
 
   viewport.addEventListener('pointerdown', (e) => {
     // The prompt veils the last frame a stopped set left, and a tap on it is for the prompt.
     if (
-      session.linesLocked ||
+      session.targetLocked ||
       !session.ballCheck ||
       (e.target instanceof Element && e.target.closest('button, .prompt'))
     )
@@ -81,23 +80,17 @@ export function bindTargetDrag(viewport: HTMLElement, session: Session): void {
     const point = pointAt(e);
     if (point === null) return;
     const { at, unit, reach } = point;
-    if (!session.board.plates.length) {
-      const lines = session.target.lines;
-      const upper = lines.upper ?? 0;
-      const lower = lines.lower ?? 1;
-      const which: Target = Math.abs(at.y - upper) <= Math.abs(at.y - lower) ? 'upper' : 'lower';
-      if (Math.abs(at.y - (which === 'upper' ? upper : lower)) <= 0.08) {
-        drag = { id: e.pointerId, kind: 'line', which };
-        viewport.setPointerCapture(e.pointerId);
-        return;
-      }
+    const grab = grabPlate(session.shownPlates(), unit, reach, !session.armed);
+    if (grab?.part === 'remove') {
+      drag = { id: e.pointerId, kind: 'remove', index: grab.index, x: e.clientX, y: e.clientY };
+      viewport.setPointerCapture(e.pointerId);
+      return;
     }
-    const grab = grabPlate(session.shownPlates(), unit, reach);
+    let index = grab?.index ?? -1;
     if (!grab) {
       if (!tapPlaces(session)) return;
-      session.placeAt(at.y, at.x);
+      index = session.addAt(at.y, at.x);
     }
-    const index = grab?.index ?? 0;
     const plate = session.shownPlates()[index];
     if (!plate) return;
     drag = { id: e.pointerId, kind: grab?.part ?? 'move', index, from: unit, plate };
@@ -106,12 +99,13 @@ export function bindTargetDrag(viewport: HTMLElement, session: Session): void {
 
   viewport.addEventListener('pointermove', (e) => {
     if (drag?.id !== e.pointerId) return;
-    const point = pointAt(e);
-    if (point === null) return;
-    if (drag.kind === 'line') {
-      session.setTarget({ which: drag.which, line: point.at.y, x: point.at.x });
+    if (drag.kind === 'remove') {
+      // A finger that slides off the button is not tapping it.
+      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > TAP_SLOP) drag = null;
       return;
     }
+    const point = pointAt(e);
+    if (point === null) return;
     const { plate, from } = drag;
     const [dx, dy] = [point.unit.x - from.x, point.unit.y - from.y];
     const next =
@@ -127,9 +121,8 @@ export function bindTargetDrag(viewport: HTMLElement, session: Session): void {
     if (drag?.id !== e.pointerId) return;
     const ended = drag;
     drag = null;
-    session.placed = true;
-    if (ended.kind === 'line') {
-      session.setTarget({ which: ended.which, line: session.target.lines[ended.which] ?? undefined }, true);
+    if (ended.kind === 'remove') {
+      if (e.type === 'pointerup') session.removePlate(ended.index);
       return;
     }
     const plate = session.shownPlates()[ended.index];

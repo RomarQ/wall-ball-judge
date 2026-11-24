@@ -18,7 +18,7 @@ import { SessionRecorder, type Recording } from './record';
 import { t, warningText } from './i18n';
 import { unitFor } from './phone-check';
 import { ballCheckOn, requiredAtStart, storeRequired } from './settings';
-import { athleteFrom, LINE_GAP, MAX_GAP, searchClip, type Look, type Seen } from './placement';
+import { athleteFrom, searchClip, type Look, type Seen } from './placement';
 import { TargetFinder } from './target-finder';
 import type { LookTicket } from './frame-judge';
 import type { RepTimes } from './tally';
@@ -152,12 +152,6 @@ function assertCameraAvailable(): void {
   }
 }
 
-function stored(key: string): number | null {
-  const raw = localStorage.getItem(key);
-  const value = Number(raw);
-  return raw !== null && Number.isFinite(value) ? value : null;
-}
-
 export class Session {
   video: HTMLVideoElement;
   canvas: HTMLCanvasElement;
@@ -225,12 +219,7 @@ export class Session {
     this.onPicked = onPicked;
     this.record = record;
 
-    const upper = stored('targetUpper') ?? config.ball.defaultLines.upper;
-    const gap = config.ball.defaultLines.lower - config.ball.defaultLines.upper;
-    const lower = stored('targetLower') ?? upper + gap;
-    this.target.lines = { upper, lower: Math.min(Math.max(lower, upper + LINE_GAP), upper + MAX_GAP, 0.98) };
     this.board.setRequired(requiredAtStart());
-    this.board.targetX = stored('targetX');
     this.ballCheck = ballCheckOn();
     this.facingMode = localStorage.getItem('facingMode') === 'environment' ? 'environment' : 'user';
     this.stats = this.#freshStats();
@@ -255,33 +244,11 @@ export class Session {
   }
 
   /**
-   * Moves one target line, `which` of 'upper' or 'lower', and the spot along
-   * it. `line` and `x` are fractions of the painted frame as seen on screen,
-   * so `x` is unmirrored here for the front camera. The lower target stays
-   * below the upper one, as on the wall. Lines set this way stand on bare
-   * wall, so any plate goes: a plate and its lines never disagree.
-   */
-  setTarget(
-    { which = 'upper', line, x = null }: { which?: Target; line?: number; x?: number | null },
-    persist = false,
-  ): void {
-    if (typeof line === 'number' && Number.isFinite(line)) this.board.moveLine(which, line);
-    if (typeof x === 'number' && Number.isFinite(x)) this.board.moveSpot(this.#mirrored() ? 1 - x : x);
-    if (persist) this.#persist();
-    this.#renderIdle();
-  }
-
-  /**
-   * Saves the lines, the spot and the plates for the next session. A plate is
-   * saved in fractions of the picture's width and height, so a picture of
-   * another shape still puts it on the same part of the wall.
+   * Saves the plates for the next session, none when the judge removed them.
+   * A plate is saved in fractions of the picture's width and height, so a
+   * picture of another shape still puts it on the same part of the wall.
    */
   #persist(): void {
-    const { lines } = this.target;
-    const { targetX } = this.board;
-    if (lines.upper !== null) localStorage.setItem('targetUpper', lines.upper.toFixed(3));
-    if (lines.lower !== null) localStorage.setItem('targetLower', lines.lower.toFixed(3));
-    if (targetX !== null) localStorage.setItem('targetX', targetX.toFixed(3));
     const { w, h } = this.#frameSize();
     const across = w ? h / w : 1;
     const plates = this.board.plates.map((p) => ({ x: p.x * across, y: p.y, w: p.w * across, h: p.h }));
@@ -315,9 +282,8 @@ export class Session {
    * and another it knows less well answers the same way every time, and the
    * judge has no way to ask for the other one.
    *
-   * When nothing is found the next tap anywhere on the view places the line,
-   * so a gym the model does not know costs one tap rather than a hunt for a
-   * line that starts at the height the last gym needed.
+   * When nothing is found the next tap anywhere on the view places a plate,
+   * so a gym the model does not know costs one tap.
    */
   async findTargets(): Promise<SearchOutcome> {
     this.finder ??= new TargetFinder();
@@ -412,6 +378,23 @@ export class Session {
     this.#placed();
   }
 
+  /**
+   * Adds a plate centred where a tap landed, `y` a fraction of the picture's
+   * height and `x` of its width as shown, and returns its index; or returns -1
+   * when the target holds two already. See `Board.addAt`.
+   */
+  addAt(y: number, x: number): number {
+    const index = this.board.addAt(this.#mirrored() ? 1 - x : x, y);
+    if (index >= 0) this.#placed();
+    return index;
+  }
+
+  /** Removes plate `index`, and saves what is left. */
+  removePlate(index: number): void {
+    this.board.removePlate(index);
+    this.#placed();
+  }
+
   /** Places the target from one plate box in pixels of the picture, as the judge drew it. */
   placeBox(box: Rect): void {
     this.board.placeBoxes([box]);
@@ -455,26 +438,23 @@ export class Session {
     return plates.map((p) => ({ ...p, x: w / h - (p.x + p.w) }));
   }
 
-  /** Marks the target placed in this session, after the board placed it. */
+  /** Takes the target as the board now holds it: saves it, and draws it while no frame loop does. */
   #placed(persist = true): void {
-    this.placed = true;
     this.tapToPlace = false;
     if (persist) this.#persist();
     this.#renderIdle();
   }
 
   /**
-   * True while a tap on the view should place the target line rather than drag one.
-   *
-   * The lines come back from the last session at the height that gym needed,
-   * so at a new one there is nothing to drag towards. A tap places them until
-   * they have been placed once here, and again whenever a search comes back
-   * without a target to tap.
+   * True while a tap on the running set's view should add a plate: a search
+   * came back without a target to tap, so placing one by hand is all there is.
    */
   tapToPlace = true;
 
-  /** True once the target has been placed in this session, by tap, drag or the finder. */
-  placed = false;
+  /** True while a target is placed, by a tap, the finder, or the last session's plates. */
+  get placed(): boolean {
+    return this.board.placed;
+  }
 
   /**
    * False while the target is being chosen: the picture, the pose and the
@@ -509,14 +489,14 @@ export class Session {
   #loopId = 0;
 
   /**
-   * True while the lines take no taps and no drags.
+   * True while the target takes no taps and no drags.
    *
-   * Pressing find locks them: the plates it draws are what a tap is for, and a
+   * Pressing find locks it: the plates it draws are what a tap is for, and a
    * mark on the wall is small enough that a tap meant for one would otherwise
-   * land on bare picture and move a line instead. A search that finds nothing
-   * unlocks them again, because then placing a line by hand is all there is.
+   * land on bare picture and add a plate instead. A search that finds nothing
+   * unlocks it again, because then placing a plate by hand is all there is.
    */
-  linesLocked = false;
+  targetLocked = false;
 
   /** A banner on the camera view for `holdMs`, in the tone 'ok', 'warn' or 'plain'. */
   showNotice(text: string, holdMs: number, tone: NoticeTone = 'plain'): void {
@@ -708,7 +688,11 @@ export class Session {
     const { w, h } = this.#frameSize();
     this.board.width = w;
     this.board.height = h;
-    this.board.plates = this.#storedPlates();
+    // Through the board, which takes its lines and spot from the plates: a plate set alone is drawn but not judged.
+    const plates = this.#storedPlates();
+    if (plates.length)
+      this.board.placeBoxes(plates.map((p) => ({ x: p.x * h, y: p.y * h, w: p.w * h, h: p.h * h })));
+    else this.board.clearTarget();
     this.board.reset();
     this.board.setRequired(requiredAtStart());
     this.stats = this.#freshStats();
@@ -729,10 +713,9 @@ export class Session {
     if (!this.ballCheck) return null;
     const { board } = this;
     return {
-      lines: this.target.lines,
       required: this.target.required,
-      x: board.targetX,
       plates: board.plates,
+      editable: !this.armed,
       ball: board.ball,
       candidates: board.candidates,
       stations: board.stations,

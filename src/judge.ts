@@ -16,7 +16,7 @@ import { decimal, onLanguage, t } from './i18n';
 import { downloadUrl, videoName } from './record';
 import { Session, frameLine, type FrameTick } from './session';
 import { recordVideo } from './settings';
-import { bindTargetDrag, pointOnFrame } from './target-line';
+import { bindTargetDrag, pointOnFrame } from './target-drag';
 import { saveLastSet, SetTrace } from './trace';
 import { Tally, TALLY_KEY, type TallyChange } from './tally';
 import type { Box } from './types';
@@ -87,8 +87,8 @@ const session = new Session({
     return tally.count;
   },
   onPicked() {
-    // The boxes go with the pick, and with them the reason to lock the lines.
-    session.linesLocked = false;
+    // The boxes go with the pick, and with them the reason to lock the target.
+    session.targetLocked = false;
     notice(t('board.picked'), t('board.placedBanner'), 'ok');
   },
   onTrackingLost: () => audio.trackingLost(),
@@ -252,7 +252,7 @@ function showChips(): void {
 function plainLine(tick: FrameTick): string {
   const what = !session.armed
     ? t('board.notCounting')
-    : tick.mode === 'target'
+    : tick.mode === 'target' && session.placed
       ? session.board.singleTarget
         ? t('board.judgingTarget')
         : t('board.judging')(session.target.required)
@@ -280,14 +280,14 @@ function notice(text: string, banner: string, tone: 'ok' | 'warn' | 'plain' = 'p
 /** Looks for the plate; places it, or leaves numbered boxes for a tap. */
 async function findTarget(): Promise<void> {
   notice(t('board.looking'), t('board.lookingBanner'), 'plain', 30000);
-  // Locked while it looks, so a tap during the search cannot move a line.
-  session.linesLocked = true;
+  // Locked while it looks, so a tap during the search cannot add a plate.
+  session.targetLocked = true;
   const started = performance.now();
   try {
     const outcome = await session.findTargets();
     // One number on the preview for each station, the plates of a station together.
     const n = session.board.stations.length;
-    session.linesLocked = n > 0;
+    session.targetLocked = n > 0;
     showChips();
     const took = t('board.searched')(
       chipOf(session.finder?.detector?.delegate),
@@ -341,8 +341,8 @@ function pickCandidate(e: PointerEvent): void {
     if (away <= reach(c) && away < closest) [index, closest] = [i, away];
   });
   e.stopImmediatePropagation();
-  // The boxes go with the choice, and with them the reason to lock the lines.
-  session.linesLocked = false;
+  // The boxes go with the choice, and with them the reason to lock the target.
+  session.targetLocked = false;
   if (index < 0) {
     // None of them was it, and the tap shows where it is.
     session.clearCandidates();
@@ -382,7 +382,7 @@ async function start(open: () => Promise<void>, source: 'camera' | 'file'): Prom
     renderDivision();
     showCamera(true);
     // Search before offering the view. Until something is found there is
-    // nothing to tap, and a tap would move a line to wherever it landed.
+    // nothing to tap, and a tap would add a plate wherever it landed.
     await findTarget();
   } catch (err) {
     const failure = t('board.failed')(source === 'file', err instanceof Error ? err.message : String(err));
@@ -417,7 +417,9 @@ export async function stopSet(): Promise<void> {
 function arm(): void {
   session.armed = true;
   showCamera(true);
-  notice(t('board.counting'), t('board.goBanner'), 'ok', 2000);
+  if (session.ballCheck && !session.placed)
+    notice(t('board.untargeted'), t('board.untargetedBanner'), 'warn', 4000);
+  else notice(t('board.counting'), t('board.goBanner'), 'ok', 2000);
   void session.play();
 }
 

@@ -1,6 +1,6 @@
 /**
  * Canvas overlay: paints the layout of overlay-layout.ts, the skeleton, the
- * parallel and target lines, the boxes, the verdict banners, and warnings.
+ * parallel line, the boxes and their controls, the verdict banners, and warnings.
  *
  * It paints them as the Android app's Overlay.tsx does, in that app's sizes:
  * those are screen points, which the canvas reaches through the picture's
@@ -17,21 +17,20 @@ import {
   type BoxMark,
   type Colour,
   type DepthBar,
-  type LineMark,
   type NoticeTone,
   type OverlayLayout,
-  type PlateMark,
   type TargetFrame,
   type TextMark,
 } from './overlay-layout';
 import { palette, setFont } from './palette';
-import type { Landmark } from './types';
+import { FINGERTIP_PT } from './placement';
+import type { Landmark, Point } from './types';
 
 /** Under each bone, so the skeleton reads on a white wall as well as on a dark one. */
 const SHADE = 'rgba(0,0,0,0.55)';
 /** The black that text takes on a chalk, amber or green tag. */
 const INK = '#000';
-/** A label's line, in points; the layout places the upper target line's label above the line by it. */
+/** A label's line, in points. */
 const LABEL_PT = 18;
 /** The line Android gives one line of Roboto, as a share of its size. */
 const TEXT_LINE = 1.36;
@@ -192,39 +191,44 @@ function drawBanner(ctx: Ctx, canvas: HTMLCanvasElement, pt: number, { title, de
   ]);
 }
 
-/** The plates the judge picked: a box each, the inactive one dim, with its name above it. */
-function drawPlates(ctx: Ctx, pt: number, plates: PlateMark[]) {
+/**
+ * The plates the judge picked: a box each, the inactive one dim, with its name above it, and while the target is
+ * editable a remove button and a resize handle at full strength.
+ */
+function drawPlates(ctx: Ctx, pt: number, { plates, handleSide, removeRadius }: OverlayLayout) {
   const { tape } = palette();
-  for (const { box, name, active } of plates) {
+  for (const { box, name, active, remove, handle } of plates) {
     ctx.save();
     ctx.globalAlpha = active ? 1 : 0.45;
     labelledBox(ctx, pt, { box, label: name }, tape);
     ctx.restore();
+    if (handle) drawHandle(ctx, handle, handleSide);
+    if (remove) drawRemove(ctx, pt, remove, removeRadius);
   }
 }
 
-/** The target lines on bare wall: the active one bright, the other dim, a diamond on the spot the ball hits. */
-function drawLines(ctx: Ctx, canvas: HTMLCanvasElement, pt: number, lines: LineMark[]) {
-  const { chalk } = palette();
-  for (const { y, label: text, active, above, spot } of lines) {
-    ctx.save();
-    ctx.globalAlpha = active ? 1 : 0.55;
-    dashedLine(ctx, canvas, pt, y, chalk);
-    if (spot !== null) {
-      // The Android app's diamond: a 14-point square turned by an eighth.
-      const r = 7 * Math.SQRT2 * pt;
-      ctx.fillStyle = chalk;
-      ctx.beginPath();
-      ctx.moveTo(spot, y - r);
-      ctx.lineTo(spot + r, y);
-      ctx.lineTo(spot, y + r);
-      ctx.lineTo(spot - r, y);
-      ctx.closePath();
-      ctx.fill();
-    }
-    label(ctx, pt, text, 6 * pt, y - (above ? LABEL_PT * pt : 0), chalk);
-    ctx.restore();
-  }
+/** A plate's resize handle: an amber square on its lower right corner, as the Android app draws it. */
+function drawHandle(ctx: Ctx, { x, y }: Point, side: number) {
+  ctx.fillStyle = palette().tape;
+  ctx.fillRect(x - side / 2, y - side / 2, side, side);
+}
+
+/** A plate's remove button: a black cross on a chalk disc, as the Android app draws it. */
+function drawRemove(ctx: Ctx, pt: number, { x, y }: Point, r: number) {
+  const arm = 0.4 * r;
+  ctx.fillStyle = palette().chalk;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 2 * pt;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x - arm, y - arm);
+  ctx.lineTo(x + arm, y + arm);
+  ctx.moveTo(x + arm, y - arm);
+  ctx.lineTo(x - arm, y + arm);
+  ctx.stroke();
 }
 
 /** The plates the finder saw, numbered, for the judge to tap one. */
@@ -275,14 +279,13 @@ export function render(canvas: HTMLCanvasElement, frame: RenderFrame): void {
     flash: frame.flash ?? null,
     notice: frame.notice ?? null,
     warning: frame.warning ?? null,
-    labelHeight: LABEL_PT * pt,
+    controlSize: FINGERTIP_PT * pt,
   });
 
   drawSkeleton(ctx, canvas, pt, layout);
   if (layout.parallel !== null) drawParallelLine(ctx, canvas, pt, layout.parallel);
   if (layout.depthBar) drawDepthBar(ctx, pt, layout.depthBar);
-  drawPlates(ctx, pt, layout.plates);
-  drawLines(ctx, canvas, pt, layout.lines);
+  drawPlates(ctx, pt, layout);
   drawCandidates(ctx, pt, layout.candidates);
   if (layout.ball) labelledBox(ctx, pt, layout.ball, palette().chalk);
   if (layout.banner) drawBanner(ctx, canvas, pt, layout.banner);

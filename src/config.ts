@@ -184,8 +184,6 @@ export const config = {
    * not change with the distance from the camera. See src/ball.ts.
    */
   ball: {
-    /** Where the two target lines start, as fractions of the frame height, until dragged. */
-    defaultLines: { upper: 0.25, lower: 0.33 },
     minScore: MIN_SCORE,
     /**
      * The ball check looks through a window of the model's input at the scale

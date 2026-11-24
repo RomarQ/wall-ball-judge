@@ -7,7 +7,7 @@ export { sceneAt, STILL_MS, type Division, type Point, type StationScene } from 
 export { DEFAULTS as DEPTH, LM, type Depth } from '../../src/depth';
 export { Board, type Flash, type SearchOutcome } from '../../src/board';
 export { flashText } from '../../src/flash';
-export { layoutOverlay, type Colour, type NoticeTone, type OverlayLayout } from '../../src/overlay-layout';
+export { layoutOverlay, type Colour, type NoticeTone, type OverlayLayout, type PlateMark } from '../../src/overlay-layout';
 export { FrameJudge, type JudgedFrame, type LookTicket } from '../../src/frame-judge';
 export { LINKS } from '../../src/links';
 export { chooseLanguage, decimal, t, warningText } from '../../src/i18n';
@@ -15,6 +15,7 @@ export type { LoggedTarget } from '../../src/judge-log';
 export {
   athleteFrom,
   DEFAULTS as FINDER,
+  FINGERTIP_PT,
   grabPlate,
   holdsTwoMarks,
   readLook,

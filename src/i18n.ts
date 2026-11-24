@@ -155,14 +155,16 @@ const en = {
       ? 'one possible target, placed when the athlete squats under it, or tap it'
       : `${n} possible targets, the athlete’s first squat picks theirs, or tap one`,
   'board.atSquatBanner': 'Squat under your target',
-  'board.picked': 'target placed above the athlete, drag a line to adjust',
+  'board.picked': 'target placed above the athlete, drag it to adjust',
   'board.noTarget': (best: string | null) =>
     `no target found${best ? ` (best guess ${best})` : ''}, tap it on the screen`,
   'board.noTargetBanner': 'No target found: tap it',
   'board.finderUnavailable': (why: string) => `target finder unavailable: ${why}`,
   'board.finderUnavailableBanner': 'Target finder unavailable',
-  'board.placedByTap': 'target placed where you tapped, drag a line to adjust',
-  'board.placedPick': 'target placed, drag a line to adjust',
+  'board.placedByTap': 'target placed where you tapped, drag it to adjust',
+  'board.placedPick': 'target placed, drag it to adjust',
+  'board.untargeted': 'no target placed, judging depth only',
+  'board.untargetedBanner': 'No target: judging depth only',
   'board.failed': (recording: boolean, why: string) =>
     `${recording ? 'the video' : 'the camera'} failed: ${why}`,
 
@@ -199,7 +201,6 @@ const en = {
   'overlay.target': 'Target',
   'overlay.mensTarget': 'Men’s target',
   'overlay.womensTarget': 'Women’s target',
-  'overlay.dragToMove': (name: string) => `${name}, drag to move`,
   'overlay.parallel': 'Parallel',
   'overlay.rep': (n: number) => `Rep ${n}`,
   'overlay.noRep': 'No-rep',
@@ -436,14 +437,16 @@ const ptPT: Texts = {
       ? 'um alvo possível, colocado quando o atleta agachar por baixo dele, ou toque nele'
       : `${n} alvos possíveis, o primeiro agachamento do atleta escolhe o seu, ou toque num`,
   'board.atSquatBanner': 'Agache-se por baixo do seu alvo',
-  'board.picked': 'alvo colocado por cima do atleta, arraste uma linha para ajustar',
+  'board.picked': 'alvo colocado por cima do atleta, arraste-o para ajustar',
   'board.noTarget': (best: string | null) =>
     `nenhum alvo encontrado${best ? ` (melhor palpite ${best})` : ''}, toque nele no ecrã`,
   'board.noTargetBanner': 'Nenhum alvo encontrado: toque nele',
   'board.finderUnavailable': (why: string) => `localizador do alvo indisponível: ${why}`,
   'board.finderUnavailableBanner': 'Localizador do alvo indisponível',
-  'board.placedByTap': 'alvo colocado onde tocou, arraste uma linha para ajustar',
-  'board.placedPick': 'alvo colocado, arraste uma linha para ajustar',
+  'board.placedByTap': 'alvo colocado onde tocou, arraste-o para ajustar',
+  'board.placedPick': 'alvo colocado, arraste-o para ajustar',
+  'board.untargeted': 'nenhum alvo colocado, a avaliar só a profundidade',
+  'board.untargetedBanner': 'Sem alvo: a avaliar só a profundidade',
   'board.failed': (recording: boolean, why: string) => `${recording ? 'o vídeo' : 'a câmara'} falhou: ${why}`,
 
   'session.opening': 'a abrir a câmara…',
@@ -479,7 +482,6 @@ const ptPT: Texts = {
   'overlay.target': 'Alvo',
   'overlay.mensTarget': 'Alvo dos homens',
   'overlay.womensTarget': 'Alvo das mulheres',
-  'overlay.dragToMove': (name: string) => `${name}, arraste para mover`,
   'overlay.parallel': 'Paralela',
   'overlay.rep': (n: number) => `Repetição ${n}`,
   'overlay.noRep': 'No rep',

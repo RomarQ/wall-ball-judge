@@ -1,6 +1,6 @@
 /**
- * What the board's overlay shows over a frame, and where, for both apps: the legs and the depth, the target, the
- * search's plates, the ball, the verdict's banner, a notice and a warning.
+ * What the board's overlay shows over a frame, and where, for both apps: the legs and the depth, the target's plates
+ * and their controls, the search's plates, the ball, the verdict's banner, a notice and a warning.
  *
  * Positions are in frame pixels, already mirrored for a picture shown mirrored, so a painter never flips its text.
  * Each app paints the layout its own way: the web app on a canvas, the native app in views. The texts come in the
@@ -12,6 +12,7 @@ import type { BallView, Flash } from './board';
 import { LM, type Depth } from './depth';
 import { flashText } from './flash';
 import { decimal, t } from './i18n';
+import { removeSpot } from './placement';
 import type { Rect } from './reach';
 import type { Box, Landmark, Point } from './types';
 
@@ -34,6 +35,10 @@ const JOINTS = [LM.LEFT_HIP, LM.RIGHT_HIP, LM.LEFT_KNEE, LM.RIGHT_KNEE];
 const BAR_ABOVE = 100;
 const BAR_SPAN = 140;
 
+/** A resize handle's side and a remove button's radius, as shares of a plate control's size. */
+const HANDLE = 0.45;
+const REMOVE = 0.45;
+
 /** What the board calls each target: the division whose athletes must reach it. */
 const TARGET_NAME = { upper: 'overlay.mensTarget', lower: 'overlay.womensTarget' } as const satisfies Record<
   Target,
@@ -48,13 +53,12 @@ export type NoticeTone = 'ok' | 'warn' | 'plain';
 
 /** The target as the board holds it, and what the ball check saw. */
 export interface TargetFrame {
-  lines: Record<Target, number | null>;
   /** The target this athlete must reach, or null until the first hit picks it. */
   required: Target | null;
-  /** The spot on the wall the ball hits, as a fraction of the frame width, or null until it is placed. */
-  x: number | null;
-  /** The plates the target was placed from, in frame units, the higher first. Empty for lines on bare wall. */
+  /** The plates the target was placed from, in frame units, the higher first. Empty before a target is placed. */
   plates: Rect[];
+  /** Whether the judge may still remove a plate, which is while the set has not started. */
+  editable: boolean;
   ball: BallView | null;
   /** The search's plates, in pixels, for a tap to choose from. */
   candidates: Box[];
@@ -78,8 +82,8 @@ export interface OverlayFrame {
   flash: Flash | null;
   notice: { text: string; tone: NoticeTone } | null;
   warning: string | null;
-  /** A line label's height in frame pixels: the upper line's label goes above it when the lines are closer than this. */
-  labelHeight: number;
+  /** A plate control's size in frame pixels: a fingertip, the reach a grab on a plate takes. */
+  controlSize: number;
 }
 
 export interface DepthBar {
@@ -94,22 +98,16 @@ export interface DepthBar {
   fill: Colour;
 }
 
-/** A plate the target was placed from, named for its division; the one this athlete must reach is active. */
+/**
+ * A plate the target was placed from, named for its division; the one this athlete must reach is active. While the
+ * target is editable, a plate shows its remove button and its resize handle, each centred on its point.
+ */
 export interface PlateMark {
   box: Rect;
   name: string;
   active: boolean;
-}
-
-/** A target line on bare wall, with its label and the spot along it that the ball hits. */
-export interface LineMark {
-  y: number;
-  label: string;
-  active: boolean;
-  /** Whether the label sits above the line rather than below it. */
-  above: boolean;
-  /** Where the ball hits along the line, or null before the spot is placed. */
-  spot: number | null;
+  remove: Point | null;
+  handle: Point | null;
 }
 
 export interface BoxMark {
@@ -139,7 +137,9 @@ export interface OverlayLayout {
   parallel: number | null;
   depthBar: DepthBar | null;
   plates: PlateMark[];
-  lines: LineMark[];
+  /** A resize handle's side and a remove button's radius, in frame pixels. */
+  handleSide: number;
+  removeRadius: number;
   candidates: BoxMark[];
   ball: BoxMark | null;
   banner: Banner | null;
@@ -201,39 +201,24 @@ export function layoutOverlay(frame: OverlayFrame): OverlayLayout {
   }
 
   const plates: PlateMark[] = [];
-  const lines: LineMark[] = [];
+  const size = frame.controlSize;
   // While there are plates to choose between, the target is noise: it crosses them, and a tap is for picking one.
   if (target && !target.candidates.length) {
-    const { required, single = false } = target;
-    // The plates the judge picked are the target, so they show and the lines do not. Two plates take a name each,
-    // the higher the men's; one plate holding both marks is named for the height this athlete needs, once known.
+    const { required, single = false, editable } = target;
+    // Two plates take a name each, the higher the men's; one plate holding both marks is named for the height this
+    // athlete needs, once known.
     target.plates.forEach((p, i) => {
       const which = target.plates.length > 1 ? TARGETS[i] : required;
       const left = mirror ? w / h - (p.x + p.w) : p.x;
+      const shown = { x: left * h, y: p.y * h, w: p.w * h, h: p.h * h };
       plates.push({
-        box: { x: left * h, y: p.y * h, w: p.w * h, h: p.h * h },
+        box: shown,
         name: which === null ? t('overlay.target') : targetName(which, single),
         active: target.plates.length === 1 || which === required,
+        remove: editable ? removeSpot(shown, size) : null,
+        handle: editable ? { x: shown.x + shown.w, y: shown.y + shown.h } : null,
       });
     });
-    if (!plates.length) {
-      const { upper, lower } = target.lines;
-      const gap = upper !== null && lower !== null ? (lower - upper) * h : Infinity;
-      for (const which of TARGETS) {
-        const line = target.lines[which];
-        if (line === null) continue;
-        const active = which === required;
-        const name = targetName(which, single);
-        lines.push({
-          y: line * h,
-          label: active ? t('overlay.dragToMove')(name) : name,
-          active,
-          // A label hangs below its line, clear of the board's top, unless the upper one has no room between the lines.
-          above: which === 'upper' && gap < frame.labelHeight,
-          spot: target.x === null ? null : across(target.x),
-        });
-      }
-    }
   }
 
   const stations = target
@@ -247,7 +232,8 @@ export function layoutOverlay(frame: OverlayFrame): OverlayLayout {
     parallel: depth?.ok ? depth.kneeY * h : null,
     depthBar,
     plates,
-    lines,
+    handleSide: HANDLE * size,
+    removeRadius: REMOVE * size,
     candidates: stations.map((station, i) => ({ box: box(station), label: `${i + 1}` })),
     ball: ball
       ? {
