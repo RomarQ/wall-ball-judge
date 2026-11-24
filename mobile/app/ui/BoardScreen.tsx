@@ -1,6 +1,6 @@
 /**
  * The judge board, laid out as the PWA's: the picture with the overlay, the tools under it, and the scoreboard the
- * judge reads from across the station. A recording shows its search frame while the target is chosen and then plays
+ * judge reads from across the station, under the picture or, on its side, beside it. A recording shows its search frame while the target is chosen and then plays
  * as it is judged; the camera is judged live. The live scoreboard's tally runs across sets until Reset; a replayed
  * clip's starts at zero.
  */
@@ -12,6 +12,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type GestureResponderEvent,
   type LayoutRectangle,
@@ -63,6 +64,14 @@ const RESET_ARMED_MS = 4000;
 const NOTHING_TO_RESET_MS = 1500;
 /** The picture's corner radius, the PWA's 1rem. */
 const CORNER = REM;
+/** Reset's width, and the division block's above it, so the two line up; the PWA's --side. */
+const SIDE = 8.5 * REM;
+/** A fault's number and label, in their line heights. */
+const FAULT_N_LINE = 28;
+const FAULT_WHAT_LINE = 15;
+/** The narrowest screen on its side that puts the scoreboard beside the picture, and the scoreboard's width there; the PWA's. */
+const WIDE_MIN = 600;
+const WIDE_SIDE = 24 * REM;
 /** The unit the target search runs on: LiteRT on the CPU. */
 const FINDER_UNIT = 'CPU';
 const FACING_KEY = 'facingMode';
@@ -135,6 +144,8 @@ export function BoardScreen({
   const [said, setSaid] = useState<Said | null>(null);
   const saidTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [area, setArea] = useState({ width: 0, height: 0 });
+  const screen = useWindowDimensions();
+  const wide = screen.width > screen.height && screen.width >= WIDE_MIN;
   const [image, setImage] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [facing, setFacing] = useState<Facing>(() => (localStorage.getItem(FACING_KEY) === 'environment' ? 'environment' : 'user'));
@@ -483,7 +494,7 @@ export function BoardScreen({
         </IconButton>
       </Bar>
 
-      <View style={styles.station}>
+      <View style={[styles.station, wide && styles.stationWide]}>
         <View style={styles.camera}>
           <View style={styles.frame} onLayout={(e) => setArea(e.nativeEvent.layout)}>
             <View
@@ -541,19 +552,21 @@ export function BoardScreen({
           ) : null}
         </View>
 
-        <Scoreboard
-          tally={tally}
-          required={board.required}
-          onRequired={(which) => {
-            board.setRequired(which);
-            sender.resend();
-            redraw();
-          }}
-          byHand={byHand}
-        />
+        <View style={wide ? styles.side : styles.under}>
+          <Scoreboard
+            tally={tally}
+            required={board.required}
+            onRequired={(which) => {
+              board.setRequired(which);
+              sender.resend();
+              redraw();
+            }}
+            byHand={byHand}
+          />
 
-        <View style={styles.foot}>
-          <Text style={styles.footText}>{chips}</Text>
+          <View style={styles.foot}>
+            <Text style={styles.footText}>{chips}</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -754,6 +767,7 @@ function CameraFeed({ facing }: { facing: Facing }) {
   if (!hasPermission || device == null) return null;
   // The preview streams 4:3 and the judged frames 16:9, both from the sensor's middle. In a view of the frames' shape,
   // cover shows the preview's middle, which is what the frames hold, so the overlay sits on what it judged.
+  // The activity takes a turn of the phone without restarting, and only a TextureView preview turns with the display then.
   return (
     <Camera
       style={StyleSheet.absoluteFill}
@@ -762,6 +776,7 @@ function CameraFeed({ facing }: { facing: Facing }) {
       outputs={[frameOutput, videoOutput]}
       constraints={[{ fps: 30 }]}
       resizeMode="cover"
+      implementationMode="compatible"
     />
   );
 }
@@ -786,6 +801,9 @@ function saveSet(board: PipelineBoard, name: string, ballUnit: string): void {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLOURS.black },
   station: { flex: 1, gap: 10, paddingHorizontal: 10 },
+  stationWide: { flexDirection: 'row', gap: 12, paddingBottom: 8 },
+  under: { gap: 10 },
+  side: { width: WIDE_SIDE, justifyContent: 'center', gap: 10 },
   camera: { flex: 1, gap: 8 },
   frame: { flex: 1, minHeight: 11 * REM },
   viewport: { position: 'absolute', backgroundColor: COLOURS.graphite, borderRadius: CORNER, overflow: 'hidden' },
@@ -806,19 +824,20 @@ const styles = StyleSheet.create({
   camStatus: { flex: 1, color: COLOURS.steel, fontSize: 15, lineHeight: 19, textAlign: 'center' },
   setup: { flexDirection: 'row', gap: 8 },
   scoreboard: { gap: 4, paddingTop: 8, paddingHorizontal: 12, paddingBottom: 6, backgroundColor: COLOURS.graphite, borderRadius: CORNER },
-  board: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  faults: { flex: 1, gap: 6, alignItems: 'flex-start' },
-  fault: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: TAP, paddingVertical: 3, paddingHorizontal: 5, marginHorizontal: -5, borderRadius: 8 },
+  // The faults take the room their words need, and the count the rest; the count's label sits on the squat's baseline.
+  board: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  faults: { gap: 6, alignItems: 'flex-start' },
+  fault: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: TAP, paddingHorizontal: 5, marginHorizontal: -5, borderRadius: 8 },
   faultLit: { backgroundColor: 'rgba(255,82,72,0.35)' },
-  faultN: { color: COLOURS.chalk, fontFamily: CONDENSED, fontSize: 26, fontWeight: '800', lineHeight: 28 },
-  faultWhat: { color: COLOURS.steel, fontFamily: CONDENSED, fontSize: 13, lineHeight: 15 },
-  tally: { flex: 1.15, alignItems: 'center' },
+  faultN: { color: COLOURS.chalk, fontFamily: CONDENSED, fontSize: 26, fontWeight: '800', lineHeight: FAULT_N_LINE },
+  faultWhat: { color: COLOURS.steel, fontFamily: CONDENSED, fontSize: 13, lineHeight: FAULT_WHAT_LINE },
+  tally: { flex: 1, alignItems: 'center', paddingBottom: (TAP - FAULT_N_LINE - FAULT_WHAT_LINE) / 2 },
   count: { color: COLOURS.chalk, fontFamily: CONDENSED, fontWeight: '800', includeFontPadding: false, letterSpacing: -1 },
   countLit: { color: COLOURS.rep },
-  tallyWhat: { marginTop: 2, color: COLOURS.steel, fontSize: 13 },
-  targets: { gap: 5, alignItems: 'flex-end' },
+  tallyWhat: { marginTop: 2, color: COLOURS.steel, fontSize: 13, lineHeight: FAULT_WHAT_LINE },
+  targets: { gap: 6, minWidth: SIDE },
   targetRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  pill: { minHeight: 44, paddingHorizontal: 10, justifyContent: 'center', borderWidth: 1, borderColor: COLOURS.rule, borderRadius: 999 },
+  pill: { flex: 1, minHeight: TAP, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: COLOURS.rule, borderRadius: 999 },
   pillOn: { backgroundColor: COLOURS.chalk, borderColor: COLOURS.chalk },
   pillText: { color: COLOURS.steel, fontFamily: CONDENSED, fontSize: 15, fontWeight: '600' },
   pillTextOn: { color: COLOURS.onChalk },
@@ -829,7 +848,7 @@ const styles = StyleSheet.create({
   clockValue: { color: COLOURS.chalk, fontFamily: CONDENSED, fontSize: 28, fontWeight: '800', lineHeight: 31 },
   pace: { flexBasis: '100%', color: COLOURS.steel, fontSize: 13, lineHeight: 16 },
   reset: {
-    width: 136,
+    width: SIDE,
     minHeight: TAP,
     paddingHorizontal: 10,
     alignItems: 'center',
