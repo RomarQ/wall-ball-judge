@@ -450,7 +450,7 @@
   font-weight: 600;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 900px) and (min-height: 601px) {
   .home {
     max-width: 64rem;
     padding-inline: 2rem;
@@ -483,5 +483,52 @@
   }
   .home footer {
     grid-column: 2;
+  }
+}
+
+/* A phone on its side: the picture as tall as the screen on the left and the words and the start controls on its right,
+   then the device and the placing side by side. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .home {
+    max-width: 56rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 2.5rem;
+    align-items: start;
+  }
+  .stage {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto auto 1fr;
+    grid-template-areas:
+      'scene .'
+      'scene title'
+      'scene rules'
+      'scene controls'
+      'scene .';
+    column-gap: 2rem;
+  }
+  .viewfinder {
+    display: contents;
+  }
+  .scene {
+    grid-area: scene;
+    width: auto;
+    height: calc(100dvh - 2rem);
+    margin: 1rem 0;
+  }
+  .title {
+    grid-area: title;
+    margin-top: 0;
+  }
+  .viewfinder figcaption {
+    grid-area: rules;
+  }
+  .controls {
+    grid-area: controls;
+  }
+  .home footer {
+    grid-column: 1 / -1;
   }
 }

@@ -1,9 +1,10 @@
 /**
  * The home screen, laid out as the PWA's home view: the title and the drawn demo with the rule, the controls that start
- * a set, whether this device runs the app, where to stand the phone, and the note that the video stays on the device.
+ * a set, whether this device runs the app, where to stand the phone, and the note that the video stays on the device. On
+ * a phone on its side, the demo stands beside the words and the controls, and the device and the placing side by side.
  */
 import React, { useEffect, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useCameraDevices } from 'react-native-vision-camera';
 import { wallballVision, type PhoneCheck } from 'wallball-vision';
 import {
@@ -34,6 +35,10 @@ function open(url: string): void {
 
 /** The demo's corner radius, the PWA's 1.1rem. */
 const SCENE_CORNER = 1.1 * REM;
+/** A phone on its side, as the PWA's home.css takes it: wider than tall, and under this many points tall. */
+const SIDE_MAX_HEIGHT = 600;
+/** The gap between the device and the placing, side by side. */
+const SIDE_GAP = 2.5 * REM;
 
 export function HomeScreen({
   playing,
@@ -48,6 +53,9 @@ export function HomeScreen({
   onSettings: () => void;
 }) {
   const [width, setWidth] = useState(0);
+  const [viewHeight, setViewHeight] = useState(0);
+  const screen = useWindowDimensions();
+  const side = screen.width > screen.height && screen.height < SIDE_MAX_HEIGHT;
   const cameras = useCameraDevices();
   const [check, setCheck] = useState<PhoneCheck | null>(null);
   // Read at each drawing: the settings, which lie over this screen, may choose another ball model.
@@ -76,62 +84,92 @@ export function HomeScreen({
   // The check runs on its own here, so a part not known yet is one still being read.
   const ready = phoneReadiness(parts);
 
-  return (
-    <ScrollView style={page.scroll} contentContainerStyle={page.body}>
-      <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-        <Text style={[page.h1, styles.title]}>Wall Ball Judge</Text>
-        <Text style={styles.lede}>{t('home.lede')}</Text>
-
-        {width > 0 ? (
-          <View style={styles.scene}>
-            <Demo width={width} playing={playing} />
-          </View>
-        ) : null}
-        <View style={styles.rule}>
-          <Rule n={1} text={t('home.ruleDepth')} />
-          <Rule n={2} text={t('home.ruleTarget')} />
-        </View>
-
-        <View style={styles.controls}>
-          <Control label={t('home.recording')} onPress={onRecording}>
-            <Film size={24} />
-          </Control>
-          <Pressable style={styles.shutter} onPress={onLive} accessibilityRole="button" accessibilityLabel={t('home.live')}>
-            {({ pressed }) => (
-              <>
-                <View style={styles.ring}>
-                  <View style={[styles.shutterKey, pressed && styles.shutterPressed]} />
-                </View>
-                <Text style={[styles.controlName, styles.shutterName]}>{t('home.live')}</Text>
-              </>
-            )}
-          </Pressable>
-          <Control label={t('nav.settings')} onPress={onSettings}>
-            <Gear size={24} />
-          </Control>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={page.h2}>{t('home.phone')}</Text>
-        <Spec
-          label={t('home.runs')}
-          value={<State state={ready} text={ready === 'none' ? t('home.checking') : t(ANSWER[ready])} />}
-          note={ready === 'slow' || ready === 'bad' ? t(WHY[ready]) : undefined}
-          first
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={page.h2}>{t('home.place')}</Text>
-        {width > 0 ? <Plan width={width} /> : null}
-        <View style={styles.notes}>
-          {[t('home.noteSide'), t('home.notePicture'), t('home.noteClose')].map((note) => (
-            <View key={note} style={styles.note}>
-              <Text style={page.text}>•</Text>
-              <Text style={[page.text, styles.noteText]}>{note}</Text>
+  const words = (
+    <>
+      <Text style={[page.h1, styles.title, side && styles.sideTitle]}>Wall Ball Judge</Text>
+      <Text style={styles.lede}>{t('home.lede')}</Text>
+    </>
+  );
+  const rules = (
+    <View style={styles.rule}>
+      <Rule n={1} text={t('home.ruleDepth')} />
+      <Rule n={2} text={t('home.ruleTarget')} />
+    </View>
+  );
+  const controls = (
+    <View style={styles.controls}>
+      <Control label={t('home.recording')} onPress={onRecording}>
+        <Film size={24} />
+      </Control>
+      <Pressable style={styles.shutter} onPress={onLive} accessibilityRole="button" accessibilityLabel={t('home.live')}>
+        {({ pressed }) => (
+          <>
+            <View style={styles.ring}>
+              <View style={[styles.shutterKey, pressed && styles.shutterPressed]} />
             </View>
-          ))}
+            <Text style={[styles.controlName, styles.shutterName]}>{t('home.live')}</Text>
+          </>
+        )}
+      </Pressable>
+      <Control label={t('nav.settings')} onPress={onSettings}>
+        <Gear size={24} />
+      </Control>
+    </View>
+  );
+
+  return (
+    <ScrollView style={page.scroll} contentContainerStyle={page.body} onLayout={(e) => setViewHeight(e.nativeEvent.layout.height)}>
+      <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        {side ? (
+          <View style={styles.sideStage}>
+            {viewHeight > 0 ? (
+              <View style={[styles.scene, styles.sideScene]}>
+                {/* As tall as the screen, as the PWA's 100dvh less its margins. */}
+                <Demo width={((viewHeight - 2 * REM) * 3) / 4} playing={playing} />
+              </View>
+            ) : null}
+            <View style={styles.sideWords}>
+              {words}
+              {rules}
+              {controls}
+            </View>
+          </View>
+        ) : (
+          <>
+            {words}
+            {width > 0 ? (
+              <View style={styles.scene}>
+                <Demo width={width} playing={playing} />
+              </View>
+            ) : null}
+            {rules}
+            {controls}
+          </>
+        )}
+      </View>
+
+      <View style={side ? styles.sideSections : undefined}>
+        <View style={[styles.section, side && styles.sideSection]}>
+          <Text style={page.h2}>{t('home.phone')}</Text>
+          <Spec
+            label={t('home.runs')}
+            value={<State state={ready} text={ready === 'none' ? t('home.checking') : t(ANSWER[ready])} />}
+            note={ready === 'slow' || ready === 'bad' ? t(WHY[ready]) : undefined}
+            first
+          />
+        </View>
+
+        <View style={[styles.section, side && styles.sideSection]}>
+          <Text style={page.h2}>{t('home.place')}</Text>
+          {width > 0 ? <Plan width={side ? (width - SIDE_GAP) / 2 : width} /> : null}
+          <View style={styles.notes}>
+            {[t('home.noteSide'), t('home.notePicture'), t('home.noteClose')].map((note) => (
+              <View key={note} style={styles.note}>
+                <Text style={page.text}>•</Text>
+                <Text style={[page.text, styles.noteText]}>{note}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
 
@@ -194,6 +232,12 @@ const styles = StyleSheet.create({
   title: { marginBottom: 0.4 * REM },
   lede: { color: COLOURS.lede, fontSize: 1.05 * REM, lineHeight: 1.5 * REM, marginBottom: REM },
   scene: { borderRadius: SCENE_CORNER, overflow: 'hidden' },
+  sideStage: { flexDirection: 'row', gap: 2 * REM },
+  sideScene: { marginVertical: REM },
+  sideWords: { flex: 1, justifyContent: 'center' },
+  sideTitle: { marginTop: 0 },
+  sideSections: { flexDirection: 'row', gap: SIDE_GAP, alignItems: 'flex-start' },
+  sideSection: { flex: 1 },
   rule: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 1.25 * REM, rowGap: 0.5 * REM, marginTop: 0.75 * REM },
   ruleItem: { flexDirection: 'row', alignItems: 'center', gap: 0.45 * REM },
   ruleNumber: { width: 1.4 * REM, height: 1.4 * REM, borderRadius: 999, borderWidth: 1.5, borderColor: COLOURS.chalk, alignItems: 'center', justifyContent: 'center' },
