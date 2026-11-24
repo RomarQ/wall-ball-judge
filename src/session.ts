@@ -244,32 +244,6 @@ export class Session {
   }
 
   /**
-   * Saves the plates for the next session, none when the judge removed them.
-   * A plate is saved in fractions of the picture's width and height, so a
-   * picture of another shape still puts it on the same part of the wall.
-   */
-  #persist(): void {
-    const { w, h } = this.#frameSize();
-    const across = w ? h / w : 1;
-    const plates = this.board.plates.map((p) => ({ x: p.x * across, y: p.y, w: p.w * across, h: p.h }));
-    localStorage.setItem('targetPlates', JSON.stringify(plates));
-  }
-
-  /** The plates the last session saved, in frame units for the picture now showing. */
-  #storedPlates(): Rect[] {
-    const { w, h } = this.#frameSize();
-    if (!w || !h) return [];
-    try {
-      const saved: unknown = JSON.parse(localStorage.getItem('targetPlates') ?? '[]');
-      if (!Array.isArray(saved)) return [];
-      const ok = (p: Rect) => [p.x, p.y, p.w, p.h].every((v) => typeof v === 'number' && Number.isFinite(v));
-      return saved.filter(ok).map((p: Rect) => ({ x: (p.x * w) / h, y: p.y, w: (p.w * w) / h, h: p.h }));
-    } catch {
-      return [];
-    }
-  }
-
-  /**
    * Looks for the target plate in the picture. The board places the only
    * sure station at once, or picks the athlete's at their first squat;
    * otherwise the plates found stay as candidates, drawn on the overlay,
@@ -389,7 +363,7 @@ export class Session {
     return index;
   }
 
-  /** Removes plate `index`, and saves what is left. */
+  /** Removes plate `index`. */
   removePlate(index: number): void {
     this.board.removePlate(index);
     this.#placed();
@@ -415,18 +389,17 @@ export class Session {
 
   /**
    * Moves or resizes plate `index` to `shown`, in frame units as the picture
-   * shows it, and puts the lines where the plates now say. `persist` saves it,
-   * at the end of a drag. Returns the plate's index, which changes when it
-   * passes the other plate of a pair.
+   * shows it, and puts the lines where the plates now say. Returns the plate's
+   * index, which changes when it passes the other plate of a pair.
    */
-  setPlate(index: number, shown: Rect, persist = false): number {
+  setPlate(index: number, shown: Rect): number {
     const { w, h } = this.#frameSize();
     if (!this.board.plates[index] || !h) return index;
     const higher = this.board.setPlate(index, {
       ...shown,
       x: this.#mirrored() ? w / h - (shown.x + shown.w) : shown.x,
     });
-    this.#placed(persist);
+    this.#placed();
     return higher;
   }
 
@@ -438,10 +411,9 @@ export class Session {
     return plates.map((p) => ({ ...p, x: w / h - (p.x + p.w) }));
   }
 
-  /** Takes the target as the board now holds it: saves it, and draws it while no frame loop does. */
-  #placed(persist = true): void {
+  /** Takes the target as the board now holds it, and draws it while no frame loop does. */
+  #placed(): void {
     this.tapToPlace = false;
-    if (persist) this.#persist();
     this.#renderIdle();
   }
 
@@ -451,7 +423,7 @@ export class Session {
    */
   tapToPlace = true;
 
-  /** True while a target is placed, by a tap, the finder, or the last session's plates. */
+  /** True while a target is placed, by a tap or the finder. Each set starts with none. */
   get placed(): boolean {
     return this.board.placed;
   }
@@ -684,15 +656,11 @@ export class Session {
     this.log = new URLSearchParams(location.search).has('log')
       ? new JudgeLog({ depth: config.depth, ball: config.ball })
       : null;
-    // A script may place the target before the first frame sizes the board.
+    // A tap or a script may place the target before the first frame sizes the board.
     const { w, h } = this.#frameSize();
     this.board.width = w;
     this.board.height = h;
-    // Through the board, which takes its lines and spot from the plates: a plate set alone is drawn but not judged.
-    const plates = this.#storedPlates();
-    if (plates.length)
-      this.board.placeBoxes(plates.map((p) => ({ x: p.x * h, y: p.y * h, w: p.w * h, h: p.h * h })));
-    else this.board.clearTarget();
+    this.board.clearTarget();
     this.board.reset();
     this.board.setRequired(requiredAtStart());
     this.stats = this.#freshStats();

@@ -121,12 +121,7 @@ export function bindTargetDrag(viewport: HTMLElement, session: Session): void {
     if (drag?.id !== e.pointerId) return;
     const ended = drag;
     drag = null;
-    if (ended.kind === 'remove') {
-      if (e.type === 'pointerup') session.removePlate(ended.index);
-      return;
-    }
-    const plate = session.shownPlates()[ended.index];
-    if (plate) session.setPlate(ended.index, plate, true);
+    if (ended.kind === 'remove' && e.type === 'pointerup') session.removePlate(ended.index);
   };
   viewport.addEventListener('pointerup', end);
   viewport.addEventListener('pointercancel', end);
