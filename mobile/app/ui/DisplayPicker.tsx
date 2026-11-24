@@ -41,7 +41,7 @@ export function DisplayPicker({ sender, onClose }: { sender: DisplaySender; onCl
         {linked ? (
           <>
             <Text style={styles.linked}>
-              {sender.state === 'linked' ? t('pair.displayLinked') : t('board.linking')}: {sender.name}
+              {(sender.state === 'linked' ? t('pair.linkedTo') : t('pair.linkingTo'))(sender.name ?? '')}
             </Text>
             <Button label={t('pair.unlink')} onPress={() => sender.unlink()} />
           </>

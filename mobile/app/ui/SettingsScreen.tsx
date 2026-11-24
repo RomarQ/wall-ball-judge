@@ -68,7 +68,7 @@ export function SettingsScreen({
     return last ? `${setWhen(last)} · ${setSummary(last)}` : t('sets.none');
   });
   const linkText =
-    sender.state === 'none' ? t('pair.silent') : sender.state === 'linked' ? t('pair.linkedTo')(sender.name ?? '') : t('board.linking');
+    sender.state === 'none' ? t('pair.silent') : (sender.state === 'linked' ? t('pair.linkedTo') : t('pair.linkingTo'))(sender.name ?? '');
 
   return (
     <View style={styles.screen}>

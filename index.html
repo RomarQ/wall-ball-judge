@@ -6,7 +6,7 @@
     <title>Wall Ball Judge</title>
     <meta
       name="description"
-      content="Judge wall balls with your device. The app watches the squat and the ball, counts each rep and calls each no-rep, live at the gym or from a recording."
+      content="Judge wall balls with your device. The app watches the squat and the ball, counts each rep and calls each no-rep, live at the gym or from a video."
     />
     <meta name="theme-color" content="#000" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -112,7 +112,7 @@
         <section class="stage" aria-labelledby="home-title">
           <header class="title">
             <h1 id="home-title" tabindex="-1">Wall Ball Judge</h1>
-            <p data-i18n="home.lede">Train your wall balls with your device as the judge.</p>
+            <p data-i18n="home.lede">Use your device to judge your wall balls.</p>
           </header>
 
           <figure class="viewfinder">
@@ -124,10 +124,10 @@
               aria-labelledby="home-demo-title"
             >
               <title id="home-demo-title" data-i18n="home.demoTitle">
-                Two stations, seen from behind. On the left a man throws to the men's target, and on the right
-                a woman throws to the women's target. A rep counts when the hips go below the knees and the
-                ball then hits the athlete's target. A squat above parallel, or a man's throw that reaches
-                only the women's target, is a no-rep.
+                Two stations, seen from behind. On the left a man throws to the men&#8217;s target, and on the
+                right a woman throws to the women&#8217;s target. A rep counts when the hips go below the
+                knees and the ball then hits the athlete&#8217;s target. A squat above parallel, or a
+                man&#8217;s throw that reaches only the women&#8217;s target, is a no-rep.
               </title>
               <defs>
                 <linearGradient id="home-wall" x1="0" y1="0" x2="0" y2="1">
@@ -367,7 +367,7 @@
             class="plan"
             viewBox="0 0 320 214"
             role="img"
-            aria-label="Seen from above: the phone stands at the athlete's side or behind the athlete, and sees the athlete and the target. A phone close to the wall under the target is wrong."
+            aria-label="Seen from above: the device stands at the athlete&#8217;s side or behind the athlete, and sees the athlete and the target. A device close to the wall under the target is wrong."
             data-i18n-label="home.planLabel"
           >
             <defs>
@@ -424,9 +424,11 @@
             <text class="label bad" x="226" y="76" data-i18n="home.planClose">too close</text>
           </svg>
           <ul class="notes">
-            <li data-i18n="home.noteSide">Stand it at the athlete's side or behind them, at hip height.</li>
+            <li data-i18n="home.noteSide">
+              Stand it at the athlete&#8217;s side or behind them, at hip height.
+            </li>
             <li data-i18n="home.notePicture">The picture must show the hips, the knees and the target.</li>
-            <li data-i18n="home.noteClose">Do not put it close under the target.</li>
+            <li data-i18n="home.noteClose">Do not put it near the wall or under the target.</li>
           </ul>
         </section>
 
@@ -541,7 +543,7 @@
             </button>
             <button class="button" id="find">
               <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-aim" /></svg>
-              <span data-i18n="board.find">Find target</span>
+              <span data-i18n="board.find">Find the target</span>
             </button>
           </div>
         </div>
@@ -552,7 +554,7 @@
               <button
                 class="fault"
                 id="fault-target"
-                title="A target no-rep. Tap to add one by hand."
+                title="Target no-reps. Tap to add one by hand."
                 data-i18n-title="board.targetFaultTitle"
               >
                 <svg viewBox="0 0 28 28" aria-hidden="true">
@@ -566,7 +568,7 @@
               <button
                 class="fault"
                 id="fault-move"
-                title="A squat no-rep. Tap to add one by hand."
+                title="Squat no-reps. Tap to add one by hand."
                 data-i18n-title="board.moveFaultTitle"
               >
                 <svg viewBox="0 0 28 28" aria-hidden="true">
@@ -585,14 +587,14 @@
 
             <div
               class="targets"
-              title="The highlighted division is the target this athlete must reach. Tap a plate when the ball hit it."
+              title="The highlighted division&#8217;s target is the one this athlete must reach. Tap a plate when the ball hits it."
               data-i18n-title="board.divisionTitle"
             >
               <button class="pill" data-target="upper" data-i18n="board.men">Men</button>
               <button
                 class="plate-button upper"
                 id="target-upper"
-                aria-label="The ball hit the men's target"
+                aria-label="The ball hit the men&#8217;s target"
                 data-i18n-label="board.hitMen"
               >
                 <svg viewBox="0 0 100 100" aria-hidden="true">
@@ -604,7 +606,7 @@
               <button
                 class="plate-button lower"
                 id="target-lower"
-                aria-label="The ball hit the women's target"
+                aria-label="The ball hit the women&#8217;s target"
                 data-i18n-label="board.hitWomen"
               >
                 <svg viewBox="0 0 100 100" aria-hidden="true">
@@ -661,8 +663,8 @@
           <button class="button say" id="test" type="button" data-i18n="settings.say">Say twelve</button>
           <p class="hint" id="voices" role="status"></p>
           <p class="hint" data-i18n="settings.voiceNote">
-            The phone&#8217;s own speech engine speaks the count. On Android, install a missing voice under
-            Settings, System, Languages, Text-to-speech output, Google engine, Install voice data.
+            The device&#8217;s voice speaks the count. To add a missing voice on Android, open Settings,
+            System, Languages, Text-to-speech output, then install the voice data.
           </p>
         </section>
 
@@ -671,7 +673,7 @@
           <label class="switch">
             <span>
               <strong data-i18n="settings.ballCheck">Check the ball on the target</strong>
-              <small data-i18n="settings.ballCheckHint">When off, the board judges the squat alone.</small>
+              <small data-i18n="settings.ballCheckHint">When off, the board judges only the squat.</small>
             </span>
             <input id="ball-check" type="checkbox" role="switch" />
           </label>
@@ -679,8 +681,7 @@
             <span>
               <strong data-i18n="settings.divisionByHit">Pick the division from the first hit</strong>
               <small data-i18n="settings.divisionByHitHint"
-                >When on, each set&#8217;s first throw that hits the men&#8217;s or the women&#8217;s mark
-                picks the division.</small
+                >In each set, the first throw that hits a target picks the division.</small
               >
             </span>
             <input id="division-by-hit" type="checkbox" role="switch" />
@@ -690,9 +691,8 @@
             <div class="choices" id="ball-input" role="group" aria-labelledby="ball-input-label"></div>
           </div>
           <p class="hint" data-i18n="settings.ballInputHint">
-            The ball check reads a square of this many pixels around the target, at the scale of the training
-            frames. At 416 it reads more of the frame around the target, and it needs more time for each frame
-            it checks. A change applies at the board&#8217;s next start.
+            416 sees more of the wall around the target, but each frame takes longer. A change applies the
+            next time the board starts.
           </p>
           <div class="setting">
             <label for="models" data-i18n="settings.models">Detection models</label>
@@ -705,9 +705,8 @@
             <input id="confidence" type="range" min="0.5" max="0.95" step="0.05" />
           </div>
           <p class="hint" data-i18n="settings.confidenceHint">
-            How sure the pose model must be before it draws a skeleton. Raise it when the board counts reps
-            that nobody did, as when somebody walks into the picture. Lower it when the board loses an athlete
-            who is plainly there.
+            How sure the app must be that it sees an athlete. Raise it if the board counts reps that nobody
+            did. Lower it if the board loses the athlete.
           </p>
         </section>
 
@@ -717,7 +716,7 @@
             <span>
               <strong data-i18n="settings.keepVideo">Keep the camera&#8217;s video</strong>
               <small data-i18n="settings.keepVideoHint"
-                >When the camera stops, the board can save the set&#8217;s video.</small
+                >When the camera stops, you can save the set&#8217;s video.</small
               >
             </span>
             <input id="record" type="checkbox" role="switch" />

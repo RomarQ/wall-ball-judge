@@ -37,7 +37,7 @@ The service worker precaches the shell when the app opens. It caches the WASM ru
 
 The download creates each model through the loader that a set uses, then closes it. The requests are thus the ones this phone makes in a set. A fixed list of files cannot do this, because MediaPipe and ONNX Runtime each pick their runtime files for the device.
 
-A set caches what it loads, but it does not load everything. The target detector loads on **Find target** only. Use the download, not a set, to get a phone ready.
+A set caches what it loads, but it does not load everything. The target detector loads on **Find the target** only. Use the download, not a set, to get a phone ready.
 
 A browser may clear stored files when the phone runs low on space. Safari also clears them after seven days of use with no visit to the site, unless the app is on the home screen. So the check, and an install, ask the browser to keep them. Chrome grants that with no prompt to an installed app. Until the browser agrees, a line under the "Yes" says that the browser may clear the models when the phone needs space, and, before an install, that installing the app keeps them.
 
@@ -45,7 +45,7 @@ The home view reads the ready state from the worker's caches on each visit. The 
 
 ## What the device can run
 
-The **Can this device run the app?** row on the home view sums up the check. It reads **Yes** when the camera is there, the pose runs at 15 frames a second or more, a look of the ball check takes 90 ms or less, and the target finder loads. It reads **Maybe** when the ball check or the finder runs slower or not at all: the board still judges the squat, and the target is placed by a tap. It reads **No** without the camera or the pose. Before the check it reads "Not checked", and while the check runs, "Checking…". The check finds no time for the pose, so until a set has run on the device the row reads "Not known yet", and the first set measures the pose.
+The **Can this device run the app?** row on the home view sums up the check. It reads **Yes** when the camera is there, the pose runs at 15 frames a second or more, a look of the ball check takes 90 ms or less, and the target finder loads. It reads **Maybe** when the ball check or the finder runs slower or not at all: the board still judges the squat, and the target is placed by a tap. It reads **No** without the camera or the pose. Before the check it reads "Not checked", and while the check runs, "Checking…". The check finds no time for the pose, so until a set has run on the device the row reads "Not known yet", and the first live set measures the pose model's speed.
 
 The check also decides where each model runs. The detector's worker runs the model on the GPU, through WebGPU, when the model loads there and computes the same numbers as on the CPU; otherwise it runs the model on the CPU, see [src/litert-worker.ts](../src/litert-worker.ts). The check times each model on both units, and a set runs each one on the faster. On the CPU a look takes about a quarter of a second, so the app sees the ball less often and can miss a fast throw. The board's footer names the unit each model runs on.
 
