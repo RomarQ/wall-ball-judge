@@ -12,8 +12,8 @@
  *
  * The target is the one the judge chose, not one picked out of the picture.
  * A gym wall carries marks at several heights and a rig carries rows of them,
- * so choosing per frame was never sound: the ball passes the women's mark on
- * its way to the men's, and a plate at the frame's edge is measured short.
+ * so choosing per frame was never sound: the ball passes the lower mark on
+ * its way to the upper, and a plate at the frame's edge is measured short.
  * The division says which of a pair is being judged, and this rule is given
  * that one.
  *

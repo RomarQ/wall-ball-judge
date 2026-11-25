@@ -9,7 +9,7 @@ import { readLog, replay } from './judge-replay';
 
 describe('a recorded set judged again', () => {
   it("gives the board's decision on every frame", () => {
-    // gym-raw-7a under the men's target: the target chosen, then three target faults and a rep.
+    // gym-raw-7a under the upper target: the target chosen, then three target faults and a rep.
     const { differences, valid, noRep } = replay(readLog('test/data/judge-excerpt.json.gz'));
     expect(differences).toEqual([]);
     expect([valid, noRep]).toEqual([1, 3]);

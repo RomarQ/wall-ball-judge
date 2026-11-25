@@ -1,9 +1,9 @@
 /**
  * The judge board: the station screen, counted by the camera or by hand.
  *
- * Mirrors the HYROX Labs station screen. The two targets are the men's and
- * the women's heights, and the division switch says which one the athlete
- * must reach. A hit on the required target or above counts a rep; a hit
+ * Mirrors the HYROX Labs station screen. The two targets are the upper and
+ * the lower heights, and the division switch says which one the athlete
+ * must reach: the upper for men, the lower for women. A hit on the required target or above counts a rep; a hit
  * that falls short of it is a target fault; NO REP records a movement
  * fault. The camera session raises the same events, naming the target the
  * ball reached. The buttons stay for corrections.

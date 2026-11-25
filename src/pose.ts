@@ -155,8 +155,8 @@ export interface StillPose {
  *
  * It runs on the CPU delegate at the search's own confidence, which the
  * target search places plates with: on the GPU, finding a person at the
- * judging pose's lower figure, it put gym-raw-14's men's target on the
- * women's plate.
+ * judging pose's lower figure, it put gym-raw-14's upper target on the
+ * lower plate.
  */
 export async function createStillPose(quality: PoseQuality): Promise<StillPose> {
   const { landmarker } = await openLandmarker(quality, 'IMAGE', 'CPU');

@@ -45,7 +45,7 @@ const opening = log.frames.findIndex(
   (f, i) => i > 0 && log.frames[i - 1].state === 'BOTTOM' && f.state === 'DRIVING',
 );
 
-/** A ball centred on the men's mark, as the frame of `ticket` placed it. */
+/** A ball centred on the upper mark, as the frame of `ticket` placed it. */
 function ballOnUpperMark(ticket: LookTicket): Box {
   const line = ticket.marks.find((m) => m.which === 'upper')!.line;
   const side = 40;

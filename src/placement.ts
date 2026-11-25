@@ -17,14 +17,14 @@ export const SEARCH_AT: readonly number[] = [0, 1, 2, 4];
  * How far below the upper target line the lower one may sit, as fractions of
  * the frame height. The two marks on a plate are 30 cm apart, about a tenth
  * of the frame from where a phone stands, and a line dragged to the floor
- * would put the women's mark somewhere no throw ever reaches.
+ * would put the lower mark somewhere no throw ever reaches.
  */
 export const LINE_GAP = 0.02;
 // The widest a rig's two heights stand apart in the verified frames is 0.42 of the frame.
 export const MAX_GAP = 0.5;
 /** How tall a plate placed by hand starts, as a share of the frame height: most plates in the clips are 0.06 to 0.08. */
 export const HAND_PLATE = 0.07;
-/** The most plates a target holds: the men's mark and the women's, as the hit rule weighs them. */
+/** The most plates a target holds: the upper mark and the lower, as the hit rule weighs them. */
 export const MAX_PLATES = 2;
 /** A fingertip on the screen, in points: how near a grab must land to a plate, and the size of a plate's controls. */
 export const FINGERTIP_PT = 24;
@@ -332,7 +332,7 @@ interface PlateLines {
   x: number;
 }
 
-/** True when a plate box holds two marks, the men's above the women's, and not a single disc's one. */
+/** True when a plate box holds two marks, the upper above the lower, and not a single disc's one. */
 export function holdsTwoMarks(box: Pick<Box, 'w' | 'h'>, options: Partial<FinderOptions> = {}): boolean {
   return box.h / box.w >= { ...DEFAULTS, ...options }.twoMarkAspect;
 }
@@ -364,17 +364,17 @@ export interface Mark {
 }
 
 /**
- * The marks the touch rule weighs against each other, the men's first.
+ * The marks the touch rule weighs against each other, the upper first.
  *
  * Each line is a mark, and a ball goes to the nearest one. A single disc is
- * one mark, on the men's line its box set, for both divisions. Its second
+ * one mark, on the upper line its box set, for both divisions. Its second
  * line stands apart from the first only because the two lines keep a gap,
- * and weighing it would give a ball on the disc's lower half to the women's
+ * and weighing it would give a ball on the disc's lower half to the lower
  * mark. `plates` are in units of the frame height, as the session keeps them.
  */
 export function weighedMarks(lines: Record<Target, number | null>, plates: Plate[]): Mark[] {
   const [disc] = plates;
-  // The men's mark is at or above every division's, so a hit on it counts for each.
+  // The upper mark is at or above every division's, so a hit on it counts for each.
   if (plates.length === 1 && !holdsTwoMarks(disc)) {
     return [{ which: 'upper', line: lines.upper ?? disc.y + disc.h / 2 }];
   }
@@ -411,7 +411,7 @@ export function pairFor(box: Plate, candidates: Plate[], options: Partial<Finder
   return best;
 }
 
-/** The lines two marks of one rig imply, the higher one giving the men's line. */
+/** The lines two marks of one rig imply, the higher one giving the upper line. */
 function linesFromPair(a: Plate, b: Plate, frameWidth: number, frameHeight: number): PlateLines {
   const [top, bottom] = a.y <= b.y ? [a, b] : [b, a];
   const mark = (plate: Plate) => (plate.y + DEFAULTS.singleMark * plate.h) / frameHeight;

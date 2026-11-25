@@ -4,7 +4,7 @@
  * each target, the box on the ball, and the verdict. The camera sees the athletes from behind.
  *
  * Each station runs its own set. The man's set holds both kinds of no-rep: a squat that stays above parallel, and a
- * throw that reaches only the women's target. Only a good rep counts.
+ * throw that reaches only the lower target. Only a good rep counts.
  *
  * No DOM: src/demo.ts paints a scene into the page's drawing, and the native app into its own.
  */
@@ -21,7 +21,7 @@ const AT = {
   arms: [0.46, 0.54, 0.68, 0.8],
   release: 0.5,
   hit: 0.64,
-  /** When a throw that reached only the women's target is called: once the ball is on its way down. */
+  /** When a throw that reached only the lower target is called: once the ball is on its way down. */
   short: 0.7,
   catch: 0.8,
   clear: 0.92,
@@ -49,8 +49,8 @@ const STATIONS: Record<Division, Station> = {
 export const STILL_MS = AT.arms[2] * LOOP_MS;
 
 /** The centres of the two targets, in a station's own units. */
-const MENS = { x: 150, y: 0 };
-const WOMENS = { x: 150, y: 64 };
+const UPPER = { x: 150, y: 0 };
+const LOWER = { x: 150, y: 64 };
 
 /** How deep a shallow squat goes, as a share of a full one: the hips stay above the knees. */
 const SHALLOW = 0.55;
@@ -121,8 +121,8 @@ function frameAt(t: number, rep: Rep, division: Division): DemoFrame {
   const [up, peak, down, rest] = AT.arms;
   const raise = t < peak ? easeOut(between(t, up, peak)) : 1 - easeInOut(between(t, down, rest));
 
-  const own = division === 'men' ? MENS : WOMENS;
-  const target = rep === 'short' ? WOMENS : own;
+  const own = division === 'men' ? UPPER : LOWER;
+  const target = rep === 'short' ? LOWER : own;
   const hold = { x: target.x, y: shoulderY + 22 };
   let ball = hold;
   if (t >= AT.release && t < AT.hit) {

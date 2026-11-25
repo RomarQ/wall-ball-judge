@@ -205,7 +205,7 @@ export function layoutOverlay(frame: OverlayFrame): OverlayLayout {
   // While there are plates to choose between, the target is noise: it crosses them, and a tap is for picking one.
   if (target && !target.candidates.length) {
     const { required, single = false, editable } = target;
-    // Two plates take a name each, the higher the men's; one plate holding both marks is named for the height this
+    // Two plates take a name each, the higher the upper; one plate holding both marks is named for the height this
     // athlete needs, once known.
     target.plates.forEach((p, i) => {
       const which = target.plates.length > 1 ? TARGETS[i] : required;

@@ -75,8 +75,8 @@ export class Board {
   /** Where the target sits across the picture, as a fraction of its width, or null before it is placed. */
   targetX: number | null = null;
   /**
-   * The plates the target was placed from, in frame units, the higher first: two for a wall with the men's and the
-   * women's marks on separate plates, one for a plate holding both or a single disc, none before a target is placed.
+   * The plates the target was placed from, in frame units, the higher first: two for a wall with the upper and the
+   * lower marks on separate plates, one for a plate holding both or a single disc, none before a target is placed.
    * The lines alone do not say which plate the judge chose, as a wall carries marks the set never uses.
    */
   plates: Rect[] = [];

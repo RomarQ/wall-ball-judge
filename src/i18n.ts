@@ -32,7 +32,7 @@ const en = {
 
   'home.lede': 'Use your device to judge your wall balls.',
   'home.demoTitle':
-    'Two stations, seen from behind. On the left a man throws to the upper target, the men’s, and on the right a woman throws to the lower target, the women’s. A rep counts when the hips go below the knees and the ball then hits the athlete’s target. A squat above parallel, or a man’s throw that reaches only the lower target, is a no-rep.',
+    'Two stations, seen from behind. On the left a man throws to the upper target, and on the right a woman throws to the lower target. A rep counts when the hips go below the knees and the ball then hits the athlete’s target. A squat above parallel, or a man’s throw that reaches only the lower target, is a no-rep.',
   'home.ruleDepth': 'Hips below the knees',
   'home.ruleTarget': 'Ball on the athlete’s target',
   'home.recording': 'Replay a video',
@@ -304,7 +304,7 @@ const ptPT: Texts = {
 
   'home.lede': 'Use o seu dispositivo para avaliar os seus wall balls.',
   'home.demoTitle':
-    'Duas estações, vistas de trás. À esquerda, um homem lança para o alvo superior, o dos homens; à direita, uma mulher lança para o alvo inferior, o das mulheres. Uma repetição conta quando a anca desce abaixo dos joelhos e depois a bola acerta no alvo do atleta. Um agachamento acima da paralela, ou um lançamento de um homem que só chega ao alvo inferior, é um no rep.',
+    'Duas estações, vistas de trás. À esquerda, um homem lança para o alvo superior; à direita, uma mulher lança para o alvo inferior. Uma repetição conta quando a anca desce abaixo dos joelhos e depois a bola acerta no alvo do atleta. Um agachamento acima da paralela, ou um lançamento de um homem que só chega ao alvo inferior, é um no rep.',
   'home.ruleDepth': 'Anca abaixo dos joelhos',
   'home.ruleTarget': 'Bola no alvo do atleta',
   'home.recording': 'Rever um vídeo',

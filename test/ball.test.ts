@@ -185,7 +185,7 @@ function squat(tc: TargetCheck, t: number) {
 }
 
 {
-  // On the way up the ball crosses the women's target before the men's.
+  // On the way up the ball crosses the lower target before the upper.
   const tc = newCheck('upper');
   const t = squat(tc, 0);
   tc.update({ tMs: t + 200, state: 'DRIVING', ball: ballOn('lower') });
@@ -216,14 +216,14 @@ function squat(tc: TargetCheck, t: number) {
 }
 
 {
-  // The first hit picks the division. The ball passes the women's mark on its way to the men's, so the throw's
+  // The first hit picks the division. The ball passes the lower mark on its way to the upper, so the throw's
   // highest hit decides, not its first look.
   const tc = newCheck(null);
   const t = squat(tc, 0);
   const passing = tc.update({ tMs: t + 200, state: 'DRIVING', ball: ballOn('lower') });
   const v = tc.update({ tMs: t + 300, state: 'DRIVING', ball: ballOn('upper') });
   check(
-    "before the division is picked, a hit on the women's mark waits, and the men's mark then picks the men's",
+    "before the division is picked, a hit on the lower mark waits, and the upper mark then picks the men's division",
     [passing, v?.valid, v?.target, tc.required],
     [null, true, 'upper', 'upper'],
   );
@@ -235,7 +235,7 @@ function squat(tc: TargetCheck, t: number) {
   tc.update({ tMs: t + 300, state: 'DRIVING', ball: ballOn('lower') });
   const v = nextSquat(tc, t + 2000);
   check(
-    "a first throw that hits only the women's mark picks the women's, and is a rep, not a no-rep",
+    "a first throw that hits only the lower mark picks the women's division, and is a rep, not a no-rep",
     [v?.valid, v?.target, tc.required],
     [true, 'lower', 'lower'],
   );

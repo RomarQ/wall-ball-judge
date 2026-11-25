@@ -3,7 +3,7 @@
  *
  * The trained detector's `target` class boxes the plate (see docs/models.md);
  * the marks sit at fixed shares of a plate's height. A tall box is a
- * two-mark plate, the men's mark near the top and the women's near the
+ * two-mark plate, the upper mark near the top and the lower near the
  * bottom. A squat box is a single disc, and both lines fall on its centre.
  * Two squat boxes stacked in one lane are the two heights of one rig, and
  * each gives its own line. The judge confirms or corrects by dragging.

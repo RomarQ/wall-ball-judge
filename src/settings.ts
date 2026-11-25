@@ -63,7 +63,7 @@ export const JUDGING_DETECTION = 0.5;
 /**
  * How sure the target search's pose must be at every stage, whatever the settings say. The search places a plate by
  * itself only in the lane where it finds the athlete. At 0.7 it found the athlete in gym-raw-14's first frame and put
- * the men's target on the women's plate; at 0.8 and 0.9 it offers the clip's marks to tap.
+ * the upper target on the lower plate; at 0.8 and 0.9 it offers the clip's marks to tap.
  */
 export const SEARCH_CONFIDENCE = 0.9;
 

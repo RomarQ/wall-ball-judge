@@ -206,8 +206,8 @@ it('places the station the athlete squats under before the throw that follows', 
   expect(board.candidates).toEqual([]);
 });
 
-it("counts a first throw at the women's mark as a rep when the first hit picks the division", () => {
-  // gym-raw-7a's first throws strike the women's mark, the fourth the men's: under the men's target, three no-reps.
+it('counts a first throw at the lower mark as a rep when the first hit picks the division', () => {
+  // gym-raw-7a's first throws strike the lower mark, the fourth the upper: under the upper target, three no-reps.
   const { valid, noRep, board } = replay(readLog('test/data/judge-excerpt.json.gz'), undefined, null);
   expect([valid, noRep, board.required]).toEqual([4, 0, 'lower']);
 });

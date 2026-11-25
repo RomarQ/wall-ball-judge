@@ -31,25 +31,25 @@ const placed = (boxes: Rect[], w: number, h: number) => {
 {
   // A two-mark plate 100 px wide and 200 px tall, its top at y 100, in a 720 x 1280 frame.
   check(
-    "a tall box puts the men's mark near the top and the women's near the bottom",
+    'a tall box puts the upper mark near the top and the lower near the bottom',
     placed([{ x: 310, y: 100, w: 100, h: 200 }], 720, 1280),
     [0.122, 0.191, 0.5],
   );
 }
 
 check(
-  "a squat box is one disc: the men's line on its mark, and the women's a line gap below it",
+  'a squat box is one disc: the upper line on its mark, and the lower a line gap below it',
   placed([{ x: 300, y: 100, w: 120, h: 120 }], 720, 1280),
   [0.12, 0.14, 0.5],
 );
 
 {
   // eval-gym-1's disc as the finder placed it, in units of the frame height,
-  // with the women's line kept LINE_GAP below the men's.
+  // with the lower line kept LINE_GAP below the upper.
   const disc = { x: 0.795, y: 0.047, w: 0.103, h: 0.104 };
   const marks = weighedMarks({ upper: 0.099, lower: 0.119 }, [disc]);
   check(
-    "a single disc is one mark at its centre, so a ball on its lower half is the men's hit too",
+    'a single disc is one mark at its centre, so a ball on its lower half is the upper hit too',
     marks.map(({ which, line }) => [which, Number(line.toFixed(3))]),
     [['upper', 0.099]],
   );
@@ -63,39 +63,39 @@ check(
 
 // The two marks of one lane of -NDerrug4tk/f00011, verified by a person, in
 // pixels of its 640 x 360 frame.
-const MENS = { x: 242, y: 3, w: 15, h: 28 };
-const WOMENS = { x: 244, y: 38, w: 13, h: 31 };
+const UPPER = { x: 242, y: 3, w: 15, h: 28 };
+const LOWER = { x: 244, y: 38, w: 13, h: 31 };
 
 {
   check(
     'two marks stacked in one lane give a line each, not two lines off one mark',
-    [pairFor(MENS, [MENS, WOMENS]) === WOMENS, placed([MENS, WOMENS], 640, 360)],
+    [pairFor(UPPER, [UPPER, LOWER]) === LOWER, placed([UPPER, LOWER], 640, 360)],
     [true, [0.043, 0.144, 0.391]],
   );
 }
 
 {
   // The same mark's height, a rig's width away: the next lane, not the next height.
-  const otherLane = { ...WOMENS, x: WOMENS.x + 3 * WOMENS.w };
-  check('a mark does not pair across lanes', pairFor(MENS, [MENS, otherLane]), null);
+  const otherLane = { ...LOWER, x: LOWER.x + 3 * LOWER.w };
+  check('a mark does not pair across lanes', pairFor(UPPER, [UPPER, otherLane]), null);
 }
 
 {
   // Something in the same lane at three times the height is not the other mark.
   const banner = { x: 230, y: 90, w: 40, h: 95 };
-  check('a mark does not pair with an object of another size', pairFor(MENS, [MENS, banner]), null);
+  check('a mark does not pair with an object of another size', pairFor(UPPER, [UPPER, banner]), null);
 }
 
 {
   // The same mark boxed twice, a couple of pixels apart.
-  const again = { ...MENS, y: MENS.y + 2 };
-  check('one mark boxed twice is not a pair', pairFor(MENS, [MENS, again]), null);
+  const again = { ...UPPER, y: UPPER.y + 2 };
+  check('one mark boxed twice is not a pair', pairFor(UPPER, [UPPER, again]), null);
 }
 
 {
   // A rig of three heights: the middle mark belongs with the nearer of the two.
   const third = { x: 243, y: 70, w: 14, h: 30 };
-  check('of several heights the nearest is taken', pairFor(WOMENS, [MENS, WOMENS, third]), third);
+  check('of several heights the nearest is taken', pairFor(LOWER, [UPPER, LOWER, third]), third);
 }
 
 /** A search look and where it saw the athlete. */

@@ -173,7 +173,7 @@ const COMMANDS: DisplayCommand[] = [
 const sameCommand = (a: DisplayCommand, b: DisplayCommand) =>
   a.kind === b.kind && (a.kind === 'reset' || (b.kind === 'required' && a.target === b.target));
 
-/** The `command` payload: the version, then 1 for Reset, 2 for the men's target, 3 for the women's. */
+/** The `command` payload: the version, then 1 for Reset, 2 for the upper target, 3 for the lower. */
 export function encodeCommand(command: DisplayCommand): Uint8Array {
   return Uint8Array.of(COMMAND_VERSION, COMMANDS.findIndex((known) => sameCommand(known, command)) + 1);
 }

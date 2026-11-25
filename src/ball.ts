@@ -84,8 +84,8 @@ export interface BallSeen {
 /**
  * Whether a strike at `target` makes the rep for an athlete who must reach
  * `required`: one at the required target or higher, so the women's throw that
- * sails to the men's target counts and the men's throw that lands on the
- * women's does not. Before the division is decided, only the men's target,
+ * sails to the upper target counts and the men's throw that lands on the
+ * lower does not. Before the division is decided, only the upper target,
  * which makes the rep for either.
  */
 export function counts(target: Target | null, required: Target | null): boolean {
@@ -151,7 +151,7 @@ const newWindow = (squat: Squat): ThrowWindow => ({
  * and any rep event, plus what the detector saw while `detecting` is true. It
  * returns null, or one verdict.
  *
- * There are two targets, `upper` and `lower`, the men's and the women's, and
+ * There are two targets, `upper` for men and `lower` for women, and
  * `required` names the one this athlete must reach, or is null until the first
  * throw that strikes a mark decides it. A throw opens
  * when the squat leaves BOTTOM, which is when the athlete drives the ball up.
@@ -166,13 +166,13 @@ export class TargetCheck {
   /**
    * The target this athlete must reach, or null until a throw decides it: the
    * first throw that strikes a mark of a pair makes the highest mark it struck
-   * this athlete's. Until then only the men's mark ends a throw, and a throw
-   * that strikes the women's goes on until the next squat, in case the ball
-   * reaches the men's.
+   * this athlete's. Until then only the upper mark ends a throw, and a throw
+   * that strikes the lower goes on until the next squat, in case the ball
+   * reaches the upper.
    */
   required: Target | null = 'upper';
   /**
-   * Whether the target holds the men's and the women's marks, so a strike
+   * Whether the target holds the upper and the lower marks, so a strike
    * tells the division. A single disc is one mark for both, and a strike on it
    * decides nothing.
    */
