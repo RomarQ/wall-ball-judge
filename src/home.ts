@@ -1,13 +1,13 @@
 /**
- * The home view: the drawing of a rep, the controls that start a set, whether
- * this device runs the app, the check that tests it and stores the models for
- * use with no network, and the offer to install the app.
+ * The home view: the drawing of a rep, the controls that start a set, the
+ * how-to video, whether this device runs the app, the check that tests it and
+ * stores the models for use with no network, and the offer to install the app.
  */
 import { playDemo } from './demo';
 import { cameraBlocker } from './diagnostics';
 import { $ } from './dom';
 import { onLanguage, t } from './i18n';
-import { LINKS } from './links';
+import { HOW_TO, LINKS } from './links';
 import { confirmDownload, keepStored, readOfflineState, storedKept, type OfflineState } from './offline';
 import { savedFinder, savedTimes, unitFor, type UnitTimes } from './phone-check';
 import { STEPS, modelFiles, preload } from './preload';
@@ -275,7 +275,10 @@ export function homeShown(shown: boolean): void {
   if (shown) {
     showLastSet();
     void showReadiness();
-  } else checking?.abort();
+  } else {
+    checking?.abort();
+    $<HTMLDialogElement>('home-how-to-player').close();
+  }
 }
 
 export function bindHome(start: { live: () => void; recording: (file: File) => void }): void {
@@ -301,6 +304,17 @@ export function bindHome(start: { live: () => void; recording: (file: File) => v
     file.value = '';
     if (picked) start.recording(picked);
   });
+
+  const player = $<HTMLDialogElement>('home-how-to-player');
+  const video = player.querySelector('video')!;
+  video.src = HOW_TO.path;
+  $('home-how-to-length').textContent = HOW_TO.length;
+  $('home-how-to').addEventListener('click', () => {
+    player.showModal();
+    void video.play();
+  });
+  $('home-how-to-close').addEventListener('click', () => player.close());
+  player.addEventListener('close', () => video.pause());
 
   $('home-check').addEventListener('click', () => void checkPhone());
   $('home-recheck').addEventListener('click', () => void checkPhone());

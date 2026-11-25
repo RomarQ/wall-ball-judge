@@ -1,7 +1,8 @@
 /**
  * The home screen, laid out as the PWA's home view: the title and the drawn demo with the rule, the controls that start
- * a set, whether this device runs the app, where to stand the phone, and the note that the video stays on the device. On
- * a phone on its side, the demo stands beside the words and the controls, and the device and the placing side by side.
+ * a set, the how-to video, whether this device runs the app, where to stand the phone, and the note that the video stays
+ * on the device. On a phone on its side, the demo stands beside the words, the controls and the how-to video, and the
+ * device and the placing side by side.
  */
 import React, { useEffect, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -9,9 +10,11 @@ import { useCameraDevices } from 'react-native-vision-camera';
 import { wallballVision, type PhoneCheck } from 'wallball-vision';
 import {
   ballReadiness,
+  HOW_TO,
   LINKS,
   phoneReadiness,
   poseReadiness,
+  SITE,
   t,
   type Measured,
   type Parts,
@@ -21,14 +24,14 @@ import { ballModel } from '../detect';
 import { phoneCheck } from '../phone';
 import { Button, CONDENSED, page, Spec } from './controls';
 import { Demo } from './Demo';
-import { Film, Gear, GitHub, HuggingFace, Mail } from './icons';
+import { Film, Gear, GitHub, HuggingFace, Mail, Play } from './icons';
 import { Plan } from './Plan';
-import { COLOURS, REM } from './theme';
+import { COLOURS, REM, TAP } from './theme';
 
 const ANSWER = { good: 'home.yes', slow: 'home.maybe', bad: 'home.no' } as const;
 const WHY = { slow: 'home.readySlow', bad: 'home.readyBad' } as const;
 
-/** Opens a footer link. A phone with no app for the address opens nothing. */
+/** Opens an address in the phone's app for it. A phone with no such app opens nothing. */
 function open(url: string): void {
   Linking.openURL(url).catch(() => {});
 }
@@ -116,6 +119,15 @@ export function HomeScreen({
       </Control>
     </View>
   );
+  const howTo = (
+    <Pressable style={({ pressed }) => [styles.howTo, pressed && styles.howToPressed]} onPress={() => open(SITE + HOW_TO.path)} accessibilityRole="button">
+      <View style={styles.howToPlay}>
+        <Play size={1.1 * REM} colour={COLOURS.onChalk} />
+      </View>
+      <Text style={styles.howToName}>{t('home.howTo')}</Text>
+      <Text style={styles.howToLength}>{HOW_TO.length}</Text>
+    </Pressable>
+  );
 
   return (
     <ScrollView style={page.scroll} contentContainerStyle={page.body} onLayout={(e) => setViewHeight(e.nativeEvent.layout.height)}>
@@ -132,6 +144,7 @@ export function HomeScreen({
               {words}
               {rules}
               {controls}
+              {howTo}
             </View>
           </View>
         ) : (
@@ -144,6 +157,7 @@ export function HomeScreen({
             ) : null}
             {rules}
             {controls}
+            {howTo}
           </>
         )}
       </View>
@@ -264,6 +278,24 @@ const styles = StyleSheet.create({
   shutterKey: { width: SHUTTER, height: SHUTTER, borderRadius: 999, backgroundColor: COLOURS.chalk },
   shutterPressed: { transform: [{ scale: 0.92 }] },
   shutterName: { marginTop: 0.8 * REM, fontWeight: '700' },
+  howTo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 0.75 * REM,
+    minHeight: TAP,
+    marginTop: 1.5 * REM,
+    paddingVertical: 0.5 * REM,
+    paddingLeft: 0.5 * REM,
+    paddingRight: REM,
+    backgroundColor: COLOURS.graphite,
+    borderWidth: 1,
+    borderColor: COLOURS.rule,
+    borderRadius: 0.75 * REM,
+  },
+  howToPressed: { transform: [{ scale: 0.98 }] },
+  howToPlay: { width: 2.25 * REM, height: 2.25 * REM, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOURS.chalk },
+  howToName: { color: COLOURS.chalk, fontSize: REM, fontWeight: '600' },
+  howToLength: { marginLeft: 'auto', color: COLOURS.steel, fontSize: REM, fontVariant: ['tabular-nums'] },
   section: { marginTop: 2 * REM, paddingTop: 1.5 * REM, borderTopWidth: 1, borderTopColor: COLOURS.rule },
   state: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 0.45 * REM },
   dot: { width: 0.55 * REM, height: 0.55 * REM, borderRadius: 999, borderWidth: 1.5, borderColor: COLOURS.steel },

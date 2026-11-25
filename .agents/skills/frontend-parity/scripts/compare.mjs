@@ -15,7 +15,7 @@ const ANDROID_DIR = 'mobile/app/ui';
 /** PWA drawings whose shapes `src/demo-scene.ts` moves in both apps: their literals are only a first frame. */
 const MOVING = ['home-demo'];
 /** PWA symbols for a feature the Android app has another way, as the skill's table of intended differences says. */
-const PWA_ONLY = ['icon-save'];
+const PWA_ONLY = ['icon-save', 'icon-close'];
 const GEOMETRY = [
   'd',
   'cx',

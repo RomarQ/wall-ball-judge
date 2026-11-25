@@ -78,6 +78,9 @@
           d="M4 12a8 8 0 0 1 13.7-5.7L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.7L4 15.5M4 20v-4.5h4.5"
         />
       </symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </symbol>
       <symbol id="icon-mail" viewBox="0 0 24 24">
         <rect x="3" y="5" width="18" height="14" rx="2.5" />
         <path d="M3.5 7.5 12 13l8.5-5.5" />
@@ -328,6 +331,13 @@
             </a>
           </div>
           <p class="blocked" id="home-blocked" hidden></p>
+          <button class="how-to" id="home-how-to">
+            <span class="play" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" /></svg>
+            </span>
+            <span data-i18n="home.howTo">How to use it</span>
+            <span class="length" id="home-how-to-length"></span>
+          </button>
         </section>
 
         <section class="phone" aria-labelledby="home-phone-title">
@@ -451,6 +461,23 @@
           <p id="home-version"></p>
         </footer>
       </div>
+
+      <dialog class="how-to-player" id="home-how-to-player" aria-labelledby="home-how-to-title">
+        <header>
+          <h2 id="home-how-to-title" data-i18n="home.howTo">How to use it</h2>
+          <button
+            class="icon-button small"
+            id="home-how-to-close"
+            aria-label="Close the video"
+            data-i18n-label="home.howToClose"
+          >
+            <svg viewBox="0 0 24 24"><use href="#icon-close" /></svg>
+          </button>
+        </header>
+        <video controls playsinline preload="none" poster="/media/how-to-en.jpg">
+          <track kind="captions" src="/media/how-to-en.vtt" srclang="en" label="English" />
+        </video>
+      </dialog>
     </main>
 
     <div class="view" id="judge" hidden>

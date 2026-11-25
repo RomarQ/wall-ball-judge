@@ -36,6 +36,7 @@ These differ on purpose, because each platform offers the feature another way. A
 | The choice of detection model revision in Settings                                                                        |                                                                            |
 | Home's Ready for offline use and Installed rows, and Check this device: the Android app ships its models and is installed |                                                                            |
 | The hint for a phone that opens the PWA as a desktop site                                                                 |                                                                            |
+| The player of the how-to video (`icon-close`): Android opens the video's address on the site, and the phone plays it      |                                                                            |
 
 ## Making a change
 

@@ -277,6 +277,79 @@
   font-size: 0.9rem;
   text-align: center;
 }
+.how-to {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: var(--tap);
+  margin-top: 1.5rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--chalk);
+  background: var(--graphite);
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.how-to:active {
+  transform: scale(0.98);
+}
+.how-to .play {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: var(--on-chalk);
+  background: var(--chalk);
+}
+.how-to .play svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: currentColor;
+}
+.how-to .length {
+  margin-left: auto;
+  color: var(--steel);
+  font-weight: 400;
+}
+/* The how-to video, over the whole screen. */
+.how-to-player {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  color: var(--chalk);
+  background: var(--black);
+  border: 0;
+}
+.how-to-player[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.how-to-player::backdrop {
+  background: var(--black);
+}
+.how-to-player header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+}
+.how-to-player h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.how-to-player video {
+  width: 100%;
+  height: 100%;
+  background: var(--black);
+}
 
 /* This phone: what it can do, read from the browser and from the last check. The list itself is in base.css. */
 .specs .install {
@@ -473,7 +546,7 @@
   }
   /* The whole stage, controls included, fits the height of a laptop screen. */
   .scene {
-    width: min(100%, calc((100dvh - 24rem) * 3 / 4));
+    width: min(100%, calc((100dvh - 29rem) * 3 / 4));
     margin-inline: auto;
   }
   .home section.phone {
@@ -500,12 +573,13 @@
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: 1fr auto auto auto 1fr;
+    grid-template-rows: 1fr auto auto auto auto 1fr;
     grid-template-areas:
       'scene .'
       'scene title'
       'scene rules'
       'scene controls'
+      'scene how-to'
       'scene .';
     column-gap: 2rem;
   }
@@ -527,6 +601,9 @@
   }
   .controls {
     grid-area: controls;
+  }
+  .how-to {
+    grid-area: how-to;
   }
   .home footer {
     grid-column: 1 / -1;
