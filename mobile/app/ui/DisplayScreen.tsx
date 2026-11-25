@@ -157,8 +157,8 @@ export function DisplayScreen({ onLeave }: { onLeave: () => void }): React.JSX.E
 
       {mirror.full ? (
         <View style={styles.row}>
-          {plate('upper', t('board.men'))}
-          {plate('lower', t('board.women'))}
+          {plate('upper', t('board.upper'))}
+          {plate('lower', t('board.lower'))}
         </View>
       ) : null}
 

@@ -667,11 +667,11 @@ function Scoreboard({
         </View>
         <View style={styles.targets}>
           <View style={styles.targetRow}>
-            {pill('upper', t('board.men'))}
+            {pill('upper', t('board.upper'))}
             {plate('upper', t('board.hitUpper'))}
           </View>
           <View style={styles.targetRow}>
-            {pill('lower', t('board.women'))}
+            {pill('lower', t('board.lower'))}
             {plate('lower', t('board.hitLower'))}
           </View>
         </View>

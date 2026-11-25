@@ -587,10 +587,10 @@
 
             <div
               class="targets"
-              title="The highlighted division&#8217;s target is the one this athlete must reach. Tap a plate when the ball hits it."
-              data-i18n-title="board.divisionTitle"
+              title="The highlighted target is the one this athlete must reach. Tap a plate when the ball hits it."
+              data-i18n-title="board.requiredTitle"
             >
-              <button class="pill" data-target="upper" data-i18n="board.men">Men</button>
+              <button class="pill" data-target="upper" data-i18n="board.upper">Upper</button>
               <button
                 class="plate-button upper"
                 id="target-upper"
@@ -602,7 +602,7 @@
                   <rect x="33" y="30" width="34" height="46" rx="7" />
                 </svg>
               </button>
-              <button class="pill" data-target="lower" data-i18n="board.women">Women</button>
+              <button class="pill" data-target="lower" data-i18n="board.lower">Lower</button>
               <button
                 class="plate-button lower"
                 id="target-lower"
@@ -679,9 +679,12 @@
           </label>
           <label class="switch">
             <span>
-              <strong data-i18n="settings.divisionByHit">Pick the division from the first hit</strong>
+              <strong data-i18n="settings.divisionByHit"
+                >Pick the athlete&#8217;s target from the first hit</strong
+              >
               <small data-i18n="settings.divisionByHitHint"
-                >In each set, the first throw that hits a target picks the division.</small
+                >In each set, the first throw that hits a target picks the target this athlete must
+                reach.</small
               >
             </span>
             <input id="division-by-hit" type="checkbox" role="switch" />

@@ -114,10 +114,10 @@ const en = {
   'board.squat': 'Squat',
   'board.noReps': 'No-reps',
   'board.reps': 'Reps',
-  'board.divisionTitle':
-    'The highlighted division’s target is the one this athlete must reach. Tap a plate when the ball hits it.',
-  'board.men': 'Men',
-  'board.women': 'Women',
+  'board.requiredTitle':
+    'The highlighted target is the one this athlete must reach. Tap a plate when the ball hits it.',
+  'board.upper': 'Upper',
+  'board.lower': 'Lower',
   'board.hitUpper': 'The ball hit the upper target',
   'board.hitLower': 'The ball hit the lower target',
   'board.timeTitle': 'From the start of the first rep to the end of the set',
@@ -263,8 +263,9 @@ const en = {
   'settings.judging': 'Judging',
   'settings.ballCheck': 'Check the ball on the target',
   'settings.ballCheckHint': 'When off, the board judges only the squat.',
-  'settings.divisionByHit': 'Pick the division from the first hit',
-  'settings.divisionByHitHint': 'In each set, the first throw that hits a target picks the division.',
+  'settings.divisionByHit': 'Pick the athlete’s target from the first hit',
+  'settings.divisionByHitHint':
+    'In each set, the first throw that hits a target picks the target this athlete must reach.',
   'settings.ballInput': 'Ball model input',
   'settings.pixels': (n: number) => `${n} px`,
   'settings.ballInputHint':
@@ -386,10 +387,10 @@ const ptPT: Texts = {
   'board.squat': 'Agachamento',
   'board.noReps': 'No reps',
   'board.reps': 'Repetições',
-  'board.divisionTitle':
-    'O alvo da divisão destacada é o que este atleta tem de atingir. Toque numa placa quando a bola lhe acertar.',
-  'board.men': 'Homens',
-  'board.women': 'Mulheres',
+  'board.requiredTitle':
+    'O alvo destacado é o que este atleta tem de atingir. Toque numa placa quando a bola lhe acertar.',
+  'board.upper': 'Superior',
+  'board.lower': 'Inferior',
   'board.hitUpper': 'A bola acertou no alvo superior',
   'board.hitLower': 'A bola acertou no alvo inferior',
   'board.timeTitle': 'Do início da primeira repetição ao fim da série',
@@ -539,8 +540,9 @@ const ptPT: Texts = {
   'settings.judging': 'Avaliação',
   'settings.ballCheck': 'Verificar a bola no alvo',
   'settings.ballCheckHint': 'Quando desligado, o painel avalia só o agachamento.',
-  'settings.divisionByHit': 'Escolher a divisão pelo primeiro acerto',
-  'settings.divisionByHitHint': 'Em cada série, o primeiro lançamento que acerta num alvo escolhe a divisão.',
+  'settings.divisionByHit': 'Escolher o alvo do atleta pelo primeiro acerto',
+  'settings.divisionByHitHint':
+    'Em cada série, o primeiro lançamento que acerta num alvo escolhe o alvo que este atleta tem de atingir.',
   'settings.ballInput': 'Entrada do modelo da bola',
   'settings.pixels': (n: number) => `${n} px`,
   'settings.ballInputHint':
