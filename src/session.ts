@@ -281,16 +281,12 @@ export class Session {
   }
 
   /**
-   * The plates in the clearest of several frames of a clip, or in the one
+   * The plates in the frames of a clip that `searchClip` reads, or in the one
    * frame a camera is showing.
    *
-   * A clip is held on its first frame while the target is chosen, and that is
-   * the frame where the phone was still being put down: of the clips recorded
-   * so far, two open with no plate the finder will take and both show one a
-   * second later. The target does not move, so any frame answers for all.
-   *
-   * The frames come from a second decoder on the same clip, so the picture the
-   * judge is looking at stays on the frame the set starts from.
+   * The clip's frames come from a second decoder on the same clip, so the view
+   * does not jump between them while the search runs. The view then shows the
+   * frame the plates came from.
    */
   async #lookForPlates(finder: TargetFinder): Promise<Seen> {
     const src = this.video.currentSrc;
@@ -319,6 +315,8 @@ export class Session {
         finder.cfg,
       );
       finder.lastBest = found.best;
+      // The boxes are drawn on this frame; `play` starts the set from the first one.
+      await seekTo(this.video, found.at);
       return found.seen;
     } finally {
       reader.removeAttribute('src');
@@ -581,9 +579,11 @@ export class Session {
     void this.#requestWakeLock();
   }
 
-  /** Starts a clip that has been waiting on its first frame. */
+  /** Starts a clip that has been waiting while the target was chosen, from its first frame. */
   async play(): Promise<void> {
-    if (this.source === 'file' && this.video.paused) await this.video.play();
+    if (this.source !== 'file' || !this.video.paused) return;
+    await seekTo(this.video, 0);
+    await this.video.play();
   }
 
   async loadFile(file: File): Promise<void> {
