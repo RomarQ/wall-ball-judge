@@ -11,6 +11,7 @@ import { Board, type SearchOutcome } from './board';
 import { ballModelInUse, config, modelsInUse, type PoseQuality } from './config';
 import type { Presence, RepCounter } from './depth';
 import { createBallDetector, type Detector } from './detector';
+import { keptClip } from './kept-clip';
 import { render, type Mode, type Notice, type Stats } from './overlay';
 import type { NoticeTone } from './overlay-layout';
 import { createPose, createStillPose, type Delegate, type Pose, type StillPose } from './pose';
@@ -586,6 +587,8 @@ export class Session {
   }
 
   async loadFile(file: File): Promise<void> {
+    // Started before the models load: a picked file may stop being readable soon after the pick.
+    const clip = keptClip(file);
     await this.#ensurePose();
     this.ballCheck = ballCheckOn();
     this.#followModels();
@@ -593,7 +596,7 @@ export class Session {
 
     this.video.classList.remove('mirror');
     this.video.srcObject = null;
-    this.video.src = URL.createObjectURL(file);
+    this.video.src = URL.createObjectURL(await clip);
     this.video.muted = true;
     await new Promise<void>((resolve, reject) => {
       this.video.addEventListener('loadeddata', () => resolve(), { once: true });
