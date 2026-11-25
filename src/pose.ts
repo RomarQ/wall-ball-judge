@@ -19,8 +19,16 @@ export interface Pose {
   detect(video: Frame, timestampMs: number): Landmark[] | null;
   /** Takes the confidence the settings ask for now, when it differs from the one the model runs with. */
   update(): Promise<void>;
+  /**
+   * Drops the person the model follows, so a coming frame finds them afresh: video mode turns its crop to the body it
+   * follows, and keeps a crop that turned over. At most once in `RETRACK_MS`, as each one rebuilds the model's graph.
+   */
+  retrack(): void;
   close(): void;
 }
+
+/** The least time between two retracks: until the athlete stands, a fresh search may turn the crop over again. */
+const RETRACK_MS = 1000;
 
 type RunningMode = 'VIDEO' | 'IMAGE';
 
@@ -103,6 +111,7 @@ export async function createPose({ quality, unit }: { quality: PoseQuality; unit
     unit === 'gpu' ? 'GPU' : 'CPU',
   );
   let held = JSON.stringify(confidence('VIDEO'));
+  let retrackedAt = -Infinity;
 
   return {
     quality,
@@ -113,6 +122,13 @@ export async function createPose({ quality, unit }: { quality: PoseQuality; unit
     },
     async update() {
       held = await follow(landmarker, held, 'VIDEO');
+    },
+    retrack() {
+      const now = performance.now();
+      if (now - retrackedAt < RETRACK_MS) return;
+      retrackedAt = now;
+      // MediaPipe rebuilds its graph on every setOptions, and a new graph follows no one.
+      void landmarker.setOptions({});
     },
     close() {
       landmarker.close();

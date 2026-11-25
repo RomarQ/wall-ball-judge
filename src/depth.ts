@@ -140,6 +140,18 @@ export const State = {
 
 export type RepState = (typeof State)[keyof typeof State];
 
+/**
+ * Whether a pose stands on its head: the shoulders below the hips. No part of a wall ball puts them there, so such a
+ * pose comes from a pose tracker that turned its crop over. A tracker turns its crop to the body it found, and one
+ * that finds the athlete bent over the ball can then follow them upside down while they stand.
+ */
+export function upsideDown(landmarks: Landmark[] | null): boolean {
+  const y = (i: number) => landmarks?.[i]?.y;
+  const [ls, rs, lh, rh] = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_HIP, LM.RIGHT_HIP].map(y);
+  if (ls === undefined || rs === undefined || lh === undefined || rh === undefined) return false;
+  return ls + rs > lh + rh;
+}
+
 function visibilityOf(landmark: Landmark): number {
   return typeof landmark.visibility === 'number' ? landmark.visibility : 1;
 }

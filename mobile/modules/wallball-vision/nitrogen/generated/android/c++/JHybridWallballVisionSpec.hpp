@@ -65,6 +65,7 @@ namespace margelo::nitro::wallballvision {
     void openCamera(const JudgeOptions& options) override;
     PoseFrame cameraFrame(const std::shared_ptr<ArrayBuffer>& pixels, double bytesPerRow, double width, double height, const std::string& orientation, bool mirrored, double tMs) override;
     void setLookWanted(bool wanted, const std::optional<LookWindow>& window) override;
+    void retrackPose() override;
     std::shared_ptr<Promise<TargetLook>> searchCamera(double cutWidth, double minScore) override;
     void closeCamera() override;
     std::optional<std::string> getSetting(const std::string& key) override;

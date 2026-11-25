@@ -3,6 +3,7 @@
  * the committed excerpt brings the judge to the first throw, then each test
  * probes one rule from there.
  */
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { DEFAULTS as DEPTH, LM, type DepthOptions } from '../src/depth';
 import { FrameJudge, type FrameInput, type LookTicket } from '../src/frame-judge';
@@ -135,5 +136,38 @@ describe('the window a look reads', () => {
 
   it('is the whole picture when no window side is asked for', () => {
     expect(judge.lookWindow({ ...frame, x: 0.5, plates: [], windowSide: null })).toBeNull();
+  });
+});
+
+describe('a pose standing on its head', () => {
+  // Two frames of a set filmed from behind: one from a pose tracker that turned its crop over when it found the
+  // athlete bent over the ball, and the bottom of one of the set's real squats.
+  const frames = JSON.parse(readFileSync('test/data/upside-down.json', 'utf8')) as Record<
+    'upsideDown' | 'deepSquat',
+    { w: number; h: number; landmarks: number[] }
+  >;
+  const judged = (name: keyof typeof frames) =>
+    new FrameJudge(DEPTH, { bite: REACH.bite }).frame({
+      tMs: 0,
+      width: frames[name].w,
+      height: frames[name].h,
+      landmarks: landmarksFrom(frames[name].landmarks),
+      armed: true,
+      ballCheck: false,
+      x: null,
+      plates: [],
+      windowSide: null,
+    });
+
+  it('reads no depth from it and asks for a fresh search, as it reads as a squat 100% below parallel', () => {
+    const frame = judged('upsideDown');
+    expect(frame.depth.ok).toBe(false);
+    expect(frame.retrack).toBe(true);
+  });
+
+  it('keeps the bottom of a real squat seen from behind', () => {
+    const frame = judged('deepSquat');
+    expect(frame.depth.ok).toBe(true);
+    expect(frame.retrack).toBe(false);
   });
 });

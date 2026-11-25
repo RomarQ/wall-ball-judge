@@ -182,6 +182,10 @@ namespace margelo::nitro::wallballvision {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jboolean /* wanted */, jni::alias_ref<JLookWindow> /* window */)>("setLookWanted");
     method(_javaPart, wanted, window.has_value() ? JLookWindow::fromCpp(window.value()) : nullptr);
   }
+  void JHybridWallballVisionSpec::retrackPose() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("retrackPose");
+    method(_javaPart);
+  }
   std::shared_ptr<Promise<TargetLook>> JHybridWallballVisionSpec::searchCamera(double cutWidth, double minScore) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(double /* cutWidth */, double /* minScore */)>("searchCamera");
     auto __result = method(_javaPart, cutWidth, minScore);

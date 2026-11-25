@@ -158,6 +158,11 @@ export interface WallballVision
   cameraFrame(pixels: ArrayBuffer, bytesPerRow: number, width: number, height: number, orientation: string, mirrored: boolean, tMs: number): PoseFrame
   /** Whether the next camera frames start a look of the ball model, and at which part of the frame, or at the whole frame without `window`. */
   setLookWanted(wanted: boolean, window: LookWindow | undefined): void
+  /**
+   * Drops the athlete the camera's and the clip's pose follow, so the next frame of each finds them afresh. The pose
+   * turns its crop to the body it found, and keeps a crop turned upside down while anyone is in view.
+   */
+  retrackPose(): void
   /** A search look at the next camera frame, without the still pose: a running camera's judging pose already places the athlete. */
   searchCamera(cutWidth: number, minScore: number): Promise<TargetLook>
   closeCamera(): void

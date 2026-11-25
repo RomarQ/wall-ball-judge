@@ -89,6 +89,7 @@ class OwnPose(
   private var tracked: Roi? = null
   private val visibility = Array(POSE_LANDMARKS) { LowPass() }
   private var smoother: Array<OneEuro>? = null
+  @Volatile private var retrackWanted = false
 
   init {
     val environment = Litert.environment(context)
@@ -131,6 +132,10 @@ class OwnPose(
 
   /** The 33 landmarks as x, y, z, visibility in fractions of the frame, or none; and the time the detector took, 0 when it did not run. */
   fun find(rgba: ByteBuffer, width: Int, height: Int, tMs: Long): Pair<DoubleArray, Double> {
+    if (retrackWanted) {
+      retrackWanted = false
+      lost()
+    }
     var detectorMs = 0.0
     val roi = tracked ?: run {
       val start = SystemClock.elapsedRealtimeNanos()
@@ -164,6 +169,11 @@ class OwnPose(
     )
     tracked = next
     return smooth(projected, next, width, height, tMs) to detectorMs
+  }
+
+  /** Drops the athlete it follows, from any thread: the next frame runs the detector, as after [lost]. */
+  fun retrack() {
+    retrackWanted = true
   }
 
   /** A frame without an athlete: the next frame runs the detector, and the point smoother starts over, as MediaPipe's does. */

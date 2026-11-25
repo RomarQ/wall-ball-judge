@@ -239,12 +239,13 @@ export class Board {
   step(frame: BoardFrame): JudgedFrame {
     this.width = frame.width;
     this.height = frame.height;
-    this.landmarks = frame.landmarks;
     this.#lastMs = frame.tMs;
     const judged = this.judge.frame({ ...frame, x: this.targetX, plates: this.plates });
+    this.landmarks = judged.retrack ? null : frame.landmarks;
     this.depth = judged.depth;
     // At the bottom of a squat the athlete stands at their station, and the throw that opens next needs its target.
-    if (this.#atSquat && this.judge.counter.state === 'BOTTOM') this.#pickAt(frame);
+    if (this.#atSquat && this.judge.counter.state === 'BOTTOM')
+      this.#pickAt({ ...frame, landmarks: this.landmarks });
     if (judged.verdict) this.#counted(judged.verdict, frame.tMs);
     if (this.flash && frame.tMs > this.flash.until) this.flash = null;
     if (this.ball && frame.tMs > this.ball.until) this.ball = null;

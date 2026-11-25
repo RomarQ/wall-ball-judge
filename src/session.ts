@@ -832,7 +832,7 @@ export class Session {
     );
     this.stats.mode = this.mode;
     const detector = this.detector;
-    const { depth, event, verdict, look } = this.board.step({
+    const { depth, event, verdict, look, retrack } = this.board.step({
       tMs,
       width: this.canvas.width,
       height: this.canvas.height,
@@ -841,6 +841,7 @@ export class Session {
       ballCheck: this.stats.mode === 'target',
       windowSide: config.ball.windows && detector?.size ? detector.size : null,
     });
+    if (retrack) pose.retrack();
     if (event?.type === 'abort' && event.reason === 'lost-tracking') this.onTrackingLost();
     if (logged) {
       logged.depth = depth.ok ? depth.depth : null;
@@ -854,7 +855,7 @@ export class Session {
     const showPose = this.source === 'camera' || this.armed;
 
     render(this.canvas, {
-      landmarks: showPose ? landmarks : null,
+      landmarks: showPose ? this.board.landmarks : null,
       depth: showPose ? depth : null,
       flash: this.board.flash,
       notice: this.notice,

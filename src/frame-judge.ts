@@ -22,6 +22,7 @@ import {
   FemurRuler,
   Presence,
   RepCounter,
+  upsideDown,
   type Depth,
   type DepthOptions,
   type RepEvent,
@@ -74,6 +75,8 @@ export interface JudgedFrame {
   verdict: Verdict | null;
   /** A look to run on this frame, or null. */
   look: LookTicket | null;
+  /** The pose stood on its head and counted as none: the runtime's pose tracker must find the athlete afresh. */
+  retrack: boolean;
 }
 
 /** A plate's box height at a mark, in pixels: two plates take a mark each, the higher first; one plate holds both. */
@@ -149,7 +152,9 @@ export class FrameJudge {
   }
 
   frame(input: FrameInput): JudgedFrame {
-    const { tMs, width, height, landmarks } = input;
+    const { tMs, width, height } = input;
+    const retrack = upsideDown(input.landmarks);
+    const landmarks = retrack ? null : input.landmarks;
     const aspect = width / height || 1;
     const depth: Depth = landmarks
       ? computeDepth(landmarks, aspect, this.#depth, this.ruler.length)
@@ -168,7 +173,7 @@ export class FrameJudge {
       tMs,
     });
 
-    if (!input.ballCheck) return { depth, present, event, verdict: squatVerdict(event), look: null };
+    if (!input.ballCheck) return { depth, present, event, verdict: squatVerdict(event), look: null, retrack };
     const ball = this.#pending;
     this.#pending = null;
     const marks = weighedMarks(this.target.lines, input.plates);
@@ -190,7 +195,7 @@ export class FrameJudge {
     if (thrown && thrown.reason !== 'depth' && !before.aimed) verdict = null;
     const aimed = this.target.window ? this.#aimed : placed;
     if (!verdict && event?.type === 'rep' && event.depthPass && !aimed) verdict = squatVerdict(event);
-    return { depth, present, event, verdict, look };
+    return { depth, present, event, verdict, look, retrack };
   }
 
   /**

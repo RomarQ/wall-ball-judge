@@ -92,6 +92,11 @@ class FramePipeline(
     return Landmarks.flat(landmarker!!.detectForVideo(frame, tMs).landmarks().firstOrNull())
   }
 
+  /** Drops the athlete the pose follows, so a coming frame finds them afresh. MediaPipe's landmarker has no way to. */
+  fun retrack() {
+    own?.retrack()
+  }
+
   override fun close() {
     balls?.close()
     landmarker?.close()

@@ -182,6 +182,12 @@ namespace margelo::nitro::wallballvision {
         std::rethrow_exception(__result.error());
       }
     }
+    inline void retrackPose() override {
+      auto __result = _swiftPart.retrackPose();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
     inline std::shared_ptr<Promise<TargetLook>> searchCamera(double cutWidth, double minScore) override {
       auto __result = _swiftPart.searchCamera(std::forward<decltype(cutWidth)>(cutWidth), std::forward<decltype(minScore)>(minScore));
       if (__result.hasError()) [[unlikely]] {

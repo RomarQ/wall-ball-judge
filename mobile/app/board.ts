@@ -2,7 +2,7 @@
  * One set on the board, fed with the native pipeline's frames: the repository's shared board, with the looks the
  * pipeline runs and what the line under the picture says. React-free, so a recording and the camera share it.
  */
-import type { Look, LookWindow, PoseFrame } from 'wallball-vision';
+import { wallballVision, type Look, type LookWindow, type PoseFrame } from 'wallball-vision';
 import { Board, DEPTH, MIN_SCORE, REACH, requiredAtStart, storeRequired, t, type Landmark, type LookTicket, type Tally, type Target, type Verdict } from './core';
 import { boxesOf, type TrainedFile } from './detect';
 import { trackingLost } from './sound';
@@ -81,6 +81,7 @@ export class PipelineBoard extends Board {
       ballCheck: this.ballCheck,
       windowSide: this.ballModel.input,
     });
+    if (judged.retrack) wallballVision.retrackPose();
     if (judged.event?.type === 'abort') trackingLost();
     if (judged.look) {
       if (frame.lookStarted) this.#tickets.set(frame.index, judged.look);

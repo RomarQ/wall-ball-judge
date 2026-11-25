@@ -286,6 +286,17 @@ open class HybridWallballVisionSpec_cxx {
   }
   
   @inline(__always)
+  public final func retrackPose() -> bridge.Result_void_ {
+    do {
+      try self.__implementation.retrackPose()
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
   public final func searchCamera(cutWidth: Double, minScore: Double) -> bridge.Result_std__shared_ptr_Promise_TargetLook___ {
     do {
       let __result = try self.__implementation.searchCamera(cutWidth: cutWidth, minScore: minScore)

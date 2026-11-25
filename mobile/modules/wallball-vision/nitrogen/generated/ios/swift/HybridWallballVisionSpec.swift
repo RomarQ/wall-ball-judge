@@ -24,6 +24,7 @@ public protocol HybridWallballVisionSpec_protocol: HybridObject {
   func openCamera(options: JudgeOptions) throws -> Void
   func cameraFrame(pixels: ArrayBuffer, bytesPerRow: Double, width: Double, height: Double, orientation: String, mirrored: Bool, tMs: Double) throws -> PoseFrame
   func setLookWanted(wanted: Bool, window: LookWindow?) throws -> Void
+  func retrackPose() throws -> Void
   func searchCamera(cutWidth: Double, minScore: Double) throws -> Promise<TargetLook>
   func closeCamera() throws -> Void
   func getSetting(key: String) throws -> String?

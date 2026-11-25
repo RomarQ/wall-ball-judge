@@ -77,6 +77,10 @@ abstract class HybridWallballVisionSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
+  abstract fun retrackPose(): Unit
+  
+  @DoNotStrip
+  @Keep
   abstract fun searchCamera(cutWidth: Double, minScore: Double): Promise<TargetLook>
   
   @DoNotStrip
