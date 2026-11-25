@@ -19,7 +19,7 @@ import { SessionRecorder, type Recording } from './record';
 import { t, warningText } from './i18n';
 import { unitFor } from './phone-check';
 import { ballCheckOn, requiredAtStart, storeRequired } from './settings';
-import { athleteFrom, searchClip, type Look, type Seen } from './placement';
+import { athleteFrom, searchClip, type Look, type Seen, type Span } from './placement';
 import { TargetFinder } from './target-finder';
 import type { LookTicket } from './frame-judge';
 import type { RepTimes } from './tally';
@@ -448,6 +448,8 @@ export class Session {
   #poseMs = 0;
   /** The landmarks of the frame a paused clip is holding, read once. */
   #held: { tMs: number; landmarks: Landmark[] | null } | null = null;
+  /** The picture the pose reads while the board narrows its view. */
+  #viewCanvas: HTMLCanvasElement | null = null;
   /** The revision the loaded target detector came from. */
   #detectorsOf: string | null = null;
   /** The ball model the loaded ball detector runs, as `ballModelInUse` names it. */
@@ -891,9 +893,23 @@ export class Session {
     const held = this.video.paused;
     if (held && this.#held?.tMs === tMs) return this.#held.landmarks;
     this.#poseMs = Math.max(tMs, this.#poseMs + 1);
-    const landmarks = pose.detect(frame, this.#poseMs);
+    const view = this.board.poseView;
+    const landmarks = pose.detect(view ? this.#poseInput(frame, view) : frame, this.#poseMs);
     this.#held = held ? { tMs, landmarks } : null;
     return landmarks;
+  }
+
+  /** `frame` with the picture outside `view` blacked out, so the pose sees no one there. The pose's points keep their place. */
+  #poseInput(frame: Frame, view: Span): HTMLCanvasElement {
+    const canvas = (this.#viewCanvas ??= document.createElement('canvas'));
+    const { w, h } = this.#frameSize();
+    if (canvas.width !== w || canvas.height !== h) Object.assign(canvas, { width: w, height: h });
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(frame, 0, 0, w, h);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, view.x0, h);
+    ctx.fillRect(view.x1, 0, w - view.x1, h);
+    return canvas;
   }
 
   #loop(): void {

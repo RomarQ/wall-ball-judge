@@ -16,6 +16,12 @@ export interface LookWindow {
   h: number
 }
 
+/** A span across a frame, from `x0` to `x1`, in the frame's pixels. */
+export interface PoseView {
+  x0: number
+  x1: number
+}
+
 /** One look of the ball model: the anchors whose best class score reaches the PWA's minimum, as `[6, count]` rows, channel first, boxes in input pixels. */
 export interface Look {
   /** The frame the look was taken of. */
@@ -163,6 +169,11 @@ export interface WallballVision
    * turns its crop to the body it found, and keeps a crop turned upside down while anyone is in view.
    */
   retrackPose(): void
+  /**
+   * The span across which the camera's and the clip's pose may follow someone, or the whole frame without `view`. The
+   * pose drops a person it follows outside the span, and looks for the athlete only inside it.
+   */
+  setPoseView(view: PoseView | undefined): void
   /** A search look at the next camera frame, without the still pose: a running camera's judging pose already places the athlete. */
   searchCamera(cutWidth: number, minScore: number): Promise<TargetLook>
   closeCamera(): void

@@ -163,6 +163,11 @@ class HybridWallballVision : HybridWallballVisionSpec() {
     clipPipeline?.retrack()
   }
 
+  override fun setPoseView(view: PoseView?) {
+    camera?.view = view
+    clipPipeline?.view = view
+  }
+
   override fun searchCamera(cutWidth: Double, minScore: Double): Promise<TargetLook> {
     val pipeline = camera ?: return Promise.rejected(IllegalStateException("the camera is not open"))
     val next = pipeline.snapshot()

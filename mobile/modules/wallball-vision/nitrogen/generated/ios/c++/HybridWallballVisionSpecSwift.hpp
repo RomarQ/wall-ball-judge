@@ -32,6 +32,8 @@ namespace margelo::nitro::wallballvision { struct TargetLook; }
 namespace margelo::nitro::wallballvision { struct TargetRows; }
 // Forward declaration of `ArrayBufferHolder` to properly resolve imports.
 namespace NitroModules { class ArrayBufferHolder; }
+// Forward declaration of `PoseView` to properly resolve imports.
+namespace margelo::nitro::wallballvision { struct PoseView; }
 // Forward declaration of `VideoItem` to properly resolve imports.
 namespace margelo::nitro::wallballvision { struct VideoItem; }
 
@@ -50,6 +52,7 @@ namespace margelo::nitro::wallballvision { struct VideoItem; }
 #include "TargetRows.hpp"
 #include <NitroModules/ArrayBuffer.hpp>
 #include <NitroModules/ArrayBufferHolder.hpp>
+#include "PoseView.hpp"
 #include "VideoItem.hpp"
 
 #include "WallballVision-Swift-Cxx-Umbrella.hpp"
@@ -184,6 +187,12 @@ namespace margelo::nitro::wallballvision {
     }
     inline void retrackPose() override {
       auto __result = _swiftPart.retrackPose();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline void setPoseView(const std::optional<PoseView>& view) override {
+      auto __result = _swiftPart.setPoseView(view);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

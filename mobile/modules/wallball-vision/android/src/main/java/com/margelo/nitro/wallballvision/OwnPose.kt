@@ -91,6 +91,9 @@ class OwnPose(
   private var smoother: Array<OneEuro>? = null
   @Volatile private var retrackWanted = false
 
+  /** The span across which the athlete may be followed, or null for the whole frame; set from any thread. */
+  @Volatile var view: PoseView? = null
+
   init {
     val environment = Litert.environment(context)
     detector = CompiledModel.create(context.assets, "models/pose-detector.tflite", Litert.options(context, Accelerator.CPU, "pose-detector"), environment)
@@ -136,10 +139,12 @@ class OwnPose(
       retrackWanted = false
       lost()
     }
+    val span = view
+    if (span != null && tracked?.let { it.cx < span.x0 || it.cx > span.x1 } == true) lost()
     var detectorMs = 0.0
     val roi = tracked ?: run {
       val start = SystemClock.elapsedRealtimeNanos()
-      val found = detect(rgba, width, height)
+      val found = detect(rgba, width, height, span)
       detectorMs = (SystemClock.elapsedRealtimeNanos() - start) / 1e6
       found
     }
@@ -183,7 +188,8 @@ class OwnPose(
     return DoubleArray(0)
   }
 
-  private fun detect(rgba: ByteBuffer, width: Int, height: Int): Roi? {
+  /** The region of the best person the detector finds, of those whose middle lies inside `span` when there is one. */
+  private fun detect(rgba: ByteBuffer, width: Int, height: Int, span: PoseView?): Roi? {
     // Letterboxed to the square input, the padding at 0 before the [-1, 1] mapping.
     val portrait = height > width
     val hPad = if (portrait) (1 - width.toDouble() / height) / 2 else 0.0
@@ -214,11 +220,11 @@ class OwnPose(
       val keypoints = DoubleArray(8) { k -> boxes[row + 4 + k] / DETECTOR_INPUT.toDouble() + if (k % 2 == 0) ax else ay }
       found.add(Detection(score, doubleArrayOf(xc - w / 2, yc - h / 2, xc + w / 2, yc + h / 2), keypoints))
     }
-    val best = weightedNms(found).firstOrNull() ?: return null
     // Out of the letterbox, into fractions of the frame, then pixels.
-    val kx = { k: Int -> (best.keypoints[2 * k] - hPad) / (1 - 2 * hPad) * width }
-    val ky = { k: Int -> (best.keypoints[2 * k + 1] - vPad) / (1 - 2 * vPad) * height }
-    return roiFrom(kx(0), ky(0), kx(1), ky(1))
+    val kx = { d: Detection, k: Int -> (d.keypoints[2 * k] - hPad) / (1 - 2 * hPad) * width }
+    val ky = { d: Detection, k: Int -> (d.keypoints[2 * k + 1] - vPad) / (1 - 2 * vPad) * height }
+    val best = weightedNms(found).firstOrNull { span == null || kx(it, 0) in span.x0..span.x1 } ?: return null
+    return roiFrom(kx(best, 0), ky(best, 0), kx(best, 1), ky(best, 1))
   }
 
   /** Draws the rotated square into the landmark model's input, edges repeated, values in [0, 1]. */

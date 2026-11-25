@@ -123,7 +123,7 @@ Two older-device notes: the Screen Wake Lock API needs Safari 16.4, so on older 
 
 ## Known limits
 
-- The app tracks one athlete. A second person in frame can capture the pose.
+- The app tracks one athlete. Once a target is placed, the pose stops following a person outside the target's lane: the board hides the picture past them on their side, and the pose then finds the athlete under the target. If the pose then finds no one for a second, the hidden person was the athlete, because the target is on another station, and the whole picture comes back. Before a target is placed, and in the target search, a second person can still capture the pose.
 - The pose model sees people in furniture. A skeleton the size of a chair is ignored, and an athlete must hold in frame for half a second before counting starts, but a person-sized phantom on a coat rack would count. Keep the wall behind the athlete bare.
 - The board judges the lower mark at most half the frame below the upper. A box further down is a dragging slip.
 - The camera must hold still. A moved phone moves the reference lines.

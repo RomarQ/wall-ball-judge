@@ -5,6 +5,7 @@
  */
 import {
   athleteFrom,
+  narrowView,
   pairFor,
   placePlates,
   placeable,
@@ -198,6 +199,14 @@ const seen = (look: Look, athlete: Athlete | null = null) => ({ look, athlete })
   });
   check('a hip out of sight gives no athlete, so no lane', athleteFrom(pose(0.2), 1080, 1920, 0.5), null);
 }
+
+it("stops the pose's view short of a person outside the target's lane, on their side, and leaves it for the athlete", () => {
+  // A coach 640 px left of the target with a 270 px torso stands 2.4 torso lengths off, outside the 1.5 of a lane.
+  const whole = { x0: 0, x1: 1260 };
+  expect(narrowView(whole, 900, { x: 260, torso: 270 })).toEqual({ x0: 530, x1: 1260 });
+  expect(narrowView(whole, 900, { x: 1200, torso: 100 })).toEqual({ x0: 0, x1: 1100 });
+  expect(narrowView(whole, 900, { x: 1000, torso: 100 })).toEqual(whole);
+});
 
 {
   // A shelf across the wall: the detector calls it a target, and it is wider

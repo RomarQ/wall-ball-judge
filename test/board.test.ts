@@ -1,7 +1,7 @@
 /**
  * The shared board's own rules: the verdict a set's end judges, the plates a tap adds and the lane a pair keeps, a
- * plate dragged past the other plate of its pair, a board with no target, the station the athlete's squat picks, and
- * the division the first hit picks.
+ * plate dragged past the other plate of its pair, a board with no target, the station the athlete's squat picks, the
+ * division the first hit picks, and the part of the picture the pose may follow someone in.
  *
  * Run: npm test
  */
@@ -10,7 +10,7 @@ import { Board } from '../src/board';
 import { DEFAULTS, type DepthOptions } from '../src/depth';
 import { landmarksFrom } from '../src/judge-log';
 import { DEFAULTS as FINDER } from '../src/placement';
-import type { Box } from '../src/types';
+import type { Box, Landmark } from '../src/types';
 import { readLog, replay } from './judge-replay';
 
 it('counts a throw still in the air when the set ends, and shows its banner', () => {
@@ -210,4 +210,60 @@ it('counts a first throw at the lower mark as a rep when the first hit picks the
   // gym-raw-7a's first throws strike the lower mark, the fourth the upper: under the upper target, three no-reps.
   const { valid, noRep, board } = replay(readLog('test/data/judge-excerpt.json.gz'), undefined, null);
   expect([valid, noRep, board.required]).toEqual([4, 0, 'lower']);
+});
+
+it("keeps the pose's view narrowed while the pose follows the athlete, and opens it when the target moves", () => {
+  // Opened again for the athlete, the view would let the pose go back to the person it hid; kept after the target
+  // moves, it would hide the athlete of the new target.
+  const [w, h] = [1260, 1080];
+  const person = (x: number, torso: number): Landmark[] =>
+    Array.from({ length: 33 }, (_, i) => {
+      const at: Record<number, [number, number]> = {
+        11: [x - 0.2 * torso, 300],
+        12: [x + 0.2 * torso, 300],
+        23: [x - 0.15 * torso, 300 + torso],
+        24: [x + 0.15 * torso, 300 + torso],
+      };
+      const [px, py] = at[i] ?? [x, 300];
+      return { x: px / w, y: py / h, z: 0, visibility: 1 };
+    });
+  const board = new Board({ depth: DEFAULTS, ball: { bite: 0.5 }, onVerdict: () => 0 });
+  [board.width, board.height] = [w, h];
+  board.placeBoxes([{ x: 870, y: 0, w: 60, h: 60 }]);
+  const step = (tMs: number, landmarks: Landmark[]) =>
+    board.step({ tMs, width: w, height: h, landmarks, armed: true, ballCheck: false, windowSide: null });
+
+  step(0, person(260, 270));
+  const narrowed = board.poseView;
+  expect(narrowed).toEqual({ x0: 530, x1: w });
+  step(33, person(900, 180));
+  expect(board.poseView).toEqual(narrowed);
+  board.placeBoxes([{ x: 270, y: 0, w: 60, h: 60 }]);
+  expect(board.poseView).toBeNull();
+});
+
+it('opens the narrowed view for good once it shows no one for a second', () => {
+  // A target on another station puts the athlete outside its lane; a view kept closed would hide them for the set.
+  const [w, h] = [1260, 1080];
+  const athlete: Landmark[] = Array.from({ length: 33 }, (_, i) => ({
+    x: (i === 11 || i === 23 ? 230 : i === 12 || i === 24 ? 290 : 260) / w,
+    y: (i === 23 || i === 24 ? 600 : 300) / h,
+    z: 0,
+    visibility: 1,
+  }));
+  const board = new Board({ depth: DEFAULTS, ball: { bite: 0.5 }, onVerdict: () => 0 });
+  [board.width, board.height] = [w, h];
+  board.placeBoxes([{ x: 870, y: 0, w: 60, h: 60 }]);
+  const step = (tMs: number, landmarks: Landmark[] | null) =>
+    board.step({ tMs, width: w, height: h, landmarks, armed: true, ballCheck: false, windowSide: null });
+
+  step(0, athlete);
+  expect(board.poseView).not.toBeNull();
+  step(100, null);
+  step(1000, null);
+  expect(board.poseView).not.toBeNull();
+  step(1100, null);
+  expect(board.poseView).toBeNull();
+  step(1200, athlete);
+  expect(board.poseView).toBeNull();
 });

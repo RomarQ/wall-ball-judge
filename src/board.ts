@@ -19,6 +19,7 @@ import {
   DEFAULTS as FINDER,
   handPlate,
   MAX_PLATES,
+  narrowView,
   placeable,
   placePlates,
   stationsOf,
@@ -27,6 +28,7 @@ import {
   weighedMarks,
   type FinderOptions,
   type Seen,
+  type Span,
 } from './placement';
 import type { Rect } from './reach';
 import { bannerOf, type RepTimes, type TallyBanner } from './tally';
@@ -35,6 +37,12 @@ import type { Box, Landmark } from './types';
 /** How long the board shows a verdict's banner, and a ball a look found, on the judging clock. */
 const FLASH_MS = 1200;
 const BALL_SHOWN_MS = 400;
+
+/**
+ * How long a narrowed view may show no one before the board opens it for good: it hid the athlete, as a target placed
+ * on another station puts them outside its lane. A view that hid a coach showed the athlete a tenth of a second later.
+ */
+const VIEW_EMPTY_MS = 1000;
 
 /** The banner of a verdict on the board. */
 export interface Flash extends TallyBanner {
@@ -84,6 +92,12 @@ export class Board {
   candidates: Box[] = [];
   /** The candidates grouped into stations, as indices into `candidates`, the higher plate first. */
   stations: number[][] = [];
+  /**
+   * The span of the picture the judging pose may follow someone in, in pixels, or null for all of it. It narrows past
+   * each person the pose follows outside the target's lane, and opens again when the target or the set changes, or
+   * for good when it shows no one for `VIEW_EMPTY_MS`.
+   */
+  poseView: Span | null = null;
   flash: Flash | null = null;
   ball: BallView | null = null;
   landmarks: Landmark[] | null = null;
@@ -100,6 +114,10 @@ export class Board {
   /** The sure stations the athlete's next squat picks between, or null when no squat picks. */
   #atSquat: number[][] | null = null;
   #finder: FinderOptions = FINDER;
+  /** When the narrowed view last started to show no one, or null while it shows someone. */
+  #viewEmptySince: number | null = null;
+  /** Whether the view has hidden the athlete, so it stays open until the target or the set changes. */
+  #viewOpened = false;
 
   constructor({ depth, ball, onVerdict, onPicked = () => {} }: BoardOptions) {
     this.judge = new FrameJudge(depth, ball);
@@ -206,6 +224,7 @@ export class Board {
     Object.assign(this.judge.target.lines, { upper: null, lower: null });
     this.targetX = null;
     this.plates = [];
+    this.#openView(false);
   }
 
   /** Places the target from plate boxes in pixels: one plate, or a pair holding a mark each. */
@@ -215,6 +234,7 @@ export class Board {
     Object.assign(this.judge.target.lines, placed.lines);
     this.targetX = placed.x;
     this.plates = placed.plates;
+    this.#openView(false);
   }
 
   /**
@@ -242,6 +262,7 @@ export class Board {
     this.#lastMs = frame.tMs;
     const judged = this.judge.frame({ ...frame, x: this.targetX, plates: this.plates });
     this.landmarks = judged.retrack ? null : frame.landmarks;
+    if (this.targetX !== null) this.#narrowView(frame, this.targetX);
     this.depth = judged.depth;
     // At the bottom of a squat the athlete stands at their station, and the throw that opens next needs its target.
     if (this.#atSquat && this.judge.counter.state === 'BOTTOM')
@@ -278,7 +299,29 @@ export class Board {
     this.flash = null;
     this.ball = null;
     this.landmarks = null;
+    this.#openView(false);
     this.depth = { ok: false, reason: 'no-pose' };
+  }
+
+  /** Opens `poseView` to the whole picture; `forGood` keeps it open until the target or the set changes. */
+  #openView(forGood: boolean): void {
+    this.poseView = null;
+    this.#viewEmptySince = null;
+    this.#viewOpened = forGood;
+  }
+
+  /** Narrows `poseView` past the person the pose followed in `frame`, when they stand outside the target's lane. */
+  #narrowView({ tMs, landmarks, width, height }: BoardFrame, targetX: number): void {
+    if (this.#viewOpened) return;
+    if (this.poseView && !landmarks) {
+      this.#viewEmptySince ??= tMs;
+      if (tMs - this.#viewEmptySince >= VIEW_EMPTY_MS) this.#openView(true);
+      return;
+    }
+    this.#viewEmptySince = null;
+    const person = athleteFrom(landmarks, width, height, this.#visibilityMin);
+    const view = narrowView(this.poseView ?? { x0: 0, x1: width }, targetX * width, person, this.#finder);
+    if (view.x0 > 0 || view.x1 < width) this.poseView = view;
   }
 
   /** Places the station of the search's plates that the athlete in `frame` stands under, if they stand under one. */

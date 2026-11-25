@@ -27,6 +27,8 @@ namespace margelo::nitro::wallballvision { struct VideoItem; }
 namespace margelo::nitro::wallballvision { struct JudgeOptions; }
 // Forward declaration of `BallOptions` to properly resolve imports.
 namespace margelo::nitro::wallballvision { struct BallOptions; }
+// Forward declaration of `PoseView` to properly resolve imports.
+namespace margelo::nitro::wallballvision { struct PoseView; }
 
 #include <string>
 #include <vector>
@@ -55,6 +57,8 @@ namespace margelo::nitro::wallballvision { struct BallOptions; }
 #include "JBallOptions.hpp"
 #include <NitroModules/ArrayBuffer.hpp>
 #include <NitroModules/JArrayBuffer.hpp>
+#include "PoseView.hpp"
+#include "JPoseView.hpp"
 
 namespace margelo::nitro::wallballvision {
 
@@ -185,6 +189,10 @@ namespace margelo::nitro::wallballvision {
   void JHybridWallballVisionSpec::retrackPose() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("retrackPose");
     method(_javaPart);
+  }
+  void JHybridWallballVisionSpec::setPoseView(const std::optional<PoseView>& view) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JPoseView> /* view */)>("setPoseView");
+    method(_javaPart, view.has_value() ? JPoseView::fromCpp(view.value()) : nullptr);
   }
   std::shared_ptr<Promise<TargetLook>> JHybridWallballVisionSpec::searchCamera(double cutWidth, double minScore) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(double /* cutWidth */, double /* minScore */)>("searchCamera");

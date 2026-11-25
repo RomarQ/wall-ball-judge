@@ -25,6 +25,8 @@ namespace margelo::nitro::wallballvision { struct PoseFrame; }
 namespace margelo::nitro::wallballvision { struct LookWindow; }
 // Forward declaration of `TargetLook` to properly resolve imports.
 namespace margelo::nitro::wallballvision { struct TargetLook; }
+// Forward declaration of `PoseView` to properly resolve imports.
+namespace margelo::nitro::wallballvision { struct PoseView; }
 // Forward declaration of `VideoItem` to properly resolve imports.
 namespace margelo::nitro::wallballvision { struct VideoItem; }
 
@@ -39,6 +41,7 @@ namespace margelo::nitro::wallballvision { struct VideoItem; }
 #include "LookWindow.hpp"
 #include "TargetLook.hpp"
 #include <NitroModules/ArrayBuffer.hpp>
+#include "PoseView.hpp"
 #include "VideoItem.hpp"
 
 namespace margelo::nitro::wallballvision {
@@ -84,6 +87,7 @@ namespace margelo::nitro::wallballvision {
       virtual PoseFrame cameraFrame(const std::shared_ptr<ArrayBuffer>& pixels, double bytesPerRow, double width, double height, const std::string& orientation, bool mirrored, double tMs) = 0;
       virtual void setLookWanted(bool wanted, const std::optional<LookWindow>& window) = 0;
       virtual void retrackPose() = 0;
+      virtual void setPoseView(const std::optional<PoseView>& view) = 0;
       virtual std::shared_ptr<Promise<TargetLook>> searchCamera(double cutWidth, double minScore) = 0;
       virtual void closeCamera() = 0;
       virtual std::optional<std::string> getSetting(const std::string& key) = 0;

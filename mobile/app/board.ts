@@ -31,6 +31,8 @@ export class PipelineBoard extends Board {
   verdicts: Verdict[] = [];
   /** The looks the judge asked for, by the index of the frame that started each. */
   #tickets = new Map<number, LookTicket>();
+  /** The pose's view the pipeline holds. */
+  #sentView: Board['poseView'] = null;
 
   /**
    * `ballCheck` says whether the ball is judged: the setting is on and a ball model runs. `ballModel` is the model that
@@ -75,6 +77,10 @@ export class PipelineBoard extends Board {
       windowSide: this.ballModel.input,
     });
     if (judged.retrack) wallballVision.retrackPose();
+    if (this.poseView !== this.#sentView) {
+      this.#sentView = this.poseView;
+      wallballVision.setPoseView(this.poseView ?? undefined);
+    }
     if (judged.event?.type === 'abort') trackingLost();
     if (judged.look) {
       if (frame.lookStarted) this.#tickets.set(frame.index, judged.look);

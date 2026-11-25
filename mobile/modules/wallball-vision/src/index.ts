@@ -3,7 +3,7 @@ import type { ClipViewMethods, ClipViewProps } from './specs/ClipView.nitro'
 import type { ScoreLink } from './specs/ScoreLink.nitro'
 import type { WallballVision } from './specs/WallballVision.nitro'
 
-export type { BallOptions, ClipInfo, JudgeOptions, Look, LookWindow, PhoneCheck, PoseFrame, TargetLook, TargetRows, VideoItem, WallballVision } from './specs/WallballVision.nitro'
+export type { BallOptions, ClipInfo, JudgeOptions, Look, LookWindow, PhoneCheck, PoseFrame, PoseView, TargetLook, TargetRows, VideoItem, WallballVision } from './specs/WallballVision.nitro'
 
 export type { FoundDisplay, ScoreLink } from './specs/ScoreLink.nitro'
 

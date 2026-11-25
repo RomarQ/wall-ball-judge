@@ -213,6 +213,36 @@ export function stationUnder(
   return under;
 }
 
+/** A span across the frame, from `x0` to `x1`, in pixels. */
+export interface Span {
+  x0: number;
+  x1: number;
+}
+
+/**
+ * How far a person reaches sideways from the middle of their torso, in torso lengths. Over a set on two clips, the
+ * head, shoulders, hips, knees, ankles and arms stayed within 0.82; a squat's knees and elbows reach the furthest.
+ */
+const REACH_TORSOS = 1;
+
+/**
+ * The span of the frame the judging pose may follow someone in, after it followed `person`. Someone outside the lane
+ * of the target at `targetX`, as `laneTorsos` measures it, is not the athlete: the span then stops short of them on
+ * their side. A person in the lane, or no one, leaves `view` as it is.
+ */
+export function narrowView(
+  view: Span,
+  targetX: number,
+  person: Athlete | null,
+  cfg: FinderOptions = DEFAULTS,
+): Span {
+  if (!person || Math.abs(person.x - targetX) <= cfg.laneTorsos * person.torso) return view;
+  const reach = REACH_TORSOS * person.torso;
+  return person.x < targetX
+    ? { x0: Math.max(view.x0, person.x + reach), x1: view.x1 }
+    : { x0: view.x0, x1: Math.min(view.x1, person.x - reach) };
+}
+
 /**
  * The station a search places without asking, or null: the only sure station, when the athlete stands under it or
  * is out of view.

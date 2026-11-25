@@ -97,6 +97,13 @@ class FramePipeline(
     own?.retrack()
   }
 
+  /** The span across which the pose may follow someone, or null for the whole frame. MediaPipe's landmarker ignores it. */
+  var view: PoseView?
+    get() = own?.view
+    set(value) {
+      own?.view = value
+    }
+
   override fun close() {
     balls?.close()
     landmarker?.close()

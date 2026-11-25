@@ -26,6 +26,7 @@ namespace margelo::nitro::wallballvision {
       prototype.registerHybridMethod("cameraFrame", &HybridWallballVisionSpec::cameraFrame);
       prototype.registerHybridMethod("setLookWanted", &HybridWallballVisionSpec::setLookWanted);
       prototype.registerHybridMethod("retrackPose", &HybridWallballVisionSpec::retrackPose);
+      prototype.registerHybridMethod("setPoseView", &HybridWallballVisionSpec::setPoseView);
       prototype.registerHybridMethod("searchCamera", &HybridWallballVisionSpec::searchCamera);
       prototype.registerHybridMethod("closeCamera", &HybridWallballVisionSpec::closeCamera);
       prototype.registerHybridMethod("getSetting", &HybridWallballVisionSpec::getSetting);

@@ -24,6 +24,8 @@ namespace margelo::nitro::wallballvision { struct Look; }
 namespace margelo::nitro::wallballvision { struct PhoneCheck; }
 // Forward declaration of `PoseFrame` to properly resolve imports.
 namespace margelo::nitro::wallballvision { struct PoseFrame; }
+// Forward declaration of `PoseView` to properly resolve imports.
+namespace margelo::nitro::wallballvision { struct PoseView; }
 // Forward declaration of `TargetLook` to properly resolve imports.
 namespace margelo::nitro::wallballvision { struct TargetLook; }
 // Forward declaration of `TargetRows` to properly resolve imports.
@@ -40,6 +42,7 @@ namespace margelo::nitro::wallballvision { struct VideoItem; }
 #include "LookWindow.hpp"
 #include "PhoneCheck.hpp"
 #include "PoseFrame.hpp"
+#include "PoseView.hpp"
 #include "TargetLook.hpp"
 #include "TargetRows.hpp"
 #include "VideoItem.hpp"

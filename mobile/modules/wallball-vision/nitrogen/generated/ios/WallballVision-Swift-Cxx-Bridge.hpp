@@ -20,6 +20,8 @@ namespace margelo::nitro::wallballvision { struct Look; }
 namespace margelo::nitro::wallballvision { struct PhoneCheck; }
 // Forward declaration of `PoseFrame` to properly resolve imports.
 namespace margelo::nitro::wallballvision { struct PoseFrame; }
+// Forward declaration of `PoseView` to properly resolve imports.
+namespace margelo::nitro::wallballvision { struct PoseView; }
 // Forward declaration of `TargetLook` to properly resolve imports.
 namespace margelo::nitro::wallballvision { struct TargetLook; }
 // Forward declaration of `TargetRows` to properly resolve imports.
@@ -38,6 +40,7 @@ namespace WallballVision { class HybridWallballVisionSpec_cxx; }
 #include "LookWindow.hpp"
 #include "PhoneCheck.hpp"
 #include "PoseFrame.hpp"
+#include "PoseView.hpp"
 #include "TargetLook.hpp"
 #include "TargetRows.hpp"
 #include "VideoItem.hpp"
@@ -257,6 +260,21 @@ namespace margelo::nitro::wallballvision::bridge::swift {
   Func_void_TargetLook create_Func_void_TargetLook(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_TargetLook_Wrapper wrap_Func_void_TargetLook(Func_void_TargetLook value) noexcept {
     return Func_void_TargetLook_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<PoseView>
+  /**
+   * Specialized version of `std::optional<PoseView>`.
+   */
+  using std__optional_PoseView_ = std::optional<PoseView>;
+  inline std::optional<PoseView> create_std__optional_PoseView_(const PoseView& value) noexcept {
+    return std::optional<PoseView>(value);
+  }
+  inline bool has_value_std__optional_PoseView_(const std::optional<PoseView>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PoseView get_std__optional_PoseView_(const std::optional<PoseView>& optional) noexcept {
+    return optional.value();
   }
   
   // pragma MARK: std::optional<std::string>
