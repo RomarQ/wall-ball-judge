@@ -83,13 +83,23 @@ function label(ctx: Ctx, pt: number, text: string, x: number, top: number, fill:
   ctx.restore();
 }
 
-/** A box outlined in `stroke`, with its label above its top-left corner, as the Android app's labelled boxes. */
-function labelledBox(ctx: Ctx, pt: number, { box, label: text }: BoxMark, stroke: string): void {
+/**
+ * A box outlined in `stroke`, with its label above its top-left corner, or `under` canvas pixels below its bottom
+ * edge, as the Android app's labelled boxes.
+ */
+function labelledBox(
+  ctx: Ctx,
+  pt: number,
+  { box, label: text }: BoxMark,
+  stroke: string,
+  under: number | null = null,
+): void {
   const width = 2 * pt;
   ctx.strokeStyle = stroke;
   ctx.lineWidth = width;
   ctx.strokeRect(box.x + width / 2, box.y + width / 2, box.w - width, box.h - width);
-  label(ctx, pt, text, box.x, box.y - 20 * pt, stroke);
+  const top = under === null ? box.y - 20 * pt : box.y + box.h + under + 2 * pt;
+  label(ctx, pt, text, box.x, top, stroke);
 }
 
 /** A dashed line across the picture, dashed as Android dashes a border. */
@@ -192,15 +202,15 @@ function drawBanner(ctx: Ctx, canvas: HTMLCanvasElement, pt: number, { title, de
 }
 
 /**
- * The plates the judge picked: a box each, the inactive one dim, with its name above it, and while the target is
- * editable a remove button and a resize handle at full strength.
+ * The plates the judge picked: a box each, the inactive one dim, with its name over or under it, and while the target
+ * is editable a remove button and a resize handle at full strength.
  */
 function drawPlates(ctx: Ctx, pt: number, { plates, handleSide, removeRadius }: OverlayLayout) {
   const { tape } = palette();
-  for (const { box, name, active, remove, handle } of plates) {
+  for (const { box, name, nameBelow, active, remove, handle } of plates) {
     ctx.save();
     ctx.globalAlpha = active ? 1 : 0.45;
-    labelledBox(ctx, pt, { box, label: name }, tape);
+    labelledBox(ctx, pt, { box, label: name }, tape, nameBelow ? handleSide / 2 : null);
     ctx.restore();
     if (handle) drawHandle(ctx, handle, handleSide);
     if (remove) drawRemove(ctx, pt, remove, removeRadius);

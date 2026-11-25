@@ -81,7 +81,8 @@ it("shows a plate's remove button and resize handle only while the target is edi
   expect([running.remove, running.handle]).toEqual([null, null]);
 });
 
-it('names two plates by division, the higher the men’s, and a single disc only the target', () => {
+it('names two plates upper and lower, the lower under its box, and a single disc only the target', () => {
+  // A plate's name over its box lands on a plate hung just above it, so a pair names its lower plate underneath.
   const plates = [
     { x: 0.2, y: 0.1, w: 0.1, h: 0.08 },
     { x: 0.2, y: 0.2, w: 0.1, h: 0.08 },
@@ -90,11 +91,11 @@ it('names two plates by division, the higher the men’s, and a single disc only
   const disc = layoutOverlay(
     frame({ target: target({ plates: [plates[0]], single: true, required: 'lower' }) }),
   ).plates;
-  expect(pair.map((p) => [p.name, p.active])).toEqual([
-    [t('overlay.upperTarget'), false],
-    [t('overlay.lowerTarget'), true],
+  expect(pair.map((p) => [p.name, p.active, p.nameBelow])).toEqual([
+    [t('overlay.upperTarget'), false, false],
+    [t('overlay.lowerTarget'), true, true],
   ]);
-  expect(disc.map((p) => [p.name, p.active])).toEqual([[t('overlay.target'), true]]);
+  expect(disc.map((p) => [p.name, p.active, p.nameBelow])).toEqual([[t('overlay.target'), true, false]]);
 });
 
 it('numbers each station of the search once, in one box round its plates, as the notice counts them', () => {

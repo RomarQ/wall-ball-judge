@@ -105,6 +105,11 @@ export interface DepthBar {
 export interface PlateMark {
   box: Rect;
   name: string;
+  /**
+   * Whether the name goes under the box, below its resize handle, instead of over it. The lower plate of a pair takes
+   * it there, so that neither name lands on the other plate.
+   */
+  nameBelow: boolean;
   active: boolean;
   remove: Point | null;
   handle: Point | null;
@@ -214,6 +219,7 @@ export function layoutOverlay(frame: OverlayFrame): OverlayLayout {
       plates.push({
         box: shown,
         name: which === null ? t('overlay.target') : targetName(which, single),
+        nameBelow: target.plates.length > 1 && which === 'lower',
         active: target.plates.length === 1 || which === required,
         remove: editable ? removeSpot(shown, size) : null,
         handle: editable ? { x: shown.x + shown.w, y: shown.y + shown.h } : null,

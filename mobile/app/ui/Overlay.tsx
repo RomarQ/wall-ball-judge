@@ -166,7 +166,7 @@ function PlateBox({ place, plate, layout }: { place: Place; plate: PlateMark; la
   const arm = 0.4 * r;
   return (
     <>
-      <Labelled place={place} box={box} label={name} colour={COLOURS.tape} dim={!active} />
+      <Labelled place={place} box={box} label={name} colour={COLOURS.tape} dim={!active} under={plate.nameBelow ? side / 2 : undefined} />
       {handle ? (
         <View style={{ position: 'absolute', left: place.x(handle.x) - side / 2, top: place.y(handle.y) - side / 2, width: side, height: side, backgroundColor: COLOURS.tape }} />
       ) : null}
@@ -181,13 +181,15 @@ function PlateBox({ place, plate, layout }: { place: Place; plate: PlateMark; la
   );
 }
 
-function Labelled({ place, box, label, colour, dim = false }: { place: Place; box: { x: number; y: number; w: number; h: number }; label: string; colour: string; dim?: boolean }) {
+/** A box outlined in `colour`, with its label above its top-left corner, or `under` points below its bottom edge. */
+function Labelled({ place, box, label, colour, dim = false, under }: { place: Place; box: { x: number; y: number; w: number; h: number }; label: string; colour: string; dim?: boolean; under?: number }) {
   const left = place.x(box.x);
   const top = place.y(box.y);
+  const height = place.size(box.h);
   return (
     <View style={[StyleSheet.absoluteFill, { opacity: dim ? 0.45 : 1 }]}>
-      <View style={{ position: 'absolute', left, top, width: place.size(box.w), height: place.size(box.h), borderWidth: 2, borderColor: colour }} />
-      <Text style={[styles.label, { left, top: top - 20, color: colour }]}>{label}</Text>
+      <View style={{ position: 'absolute', left, top, width: place.size(box.w), height, borderWidth: 2, borderColor: colour }} />
+      <Text style={[styles.label, { left, top: under === undefined ? top - 20 : top + height + under + 2, color: colour }]}>{label}</Text>
     </View>
   );
 }
