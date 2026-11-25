@@ -230,7 +230,8 @@ export type Depth = DepthReading | DepthMissing;
  * onto the hip, and that leg's reading pulls a deep squat to the line. With
  * no ruler yet, the two legs are averaged.
  *
- * `ok` is false when the hip or the knee is too hidden to trust.
+ * `ok` is false when the hip or the knee is too hidden to trust, and when a hip or a knee lies outside the picture: the
+ * model then guesses the legs, both of them, and an athlete standing close to the camera reads as a squat to depth.
  */
 export function computeDepth(
   landmarks: Landmark[] | null | undefined,
@@ -241,6 +242,10 @@ export function computeDepth(
   const cfg = { ...DEFAULTS, ...options };
   if (!landmarks || landmarks.length <= LM.RIGHT_KNEE) {
     return { ok: false, reason: 'no-pose' };
+  }
+  const outside = (p: Landmark | undefined) => !!p && (p.x < 0 || p.x > 1 || p.y < 0 || p.y > 1);
+  if ([LM.LEFT_HIP, LM.RIGHT_HIP, LM.LEFT_KNEE, LM.RIGHT_KNEE].some((i) => outside(landmarks[i]))) {
+    return { ok: false, reason: 'low-visibility' };
   }
 
   const left = sideDepth(landmarks, LM.LEFT_HIP, LM.LEFT_KNEE, aspect, cfg.visibilityMin, rulerLength);

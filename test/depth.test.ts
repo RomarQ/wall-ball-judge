@@ -13,6 +13,8 @@ import {
   type RepClosed,
   type RepEvent,
 } from '../src/depth';
+import { readFileSync } from 'node:fs';
+import { landmarksFrom } from '../src/judge-log';
 import type { Landmark } from '../src/types';
 import { expect, it } from 'vitest';
 // Values are captured as the check is written, the way the old runner compared them at once.
@@ -195,6 +197,17 @@ function pose({ hipY, kneeY, visibility = 1 }: { hipY: number; kneeY: number; vi
 {
   const d = computeDepth(pose({ hipY: 0.4, kneeY: 0.6, visibility: 0.2 }), 1);
   check('a hidden hip is rejected', d, { ok: false, reason: 'low-visibility' });
+}
+
+{
+  // At 0.42 s of a set filmed from behind, the athlete still stood at the phone with a knee below the picture's edge,
+  // and the model's guess at the other knee read a squat 18.7% below parallel.
+  const frames = JSON.parse(readFileSync('test/data/pose-frames.json', 'utf8')) as Record<
+    string,
+    { w: number; h: number; landmarks: number[] }
+  >;
+  const { w, h, landmarks } = frames.kneeOutside;
+  check('a knee outside the picture gives no depth', computeDepth(landmarksFrom(landmarks), w / h).ok, false);
 }
 
 {

@@ -142,7 +142,7 @@ describe('the window a look reads', () => {
 describe('a pose standing on its head', () => {
   // Two frames of a set filmed from behind: one from a pose tracker that turned its crop over when it found the
   // athlete bent over the ball, and the bottom of one of the set's real squats.
-  const frames = JSON.parse(readFileSync('test/data/upside-down.json', 'utf8')) as Record<
+  const frames = JSON.parse(readFileSync('test/data/pose-frames.json', 'utf8')) as Record<
     'upsideDown' | 'deepSquat',
     { w: number; h: number; landmarks: number[] }
   >;
