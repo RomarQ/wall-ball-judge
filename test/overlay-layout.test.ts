@@ -91,8 +91,8 @@ it('names two plates by division, the higher the men’s, and a single disc only
     frame({ target: target({ plates: [plates[0]], single: true, required: 'lower' }) }),
   ).plates;
   expect(pair.map((p) => [p.name, p.active])).toEqual([
-    [t('overlay.mensTarget'), false],
-    [t('overlay.womensTarget'), true],
+    [t('overlay.upperTarget'), false],
+    [t('overlay.lowerTarget'), true],
   ]);
   expect(disc.map((p) => [p.name, p.active])).toEqual([[t('overlay.target'), true]]);
 });

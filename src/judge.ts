@@ -248,16 +248,9 @@ function showChips(): void {
   setText('chips', text);
 }
 
-/** The status line as the judge reads it: what counts, and how fast. */
+/** The status line as the judge reads it: how fast the board judges, and whether it records. */
 function plainLine(tick: FrameTick): string {
-  const what = !session.armed
-    ? t('board.notCounting')
-    : tick.mode === 'target' && session.placed
-      ? session.board.singleTarget
-        ? t('board.judgingTarget')
-        : t('board.judging')(session.target.required)
-      : t('board.depthOnly');
-  return [what, `${tick.fps} fps`, ...(tick.recording ? [t('board.recording')] : [])].join(' · ');
+  return [`${tick.fps} fps`, ...(tick.recording ? [t('board.recording')] : [])].join(' · ');
 }
 
 const DETAILS_KEY = 'statusDetails';

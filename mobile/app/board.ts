@@ -3,7 +3,7 @@
  * pipeline runs and what the line under the picture says. React-free, so a recording and the camera share it.
  */
 import { wallballVision, type Look, type LookWindow, type PoseFrame } from 'wallball-vision';
-import { Board, DEPTH, MIN_SCORE, REACH, requiredAtStart, storeRequired, t, type Landmark, type LookTicket, type Tally, type Target, type Verdict } from './core';
+import { Board, DEPTH, MIN_SCORE, REACH, requiredAtStart, storeRequired, type Landmark, type LookTicket, type Tally, type Target, type Verdict } from './core';
 import { boxesOf, type TrainedFile } from './detect';
 import { trackingLost } from './sound';
 
@@ -59,13 +59,6 @@ export class PipelineBoard extends Board {
   override setRequired(which: Target | null): void {
     super.setRequired(which);
     if (which) storeRequired(which);
-  }
-
-  /** What the line under the picture says while judging. */
-  get mode(): string {
-    if (!this.armed) return t('board.notCounting');
-    if (!this.ballCheck || !this.placed) return t('board.depthOnly');
-    return this.singleTarget ? t('board.judgingTarget') : t('board.judging')(this.required);
   }
 
   /** Judges one frame of the pipeline, and says whether the next frames should start looks for the ball, and where. */

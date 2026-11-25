@@ -10,7 +10,7 @@ export function flashText(flash: Flash): { title: string; detail: string } {
   if (flash.valid) return { title: t('overlay.rep')(flash.count), detail: depth };
   if (flash.reason === 'target') {
     let detail = t('overlay.noHit');
-    if (flash.target === 'lower') detail = t('overlay.hitWomens');
+    if (flash.target === 'lower') detail = t('overlay.hitLower');
     else if (!flash.ballSeen) detail = t('overlay.ballNotSeen');
     return { title: t('overlay.noRep'), detail };
   }

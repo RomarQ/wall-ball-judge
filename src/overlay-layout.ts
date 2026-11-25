@@ -40,7 +40,7 @@ const HANDLE = 0.45;
 const REMOVE = 0.45;
 
 /** What the board calls each target: the division whose athletes must reach it. */
-const TARGET_NAME = { upper: 'overlay.mensTarget', lower: 'overlay.womensTarget' } as const satisfies Record<
+const TARGET_NAME = { upper: 'overlay.upperTarget', lower: 'overlay.lowerTarget' } as const satisfies Record<
   Target,
   string
 >;

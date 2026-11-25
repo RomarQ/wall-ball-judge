@@ -180,7 +180,7 @@ function countAt(station: Station, elapsed: number): number {
 /** The banner's two lines, in the words the board's overlay uses. See flashText in flash.ts. */
 function bannerText(rep: Rep, count: number): [string, string] {
   if (rep === 'shallow') return [t('overlay.noRep'), t('overlay.depth')('9', false)];
-  if (rep === 'short') return [t('overlay.noRep'), t('overlay.hitWomens')];
+  if (rep === 'short') return [t('overlay.noRep'), t('overlay.hitLower')];
   return [t('overlay.rep')(count), t('overlay.depth')('14', true)];
 }
 

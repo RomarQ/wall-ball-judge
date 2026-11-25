@@ -478,7 +478,7 @@ export function BoardScreen({
   const live = source.kind === 'camera' && phase !== 'done';
   const playing = source.kind === 'recording' && (phase === 'counting' || phase === 'done');
   const running = live || (playing && phase === 'counting');
-  const status = failure ?? said?.line ?? (running ? [board.mode, `${fps} fps`].join(' · ') : '');
+  const status = failure ?? said?.line ?? (running ? `${fps} fps` : '');
   const chips = [
     ...(board.ballCheck ? [t('board.chip')('ball', ballUnit)] : []),
     t('board.chip')('finder', FINDER_UNIT),
@@ -668,11 +668,11 @@ function Scoreboard({
         <View style={styles.targets}>
           <View style={styles.targetRow}>
             {pill('upper', t('board.men'))}
-            {plate('upper', t('board.hitMen'))}
+            {plate('upper', t('board.hitUpper'))}
           </View>
           <View style={styles.targetRow}>
             {pill('lower', t('board.women'))}
-            {plate('lower', t('board.hitWomen'))}
+            {plate('lower', t('board.hitLower'))}
           </View>
         </View>
       </View>

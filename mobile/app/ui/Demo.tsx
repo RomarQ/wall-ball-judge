@@ -99,8 +99,8 @@ function TargetBox({ y, label, own, flash = 0 }: { y: number; label: string; own
 
 function Lane({ division, transform, scene }: { division: Division; transform: string; scene: StationScene }) {
   const men = division === 'men';
-  const mensTarget = <TargetBox y={-24} label={t('overlay.mensTarget')} own={men} flash={men ? scene.targetFlash : 0} />;
-  const womensTarget = <TargetBox y={40} label={t('overlay.womensTarget')} own={!men} flash={men ? 0 : scene.targetFlash} />;
+  const upperTarget = <TargetBox y={-24} label={t('overlay.upperTarget')} own={men} flash={men ? scene.targetFlash : 0} />;
+  const lowerTarget = <TargetBox y={40} label={t('overlay.lowerTarget')} own={!men} flash={men ? 0 : scene.targetFlash} />;
   const [legLeft, legRight] = scene.legs;
   const [[hl, kl], [hr, kr]] = [legLeft, legRight];
   return (
@@ -123,8 +123,8 @@ function Lane({ division, transform, scene }: { division: Division; transform: s
       </G>
 
       {/* The athlete's own target in front, the other one dim behind, as the board's overlay draws them. */}
-      {men ? womensTarget : mensTarget}
-      {men ? mensTarget : womensTarget}
+      {men ? lowerTarget : upperTarget}
+      {men ? upperTarget : lowerTarget}
       {men ? (
         <Rect x={129} y={40} width={42} height={48} fill={COLOURS.norep} fillOpacity={0.35} stroke={COLOURS.norep} strokeWidth={2.5} opacity={scene.missFlash} />
       ) : null}

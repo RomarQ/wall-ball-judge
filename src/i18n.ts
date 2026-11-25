@@ -12,7 +12,6 @@
  * details and internal errors are read by whoever fixes the app, and match
  * the code and the docs.
  */
-import type { Target } from './ball';
 import type { Warning } from './board';
 import { language, setLanguage, type LanguageChoice, type LanguageTag } from './settings';
 
@@ -33,7 +32,7 @@ const en = {
 
   'home.lede': 'Use your device to judge your wall balls.',
   'home.demoTitle':
-    'Two stations, seen from behind. On the left a man throws to the men’s target, and on the right a woman throws to the women’s target. A rep counts when the hips go below the knees and the ball then hits the athlete’s target. A squat above parallel, or a man’s throw that reaches only the women’s target, is a no-rep.',
+    'Two stations, seen from behind. On the left a man throws to the upper target, the men’s, and on the right a woman throws to the lower target, the women’s. A rep counts when the hips go below the knees and the ball then hits the athlete’s target. A squat above parallel, or a man’s throw that reaches only the lower target, is a no-rep.',
   'home.ruleDepth': 'Hips below the knees',
   'home.ruleTarget': 'Ball on the athlete’s target',
   'home.recording': 'Replay a video',
@@ -119,8 +118,8 @@ const en = {
     'The highlighted division’s target is the one this athlete must reach. Tap a plate when the ball hits it.',
   'board.men': 'Men',
   'board.women': 'Women',
-  'board.hitMen': 'The ball hit the men’s target',
-  'board.hitWomen': 'The ball hit the women’s target',
+  'board.hitUpper': 'The ball hit the upper target',
+  'board.hitLower': 'The ball hit the lower target',
   'board.timeTitle': 'From the start of the first rep to the end of the set',
   'board.time': 'Time',
   'board.reset': 'Reset',
@@ -130,13 +129,6 @@ const en = {
     at ? `${secondsPerRep} s a rep · ${target} at ${at}` : `${secondsPerRep} s a rep`,
   'board.chip': (model: 'ball' | 'finder' | 'pose', chip: string) =>
     `${{ ball: 'Ball', finder: 'Target finder', pose: 'Pose' }[model]} on ${chip}`,
-  'board.notCounting': 'Not counting yet',
-  'board.judging': (which: Target | null) =>
-    which === null
-      ? 'Judging the target the first hit picks'
-      : `Judging the ${which === 'lower' ? 'women’s' : 'men’s'} target`,
-  'board.judgingTarget': 'Judging the target',
-  'board.depthOnly': 'Judging depth only',
   'board.recording': 'recording',
   'board.starting': 'starting…',
   'board.counting': 'counting',
@@ -199,15 +191,15 @@ const en = {
   'pose.server': 'the server',
 
   'overlay.target': 'Target',
-  'overlay.mensTarget': 'Men’s target',
-  'overlay.womensTarget': 'Women’s target',
+  'overlay.upperTarget': 'Upper target',
+  'overlay.lowerTarget': 'Lower target',
   'overlay.parallel': 'Parallel',
   'overlay.rep': (n: number) => `Rep ${n}`,
   'overlay.noRep': 'No-rep',
   'overlay.depth': (percent: string, below: boolean) =>
     `Hips ${percent}% ${below ? 'below' : 'above'} parallel`,
   'overlay.noHit': 'Missed the target',
-  'overlay.hitWomens': 'Hit the women’s target',
+  'overlay.hitLower': 'Hit the lower target',
   'overlay.ballNotSeen': 'Ball not seen',
   'overlay.ball': 'ball',
 
@@ -312,7 +304,7 @@ const ptPT: Texts = {
 
   'home.lede': 'Use o seu dispositivo para avaliar os seus wall balls.',
   'home.demoTitle':
-    'Duas estações, vistas de trás. À esquerda, um homem lança para o alvo dos homens; à direita, uma mulher lança para o alvo das mulheres. Uma repetição conta quando a anca desce abaixo dos joelhos e depois a bola acerta no alvo do atleta. Um agachamento acima da paralela, ou um lançamento de um homem que só chega ao alvo das mulheres, é um no rep.',
+    'Duas estações, vistas de trás. À esquerda, um homem lança para o alvo superior, o dos homens; à direita, uma mulher lança para o alvo inferior, o das mulheres. Uma repetição conta quando a anca desce abaixo dos joelhos e depois a bola acerta no alvo do atleta. Um agachamento acima da paralela, ou um lançamento de um homem que só chega ao alvo inferior, é um no rep.',
   'home.ruleDepth': 'Anca abaixo dos joelhos',
   'home.ruleTarget': 'Bola no alvo do atleta',
   'home.recording': 'Rever um vídeo',
@@ -398,8 +390,8 @@ const ptPT: Texts = {
     'O alvo da divisão destacada é o que este atleta tem de atingir. Toque numa placa quando a bola lhe acertar.',
   'board.men': 'Homens',
   'board.women': 'Mulheres',
-  'board.hitMen': 'A bola acertou no alvo dos homens',
-  'board.hitWomen': 'A bola acertou no alvo das mulheres',
+  'board.hitUpper': 'A bola acertou no alvo superior',
+  'board.hitLower': 'A bola acertou no alvo inferior',
   'board.timeTitle': 'Do início da primeira repetição ao fim da série',
   'board.time': 'Tempo',
   'board.reset': 'Repor',
@@ -411,13 +403,6 @@ const ptPT: Texts = {
     `${{ ball: 'Bola', finder: 'Localizador do alvo', pose: 'Pose' }[model]} ${
       chip === 'GPU' ? 'na GPU' : chip === 'CPU' ? 'no CPU' : `em ${chip}`
     }`,
-  'board.notCounting': 'Ainda não está a contar',
-  'board.judging': (which: Target | null) =>
-    which === null
-      ? 'A avaliar o alvo que o primeiro acerto escolher'
-      : `A avaliar o alvo ${which === 'lower' ? 'das mulheres' : 'dos homens'}`,
-  'board.judgingTarget': 'A avaliar o alvo',
-  'board.depthOnly': 'A avaliar só a profundidade',
   'board.recording': 'a gravar',
   'board.starting': 'a iniciar…',
   'board.counting': 'a contar',
@@ -480,15 +465,15 @@ const ptPT: Texts = {
   'pose.server': 'o servidor',
 
   'overlay.target': 'Alvo',
-  'overlay.mensTarget': 'Alvo dos homens',
-  'overlay.womensTarget': 'Alvo das mulheres',
+  'overlay.upperTarget': 'Alvo superior',
+  'overlay.lowerTarget': 'Alvo inferior',
   'overlay.parallel': 'Paralela',
   'overlay.rep': (n: number) => `Repetição ${n}`,
   'overlay.noRep': 'No rep',
   'overlay.depth': (percent: string, below: boolean) =>
     `Anca ${percent}% ${below ? 'abaixo' : 'acima'} da paralela`,
   'overlay.noHit': 'Falhou o alvo',
-  'overlay.hitWomens': 'Acertou no alvo das mulheres',
+  'overlay.hitLower': 'Acertou no alvo inferior',
   'overlay.ballNotSeen': 'Bola não detetada',
   'overlay.ball': 'bola',
 
