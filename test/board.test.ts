@@ -212,10 +212,15 @@ it('counts a first throw at the lower mark as a rep when the first hit picks the
   expect([valid, noRep, board.required]).toEqual([4, 0, 'lower']);
 });
 
-it("keeps the pose's view narrowed once it shows the athlete, through a rest, and opens it when the target moves", () => {
-  // Opened again for the athlete, or while they rest bent over out of the pose's sight, the view would let the pose go
-  // back to the person it hid; kept after the target moves, it would hide the athlete of the new target.
+/** A board whose target stands at x 900 of a 1260 by 1080 picture, stepped one frame at a time. */
+function laneBoard() {
   const [w, h] = [1260, 1080];
+  const board = new Board({ depth: DEFAULTS, ball: { bite: 0.5 }, onVerdict: () => 0 });
+  [board.width, board.height] = [w, h];
+  board.placeBoxes([{ x: 870, y: 0, w: 60, h: 60 }]);
+  const step = (tMs: number, landmarks: Landmark[] | null) =>
+    board.step({ tMs, width: w, height: h, landmarks, armed: true, ballCheck: false, windowSide: null });
+  /** A person facing the camera at `x`, their torso `torso` long and their shoulders 0.4 of it wide. */
   const person = (x: number, torso: number): Landmark[] =>
     Array.from({ length: 33 }, (_, i) => {
       const at: Record<number, [number, number]> = {
@@ -227,12 +232,13 @@ it("keeps the pose's view narrowed once it shows the athlete, through a rest, an
       const [px, py] = at[i] ?? [x, 300];
       return { x: px / w, y: py / h, z: 0, visibility: 1 };
     });
-  const board = new Board({ depth: DEFAULTS, ball: { bite: 0.5 }, onVerdict: () => 0 });
-  [board.width, board.height] = [w, h];
-  board.placeBoxes([{ x: 870, y: 0, w: 60, h: 60 }]);
-  const step = (tMs: number, landmarks: Landmark[] | null) =>
-    board.step({ tMs, width: w, height: h, landmarks, armed: true, ballCheck: false, windowSide: null });
+  return { board, step, person, w };
+}
 
+it("keeps the pose's view narrowed once it shows the athlete, through a rest, and opens it when the target moves", () => {
+  // Opened again for the athlete, or while they rest bent over out of the pose's sight, the view would let the pose go
+  // back to the person it hid; kept after the target moves, it would hide the athlete of the new target.
+  const { board, step, person, w } = laneBoard();
   step(0, person(260, 270));
   const narrowed = board.poseView;
   expect(narrowed).toEqual({ x0: 530, x1: w });
@@ -242,6 +248,25 @@ it("keeps the pose's view narrowed once it shows the athlete, through a rest, an
   expect(board.poseView).toEqual(narrowed);
   board.placeBoxes([{ x: 270, y: 0, w: 60, h: 60 }]);
   expect(board.poseView).toBeNull();
+});
+
+it("measures a person against the lane at the athlete's size, so a crouched athlete keeps the picture", () => {
+  // val-gym-6 at 383 s: crouched and turned, the athlete's torso and shoulders were 9 and 14 px against 52 standing.
+  const { board, step, person } = laneBoard();
+  step(0, person(900, 180));
+  step(33, person(840, 20));
+  expect(board.poseView).toBeNull();
+});
+
+it('takes back a narrowing that shows no one for a second, to the last view that showed the athlete', () => {
+  // A narrowing that hid the athlete would hide them for the set; opening the whole picture would show the coach.
+  const { board, step, person, w } = laneBoard();
+  step(0, person(260, 270));
+  step(33, person(900, 180));
+  step(66, person(1200, 60));
+  expect(board.poseView).toEqual({ x0: 530, x1: 1020 });
+  for (let tMs = 100; tMs <= 1100; tMs += 100) step(tMs, null);
+  expect(board.poseView).toEqual({ x0: 530, x1: w });
 });
 
 it('opens the narrowed view for good once it shows no one for a second', () => {

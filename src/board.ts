@@ -40,9 +40,8 @@ const FLASH_MS = 1200;
 const BALL_SHOWN_MS = 400;
 
 /**
- * How long a narrowed view may show no one, before it has shown anyone in the target's lane, until the board opens it
- * for good: it hid the athlete, as a target placed on another station puts them outside its lane. A view that hid a
- * coach showed the athlete a tenth of a second later.
+ * How long a view just narrowed may show no one before the board takes the narrowing back: it hid the athlete. A view
+ * that hid a coach showed the athlete a tenth of a second later.
  */
 const VIEW_EMPTY_MS = 1000;
 
@@ -96,8 +95,9 @@ export class Board {
   stations: number[][] = [];
   /**
    * The span of the picture the judging pose may follow someone in, in pixels, or null for all of it. It narrows past
-   * each person the pose follows outside the target's lane, and opens again when the target or the set changes, or
-   * for good when it shows no one for `VIEW_EMPTY_MS` before it shows anyone in the lane.
+   * each person the pose follows outside the target's lane, and opens again when the target or the set changes. A
+   * narrowing that shows no one for `VIEW_EMPTY_MS` goes back to the last view that showed someone in the lane, or
+   * opens the picture for good without one, as when a target on another station puts the athlete outside its lane.
    */
   poseView: Span | null = null;
   flash: Flash | null = null;
@@ -118,8 +118,10 @@ export class Board {
   #finder: FinderOptions = FINDER;
   /** When the narrowed view last started to show no one, or null while it shows someone. */
   #viewEmptySince: number | null = null;
-  /** Whether the narrowed view has shown someone in the target's lane, so an athlete resting out of the pose's sight keeps it. */
-  #viewKept = false;
+  /** The last narrowed view that showed someone in the target's lane, which an athlete resting out of sight keeps. */
+  #keptView: Span | null = null;
+  /** The largest torso of a person seen in the target's lane, in pixels: the athlete's, or 0 before one is seen. */
+  #athleteTorso = 0;
   /** Whether the view has hidden the athlete, so it stays open until the target or the set changes. */
   #viewOpened = false;
 
@@ -311,7 +313,8 @@ export class Board {
   #openView(forGood: boolean): void {
     this.poseView = null;
     this.#viewEmptySince = null;
-    this.#viewKept = false;
+    this.#keptView = null;
+    this.#athleteTorso = 0;
     this.#viewOpened = forGood;
   }
 
@@ -319,16 +322,29 @@ export class Board {
   #narrowView({ tMs, landmarks, width, height }: BoardFrame, targetX: number): void {
     if (this.#viewOpened) return;
     if (this.poseView && !landmarks) {
-      if (this.#viewKept) return;
+      if (this.poseView === this.#keptView) return;
       this.#viewEmptySince ??= tMs;
-      if (tMs - this.#viewEmptySince >= VIEW_EMPTY_MS) this.#openView(true);
+      if (tMs - this.#viewEmptySince < VIEW_EMPTY_MS) return;
+      if (this.#keptView) {
+        this.poseView = this.#keptView;
+        this.#viewEmptySince = null;
+      } else this.#openView(true);
       return;
     }
     this.#viewEmptySince = null;
-    const person = athleteFrom(landmarks, width, height, this.#visibilityMin);
-    if (this.poseView && person && inLane(person, targetX * width, this.#finder)) this.#viewKept = true;
-    const view = narrowView(this.poseView ?? { x0: 0, x1: width }, targetX * width, person, this.#finder);
-    if (view.x0 > 0 || view.x1 < width) this.poseView = view;
+    const seen = athleteFrom(landmarks, width, height, this.#visibilityMin);
+    if (!seen) return;
+    // Bent over, crouched or turned, the athlete looks smaller than they are, and that size put them outside the lane.
+    const person = { x: seen.x, torso: Math.max(seen.torso, this.#athleteTorso) };
+    const x = targetX * width;
+    if (inLane(person, x, this.#finder)) {
+      this.#athleteTorso = Math.max(this.#athleteTorso, seen.torso);
+      if (this.poseView) this.#keptView = this.poseView;
+      return;
+    }
+    const shown = this.poseView ?? { x0: 0, x1: width };
+    const view = narrowView(shown, x, person, this.#finder);
+    if (view.x0 !== shown.x0 || view.x1 !== shown.x1) this.poseView = view;
   }
 
   /** Places the station of the search's plates that the athlete in `frame` stands under, if they stand under one. */

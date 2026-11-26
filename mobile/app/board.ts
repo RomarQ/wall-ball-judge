@@ -80,6 +80,9 @@ export class PipelineBoard extends Board {
     if (this.poseView !== this.#sentView) {
       this.#sentView = this.poseView;
       wallballVision.setPoseView(this.poseView ?? undefined);
+      // For checks over adb: each change of the pose's view, in frame pixels, on the frames' clock.
+      const view = this.poseView && [Math.round(this.poseView.x0), Math.round(this.poseView.x1)];
+      console.log(`VIEW ${JSON.stringify({ tMs: Math.round(frame.tMs), view })}`);
     }
     if (judged.event?.type === 'abort') trackingLost();
     if (judged.look) {
