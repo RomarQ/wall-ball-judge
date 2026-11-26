@@ -212,9 +212,9 @@ it('counts a first throw at the lower mark as a rep when the first hit picks the
   expect([valid, noRep, board.required]).toEqual([4, 0, 'lower']);
 });
 
-it("keeps the pose's view narrowed while the pose follows the athlete, and opens it when the target moves", () => {
-  // Opened again for the athlete, the view would let the pose go back to the person it hid; kept after the target
-  // moves, it would hide the athlete of the new target.
+it("keeps the pose's view narrowed once it shows the athlete, through a rest, and opens it when the target moves", () => {
+  // Opened again for the athlete, or while they rest bent over out of the pose's sight, the view would let the pose go
+  // back to the person it hid; kept after the target moves, it would hide the athlete of the new target.
   const [w, h] = [1260, 1080];
   const person = (x: number, torso: number): Landmark[] =>
     Array.from({ length: 33 }, (_, i) => {
@@ -230,13 +230,15 @@ it("keeps the pose's view narrowed while the pose follows the athlete, and opens
   const board = new Board({ depth: DEFAULTS, ball: { bite: 0.5 }, onVerdict: () => 0 });
   [board.width, board.height] = [w, h];
   board.placeBoxes([{ x: 870, y: 0, w: 60, h: 60 }]);
-  const step = (tMs: number, landmarks: Landmark[]) =>
+  const step = (tMs: number, landmarks: Landmark[] | null) =>
     board.step({ tMs, width: w, height: h, landmarks, armed: true, ballCheck: false, windowSide: null });
 
   step(0, person(260, 270));
   const narrowed = board.poseView;
   expect(narrowed).toEqual({ x0: 530, x1: w });
   step(33, person(900, 180));
+  expect(board.poseView).toEqual(narrowed);
+  for (let tMs = 66; tMs <= 2066; tMs += 100) step(tMs, null);
   expect(board.poseView).toEqual(narrowed);
   board.placeBoxes([{ x: 270, y: 0, w: 60, h: 60 }]);
   expect(board.poseView).toBeNull();

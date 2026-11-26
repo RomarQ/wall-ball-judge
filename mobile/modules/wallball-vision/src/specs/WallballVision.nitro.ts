@@ -170,8 +170,8 @@ export interface WallballVision
    */
   retrackPose(): void
   /**
-   * The span across which the camera's and the clip's pose may follow someone, or the whole frame without `view`. The
-   * pose drops a person it follows outside the span, and looks for the athlete only inside it.
+   * The span of the frame that the camera's and the clip's pose see, or the whole frame without `view`. The pose reads
+   * the frame as black outside the span, and drops a person it follows there.
    */
   setPoseView(view: PoseView | undefined): void
   /** A search look at the next camera frame, without the still pose: a running camera's judging pose already places the athlete. */

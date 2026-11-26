@@ -9,6 +9,7 @@ import java.nio.ByteBuffer
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.floor
@@ -53,11 +54,15 @@ private const val OUT_VALUES = 4
 object Crop {
   @JvmStatic
   external fun warp(
-    rgba: ByteBuffer, width: Int, height: Int,
+    rgba: ByteBuffer, width: Int, height: Int, shownX0: Int, shownX1: Int,
     a: Float, b: Float, c: Float, d: Float, e: Float, f: Float,
     outW: Int, outH: Int, replicate: Boolean, scale: Float, offset: Float, out: FloatArray,
   )
 }
+
+/** The first column of a frame `width` wide that the pose reads, and the one past the last: those inside `span`, or all. */
+private fun shownColumns(span: PoseView?, width: Int): Pair<Int, Int> =
+  if (span == null) 0 to width else ceil(span.x0).toInt() to ceil(span.x1).toInt()
 
 /** A square region of the frame in pixels, turned by `rotation` radians, clockwise on screen. */
 private data class Roi(val cx: Double, val cy: Double, val side: Double, val rotation: Double)
@@ -91,7 +96,10 @@ class OwnPose(
   private var smoother: Array<OneEuro>? = null
   @Volatile private var retrackWanted = false
 
-  /** The span across which the athlete may be followed, or null for the whole frame; set from any thread. */
+  /**
+   * The span the pose sees, or null for the whole frame; set from any thread. The frame reads as black outside it, and
+   * a person followed outside it is dropped at once.
+   */
   @Volatile var view: PoseView? = null
 
   init {
@@ -118,7 +126,7 @@ class OwnPose(
     val blank = ByteBuffer.allocateDirect(width * height * 4)
     val middle = Roi(width / 2.0, height / 2.0, height / 2.0, 0.0)
     val frame = {
-      sample(blank, width, height, middle)
+      sample(blank, width, height, middle, null)
       landmarkerIn[0].writeFloat(landmarkInput)
       landmarker.run(landmarkerIn, landmarkerOut)
     }
@@ -150,7 +158,7 @@ class OwnPose(
     }
     if (roi == null) return lost() to detectorMs
 
-    sample(rgba, width, height, roi)
+    sample(rgba, width, height, roi, span)
     landmarkerIn[0].writeFloat(landmarkInput)
     landmarker.run(landmarkerIn, landmarkerOut)
     val presence = landmarkerOut[1].readFloat()[0].toDouble()
@@ -188,8 +196,9 @@ class OwnPose(
     return DoubleArray(0)
   }
 
-  /** The region of the best person the detector finds, of those whose middle lies inside `span` when there is one. */
+  /** The region of the best person the detector finds, with the frame black outside `span`. */
   private fun detect(rgba: ByteBuffer, width: Int, height: Int, span: PoseView?): Roi? {
+    val (shownX0, shownX1) = shownColumns(span, width)
     // Letterboxed to the square input, the padding at 0 before the [-1, 1] mapping.
     val portrait = height > width
     val hPad = if (portrait) (1 - width.toDouble() / height) / 2 else 0.0
@@ -197,7 +206,7 @@ class OwnPose(
     val sx = width / (DETECTOR_INPUT * (1 - 2 * hPad))
     val sy = height / (DETECTOR_INPUT * (1 - 2 * vPad))
     Crop.warp(
-      rgba, width, height,
+      rgba, width, height, shownX0, shownX1,
       sx.toFloat(), 0f, (-hPad * width / (1 - 2 * hPad)).toFloat(),
       0f, sy.toFloat(), (-vPad * height / (1 - 2 * vPad)).toFloat(),
       DETECTOR_INPUT, DETECTOR_INPUT, false, 2f / 255f, -1f, detectorInput,
@@ -223,17 +232,18 @@ class OwnPose(
     // Out of the letterbox, into fractions of the frame, then pixels.
     val kx = { d: Detection, k: Int -> (d.keypoints[2 * k] - hPad) / (1 - 2 * hPad) * width }
     val ky = { d: Detection, k: Int -> (d.keypoints[2 * k + 1] - vPad) / (1 - 2 * vPad) * height }
-    val best = weightedNms(found).firstOrNull { span == null || kx(it, 0) in span.x0..span.x1 } ?: return null
+    val best = weightedNms(found).firstOrNull() ?: return null
     return roiFrom(kx(best, 0), ky(best, 0), kx(best, 1), ky(best, 1))
   }
 
   /** Draws the rotated square into the landmark model's input, edges repeated, values in [0, 1]. */
-  private fun sample(rgba: ByteBuffer, width: Int, height: Int, roi: Roi) {
+  private fun sample(rgba: ByteBuffer, width: Int, height: Int, roi: Roi, span: PoseView?) {
+    val (shownX0, shownX1) = shownColumns(span, width)
     val step = roi.side / LANDMARK_INPUT
     val c = cos(roi.rotation)
     val s = sin(roi.rotation)
     Crop.warp(
-      rgba, width, height,
+      rgba, width, height, shownX0, shownX1,
       (step * c).toFloat(), (-step * s).toFloat(), (roi.cx - roi.side * c / 2 + roi.side * s / 2).toFloat(),
       (step * s).toFloat(), (step * c).toFloat(), (roi.cy - roi.side * s / 2 - roi.side * c / 2).toFloat(),
       LANDMARK_INPUT, LANDMARK_INPUT, true, 1f / 255f, 0f, landmarkInput,

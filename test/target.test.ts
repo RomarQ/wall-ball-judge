@@ -181,13 +181,13 @@ const seen = (look: Look, athlete: Athlete | null = null) => ({ look, athlete })
 }
 
 {
-  const pose = (hipVisibility: number): Landmark[] =>
+  const pose = (hipVisibility: number, hipY = 0.5): Landmark[] =>
     Array.from({ length: 33 }, (_, i) => {
       const at: Record<number, [number, number]> = {
         11: [0.4, 0.3],
         12: [0.6, 0.3],
-        23: [0.4, 0.5],
-        24: [0.6, 0.5],
+        23: [0.4, hipY],
+        24: [0.6, hipY],
       };
       const [x, y] = at[i] ?? [0, 0];
       return { x, y, visibility: i === 24 ? hipVisibility : 1 };
@@ -198,6 +198,12 @@ const seen = (look: Look, athlete: Athlete | null = null) => ({ look, athlete })
     torso: 384,
   });
   check('a hip out of sight gives no athlete, so no lane', athleteFrom(pose(0.2), 1080, 1920, 0.5), null);
+  // Bent over the ball with the back to the camera, the hips sit just under the shoulders in the picture.
+  check(
+    'a torso bent towards the camera takes its length from the shoulders, so its own lane keeps the athlete',
+    athleteFrom(pose(1, 0.31), 1080, 1920, 0.5),
+    { x: 540, torso: 216 },
+  );
 }
 
 it("stops the pose's view short of a person outside the target's lane, on their side, and leaves it for the athlete", () => {

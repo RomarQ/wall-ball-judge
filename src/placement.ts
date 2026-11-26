@@ -123,7 +123,10 @@ export interface Look {
   balls: Box[];
 }
 
-/** Where the athlete stands sideways, the middle of the torso, and the torso's length, in pixels. */
+/**
+ * Where the athlete stands sideways, the middle of the torso, and the torso's length, in pixels. A torso bent towards
+ * the camera or away from it is short in the picture, so the length is the shoulders' width when that is longer.
+ */
 export interface Athlete {
   x: number;
   torso: number;
@@ -225,6 +228,11 @@ export interface Span {
  */
 const REACH_TORSOS = 1;
 
+/** Whether `person` stands in the lane of the target at `targetX`: within `laneTorsos` of their torso lengths sideways. */
+export function inLane(person: Athlete, targetX: number, cfg: FinderOptions = DEFAULTS): boolean {
+  return Math.abs(person.x - targetX) <= cfg.laneTorsos * person.torso;
+}
+
 /**
  * The span of the frame the judging pose may follow someone in, after it followed `person`. Someone outside the lane
  * of the target at `targetX`, as `laneTorsos` measures it, is not the athlete: the span then stops short of them on
@@ -236,7 +244,7 @@ export function narrowView(
   person: Athlete | null,
   cfg: FinderOptions = DEFAULTS,
 ): Span {
-  if (!person || Math.abs(person.x - targetX) <= cfg.laneTorsos * person.torso) return view;
+  if (!person || inLane(person, targetX, cfg)) return view;
   const reach = REACH_TORSOS * person.torso;
   return person.x < targetX
     ? { x0: Math.max(view.x0, person.x + reach), x1: view.x1 }
@@ -351,7 +359,10 @@ export function athleteFrom(
   const [ls, rs, lh, rh] = points.map((p) => ({ x: p.x * w, y: p.y * h }));
   const shoulders = { x: (ls.x + rs.x) / 2, y: (ls.y + rs.y) / 2 };
   const hips = { x: (lh.x + rh.x) / 2, y: (lh.y + rh.y) / 2 };
-  const torso = Math.hypot(shoulders.x - hips.x, shoulders.y - hips.y);
+  const torso = Math.max(
+    Math.hypot(shoulders.x - hips.x, shoulders.y - hips.y),
+    Math.hypot(ls.x - rs.x, ls.y - rs.y),
+  );
   return torso > 0 ? { x: (shoulders.x + hips.x) / 2, torso } : null;
 }
 

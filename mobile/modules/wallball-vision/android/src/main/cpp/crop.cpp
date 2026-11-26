@@ -8,11 +8,13 @@
  *
  * Output pixel (u, v) takes the frame at sx = a·(u+½) + b·(v+½) + c, sy = d·(u+½) + e·(v+½) + f,
  * bilinearly between pixel centres. Outside the frame a tap reads the nearest edge pixel when
- * `replicate`, else 0. Each channel is written as value·scale + offset.
+ * `replicate`, else 0. A column outside `shownX0` to `shownX1`, end excluded, reads as black.
+ * Each channel is written as value·scale + offset.
  */
 extern "C" JNIEXPORT void JNICALL Java_com_margelo_nitro_wallballvision_Crop_warp(
-    JNIEnv* env, jclass, jobject rgbaBuffer, jint width, jint height, jfloat a, jfloat b, jfloat c, jfloat d,
-    jfloat e, jfloat f, jint outW, jint outH, jboolean replicate, jfloat scale, jfloat offset, jfloatArray out) {
+    JNIEnv* env, jclass, jobject rgbaBuffer, jint width, jint height, jint shownX0, jint shownX1, jfloat a,
+    jfloat b, jfloat c, jfloat d, jfloat e, jfloat f, jint outW, jint outH, jboolean replicate, jfloat scale,
+    jfloat offset, jfloatArray out) {
   const auto* rgba = static_cast<const uint8_t*>(env->GetDirectBufferAddress(rgbaBuffer));
   jfloat* hwc = static_cast<jfloat*>(env->GetPrimitiveArrayCritical(out, nullptr));
   auto tap = [&](int32_t x, int32_t y, int32_t channel) -> float {
@@ -21,6 +23,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_margelo_nitro_wallballvision_Crop_war
       x = std::clamp(x, 0, width - 1);
       y = std::clamp(y, 0, height - 1);
     }
+    if (x < shownX0 || x >= shownX1) return 0.0f;
     return rgba[(static_cast<size_t>(y) * width + x) * 4 + channel];
   };
   for (int32_t v = 0; v < outH; ++v) {

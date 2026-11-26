@@ -18,6 +18,7 @@ import {
   athleteFrom,
   DEFAULTS as FINDER,
   handPlate,
+  inLane,
   MAX_PLATES,
   narrowView,
   placeable,
@@ -39,8 +40,9 @@ const FLASH_MS = 1200;
 const BALL_SHOWN_MS = 400;
 
 /**
- * How long a narrowed view may show no one before the board opens it for good: it hid the athlete, as a target placed
- * on another station puts them outside its lane. A view that hid a coach showed the athlete a tenth of a second later.
+ * How long a narrowed view may show no one, before it has shown anyone in the target's lane, until the board opens it
+ * for good: it hid the athlete, as a target placed on another station puts them outside its lane. A view that hid a
+ * coach showed the athlete a tenth of a second later.
  */
 const VIEW_EMPTY_MS = 1000;
 
@@ -95,7 +97,7 @@ export class Board {
   /**
    * The span of the picture the judging pose may follow someone in, in pixels, or null for all of it. It narrows past
    * each person the pose follows outside the target's lane, and opens again when the target or the set changes, or
-   * for good when it shows no one for `VIEW_EMPTY_MS`.
+   * for good when it shows no one for `VIEW_EMPTY_MS` before it shows anyone in the lane.
    */
   poseView: Span | null = null;
   flash: Flash | null = null;
@@ -116,6 +118,8 @@ export class Board {
   #finder: FinderOptions = FINDER;
   /** When the narrowed view last started to show no one, or null while it shows someone. */
   #viewEmptySince: number | null = null;
+  /** Whether the narrowed view has shown someone in the target's lane, so an athlete resting out of the pose's sight keeps it. */
+  #viewKept = false;
   /** Whether the view has hidden the athlete, so it stays open until the target or the set changes. */
   #viewOpened = false;
 
@@ -307,6 +311,7 @@ export class Board {
   #openView(forGood: boolean): void {
     this.poseView = null;
     this.#viewEmptySince = null;
+    this.#viewKept = false;
     this.#viewOpened = forGood;
   }
 
@@ -314,12 +319,14 @@ export class Board {
   #narrowView({ tMs, landmarks, width, height }: BoardFrame, targetX: number): void {
     if (this.#viewOpened) return;
     if (this.poseView && !landmarks) {
+      if (this.#viewKept) return;
       this.#viewEmptySince ??= tMs;
       if (tMs - this.#viewEmptySince >= VIEW_EMPTY_MS) this.#openView(true);
       return;
     }
     this.#viewEmptySince = null;
     const person = athleteFrom(landmarks, width, height, this.#visibilityMin);
+    if (this.poseView && person && inLane(person, targetX * width, this.#finder)) this.#viewKept = true;
     const view = narrowView(this.poseView ?? { x0: 0, x1: width }, targetX * width, person, this.#finder);
     if (view.x0 > 0 || view.x1 < width) this.poseView = view;
   }
