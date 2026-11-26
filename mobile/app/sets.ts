@@ -20,9 +20,9 @@ export function setSaveSets(on: boolean): void {
   localStorage.setItem(SAVE_SETS_KEY, on ? 'true' : 'false');
 }
 
-/** Whether a kept live set also keeps the camera's video, the setting; off until it is turned on. */
+/** Whether a kept live set also keeps the camera's video, the setting; on until it is turned off, as in the PWA. */
 export function saveVideoOn(): boolean {
-  return localStorage.getItem(SAVE_VIDEO_KEY) === 'true';
+  return localStorage.getItem(SAVE_VIDEO_KEY) !== 'false';
 }
 
 export function setSaveVideo(on: boolean): void {
