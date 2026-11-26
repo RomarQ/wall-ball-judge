@@ -155,11 +155,14 @@ function showLastSet(): void {
 
 /** The browser's offer to install the app, held until the person taps Install. It prompts once. */
 let offer: InstallOffer | null = null;
-/** The app was installed while this page was open, which leaves this page in its browser tab. */
+/**
+ * The browser reported an install from this page, which leaves this page in its browser tab. It proves no install:
+ * Brave reports one before the home screen asks to place the icon, which the person can still cancel.
+ */
 let installed = false;
 
-const isInstalled = () =>
-  installed ||
+/** This page runs as the installed app, the one install state that a page can know for sure. */
+const runsAsApp = () =>
   window.matchMedia('(display-mode: standalone)').matches ||
   (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
@@ -168,16 +171,27 @@ const onIos = () =>
   /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
-/** Shows whether the app is installed, and how to install it: a button where the browser offers one, its own steps elsewhere. */
+function installSteps(): string {
+  if (onIos()) return t('home.installIos');
+  return /Android/.test(navigator.userAgent) ? t('home.installAndroid') : t('home.installOther');
+}
+
+/**
+ * Says Yes inside the installed app. A browser tab cannot tell whether the device has the app (Brave offers the
+ * install again in every tab after it adds the app to the home screen), so there the row offers the install: a button
+ * where the browser offers one, its own steps elsewhere, and where to open the app once this page installed it.
+ */
 function showInstalled(): void {
-  if (isInstalled()) {
+  const app = runsAsApp();
+  $('home-installed-label').textContent = t(app ? 'home.installed' : 'home.installApp');
+  if (app) {
     setSpec('home-installed', 'good', t('home.yes'));
     setNote('home-installed', '');
     return;
   }
   if (!offer) {
-    setSpec('home-installed', 'none', t('home.no'));
-    setNote('home-installed', onIos() ? t('home.installIos') : t('home.installOther'));
+    $('home-installed').replaceChildren();
+    setNote('home-installed', installed ? t('home.openInstalled') : installSteps());
     return;
   }
   setNote('home-installed', '');
@@ -225,7 +239,7 @@ async function showReadiness(problem = ''): Promise<void> {
 /** What may undo a ready phone: nothing once the browser keeps the files, else a full phone. */
 function keptNote(kept: boolean): string {
   if (kept) return '';
-  return isInstalled() ? t('home.mayClear') : t('home.mayClearInstall');
+  return runsAsApp() || installed ? t('home.mayClear') : t('home.mayClearInstall');
 }
 
 async function checkPhone(): Promise<void> {

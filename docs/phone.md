@@ -21,7 +21,7 @@ Then open `http://localhost:5173/` on the phone. It reaches the laptop's server,
 
 ## Installing it as an app
 
-The app is installable, and the installed app opens full screen from the home screen. The **Installed** row on the home view says whether this phone has it. Where the browser offers the install to the page, as Chrome and Brave on Android do, the row shows an **Install** button. Elsewhere a line under the row gives the browser's own steps: on an iPhone, tap **Share**, then **Add to Home Screen**; in other browsers, open the menu with the three dots, then tap **Install app** or **Add to Home screen**.
+The app installs as a web app, which opens full screen from the home screen. Inside the web app, the home view's **Installed** row says **Yes**. A browser tab cannot tell whether the phone has the web app: Brave adds it to the home screen as a shortcut and then offers the install again in every tab. So in a tab the row is **Install the web app**, and it never says yes or no. Where the browser offers the install to the page, as Chrome and Brave on Android do, the row shows an **Install** button. Elsewhere a line under the row gives the browser's own steps, as [Google's help on web apps](https://support.google.com/chrome/answer/9658361) gives them: on an iPhone, tap **Share**, then **Add to Home Screen**; on Android, open the menu with the three dots, then tap **Install and create shortcut**, then **Install**; on a computer, select **Install** in the address bar. After an install from the tab, the line says to open the web app from its icon.
 
 ## Updating
 

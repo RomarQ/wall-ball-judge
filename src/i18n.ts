@@ -47,6 +47,8 @@ const en = {
   'home.lastSet': 'Last set',
   'home.offline': 'Ready for offline use',
   'home.installed': 'Installed',
+  'home.installApp': 'Install the web app',
+  'home.openInstalled': 'Open the web app from its icon.',
   'home.check': 'Check this device',
   'home.checkSize':
     'Optional. Tests the speed of this device and keeps the app for offline use. Downloads about 50 MB.',
@@ -80,13 +82,14 @@ const en = {
   'home.firstSet': 'The first live set measures the pose model’s speed.',
   'home.frames': (n: number) => `${n} ${n === 1 ? 'frame' : 'frames'} a second`,
   'home.poseModel': (small: boolean, chip: Chip) => `${small ? 'small' : 'full'} pose model on the ${chip}`,
-  'home.installIos': 'To install the app, tap Share, then tap Add to Home Screen.',
-  'home.installOther':
-    'To install the app, open the browser menu with the three dots, then tap Install app or Add to Home screen.',
+  'home.installIos': 'To install the web app, tap Share, then tap Add to Home Screen.',
+  'home.installAndroid':
+    'To install the web app, open the browser menu with the three dots. Then tap Install and create shortcut, then Install.',
+  'home.installOther': 'To install the web app, select Install in the address bar.',
   'home.install': 'Install',
   'home.mayClear': 'The browser may clear the models when the device needs space.',
   'home.mayClearInstall':
-    'The browser may clear the models when the device needs space. Install the app to keep them.',
+    'The browser may clear the models when the device needs space. Install the web app to keep them.',
   'home.step': (step: number, of: number, name: string) => `Step ${step} of ${of}: ${name}`,
   'home.storing': 'Storing the files on the device',
   'home.notKept':
@@ -324,6 +327,8 @@ const ptPT: Texts = {
   'home.lastSet': 'Última série',
   'home.offline': 'Pronta a usar sem internet',
   'home.installed': 'Instalada',
+  'home.installApp': 'Instalar a app da Web',
+  'home.openInstalled': 'Abra a app da Web pelo seu ícone.',
   'home.check': 'Testar este dispositivo',
   'home.checkSize':
     'Opcional. Testa a velocidade deste dispositivo e guarda a app para usar sem internet. Transfere cerca de 50 MB.',
@@ -359,13 +364,15 @@ const ptPT: Texts = {
     `${String(n).replace('.', ',')} ${n === 1 ? 'imagem' : 'imagens'} por segundo`,
   'home.poseModel': (small: boolean, chip: Chip) =>
     `modelo de pose ${small ? 'pequeno' : 'completo'} ${chip === 'GPU' ? 'na GPU' : 'no CPU'}`,
-  'home.installIos': 'Para instalar a app, toque em Partilhar e depois em Adicionar ao ecrã principal.',
-  'home.installOther':
-    'Para instalar a app, abra o menu do browser com os três pontos e toque em Instalar app ou Adicionar ao ecrã principal.',
+  'home.installIos':
+    'Para instalar a app da Web, toque em Partilhar e depois em Adicionar ao ecrã principal.',
+  'home.installAndroid':
+    'Para instalar a app da Web, abra o menu do browser com os três pontos. Depois toque em Instalar e criar atalho e em Instalar.',
+  'home.installOther': 'Para instalar a app da Web, selecione Instalar na barra de endereço.',
   'home.install': 'Instalar',
   'home.mayClear': 'O browser pode apagar os modelos quando o dispositivo precisar de espaço.',
   'home.mayClearInstall':
-    'O browser pode apagar os modelos quando o dispositivo precisar de espaço. Instale a app para os manter.',
+    'O browser pode apagar os modelos quando o dispositivo precisar de espaço. Instale a app da Web para os manter.',
   'home.step': (step: number, of: number, name: string) => `Passo ${step} de ${of}: ${name}`,
   'home.storing': 'A guardar os ficheiros no dispositivo',
   'home.notKept': 'O dispositivo não guardou os ficheiros. Confirme que tem espaço livre e teste de novo.',
