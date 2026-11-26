@@ -6,7 +6,7 @@ import { DisplaySender, readyBluetooth } from './app/pair';
 import { storedRequired, storeRequired, Tally } from './app/core';
 import { ballModel, type TrainedFile } from './app/detect';
 import { liveTallyStore, tallySounds } from './app/sound';
-import { BoardScreen, type AutoSet, type BoardSource } from './app/ui/BoardScreen';
+import { BoardScreen, BoardStarting, type AutoSet, type BoardSource } from './app/ui/BoardScreen';
 import { DisplayScreen } from './app/ui/DisplayScreen';
 import { HomeScreen } from './app/ui/HomeScreen';
 import { SetsScreen } from './app/ui/SetsScreen';
@@ -118,20 +118,24 @@ function Main({ board, auto, display, linkFirst }: { board?: string; auto?: Auto
       <StatusBar hidden />
       {/* Settings lie over this view, which keeps them inside the safe area as the screens are. */}
       <View style={styles.inside}>
-        {screen.name === 'board' && ballUnit ? (
-          <BoardScreen
-            key={screen.open}
-            source={screen.source}
-            ballUnit={ballUnit}
-            ballModel={screen.ballModel}
-            liveTally={tally}
-            sender={sender}
-            onHome={home}
-            onSettings={openSettings}
-            onLive={live}
-            onRecording={recording}
-            auto={screen === launched ? auto : undefined}
-          />
+        {screen.name === 'board' ? (
+          ballUnit ? (
+            <BoardScreen
+              key={screen.open}
+              source={screen.source}
+              ballUnit={ballUnit}
+              ballModel={screen.ballModel}
+              liveTally={tally}
+              sender={sender}
+              onHome={home}
+              onSettings={openSettings}
+              onLive={live}
+              onRecording={recording}
+              auto={screen === launched ? auto : undefined}
+            />
+          ) : (
+            <BoardStarting onHome={home} onSettings={openSettings} />
+          )
         ) : screen.name === 'display' ? (
           <DisplayScreen onLeave={home} />
         ) : screen.name === 'sets' ? (

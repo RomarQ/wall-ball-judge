@@ -573,6 +573,28 @@ export function BoardScreen({
   );
 }
 
+/** The board's place while the app learns where the ball model runs, a check of some seconds once after each install. */
+export function BoardStarting({ onHome, onSettings }: { onHome: () => void; onSettings: () => void }) {
+  return (
+    <View style={styles.screen}>
+      <Bar onHome={onHome}>
+        <IconButton small label={t('nav.settings')} onPress={onSettings}>
+          <Gear />
+        </IconButton>
+      </Bar>
+      <View style={styles.station}>
+        <View style={styles.camera}>
+          <View style={[styles.frame, styles.starting]}>
+            <Text style={styles.startingText} accessibilityLiveRegion="polite">
+              {t('board.starting')}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 /** The scoreboard: the no-reps, the count, the division and its plates, and the set clock with Reset. */
 function Scoreboard({
   tally,
@@ -820,6 +842,8 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: 'rgba(20,22,24,0.82)',
   },
+  starting: { alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: COLOURS.graphite, borderRadius: CORNER },
+  startingText: { color: COLOURS.chalk, fontSize: 1.05 * REM, fontWeight: '600', textAlign: 'center' },
   camBar: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: TAP },
   camStatus: { flex: 1, color: COLOURS.steel, fontSize: 15, lineHeight: 19, textAlign: 'center' },
   setup: { flexDirection: 'row', gap: 8 },

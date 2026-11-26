@@ -1,6 +1,6 @@
 {
   "name": "wallballs",
-  "version": "0.31.15",
+  "version": "0.31.16",
   "private": true,
   "type": "module",
   "description": "A phone web app that judges HYROX wall-ball reps from the camera: squat depth and the ball reaching the target, on the device.",
