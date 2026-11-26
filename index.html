@@ -305,6 +305,9 @@
                 <li data-i18n="home.ruleDepth">Hips below the knees</li>
                 <li data-i18n="home.ruleTarget">Ball on the athlete&#8217;s target</li>
               </ol>
+              <p class="demo-caption" data-i18n="home.demoCaption">
+                Men throw to the upper target. Women throw to the lower target.
+              </p>
             </figcaption>
           </figure>
 
@@ -320,8 +323,7 @@
               <input id="home-file" type="file" accept="video/*" />
             </label>
             <button class="control shutter" id="home-live">
-              <span class="key" aria-hidden="true"></span>
-              <span class="name" data-i18n="home.live">Set up</span>
+              <span class="key"><span class="name" data-i18n="home.live">Start</span></span>
             </button>
             <a class="control" href="#settings">
               <span class="key" aria-hidden="true">
@@ -338,37 +340,6 @@
             <span data-i18n="home.howTo">How to use it</span>
             <span class="length" id="home-how-to-length"></span>
           </button>
-        </section>
-
-        <section class="phone" aria-labelledby="home-phone-title">
-          <h2 id="home-phone-title" data-i18n="home.phone">This device</h2>
-          <dl class="specs">
-            <div>
-              <dt data-i18n="home.runs">Can this device run the app?</dt>
-              <dd id="home-ready"><span data-state="none" data-i18n="home.checking">Checking…</span></dd>
-            </div>
-            <div id="home-pose-row" hidden>
-              <dt data-i18n="home.lastSet">Last set</dt>
-              <dd id="home-pose"></dd>
-            </div>
-            <div>
-              <dt data-i18n="home.offline">Ready for offline use</dt>
-              <dd id="home-offline"><span data-state="none" data-i18n="home.checking">Checking…</span></dd>
-            </div>
-            <div>
-              <dt data-i18n="home.installed">Installed</dt>
-              <dd id="home-installed"></dd>
-            </div>
-          </dl>
-          <button class="check-phone" id="home-check" hidden>
-            <strong data-i18n="home.check">Check this device</strong>
-            <span data-i18n="home.checkSize"
-              >Downloads about 50 MB, then times the models on the GPU and the CPU</span
-            >
-          </button>
-          <progress id="home-check-progress" value="0" hidden></progress>
-          <p class="status" id="home-check-status" role="status"></p>
-          <button class="link" id="home-recheck" hidden data-i18n="home.recheck">Check again</button>
         </section>
 
         <section class="place" aria-labelledby="home-place-title">
@@ -440,6 +411,38 @@
             <li data-i18n="home.notePicture">The picture must show the hips, the knees and the target.</li>
             <li data-i18n="home.noteClose">Do not put it near the wall or under the target.</li>
           </ul>
+        </section>
+
+        <section class="phone" aria-labelledby="home-phone-title">
+          <h2 id="home-phone-title" data-i18n="home.phone">This device</h2>
+          <dl class="specs">
+            <div>
+              <dt data-i18n="home.runs">Can this device run the app?</dt>
+              <dd id="home-ready"><span data-state="none" data-i18n="home.checking">Checking…</span></dd>
+            </div>
+            <div id="home-pose-row" hidden>
+              <dt data-i18n="home.lastSet">Last set</dt>
+              <dd id="home-pose"></dd>
+            </div>
+            <div>
+              <dt data-i18n="home.offline">Ready for offline use</dt>
+              <dd id="home-offline"><span data-state="none" data-i18n="home.checking">Checking…</span></dd>
+            </div>
+            <div>
+              <dt data-i18n="home.installed">Installed</dt>
+              <dd id="home-installed"></dd>
+            </div>
+          </dl>
+          <button class="check-phone" id="home-check" hidden>
+            <strong data-i18n="home.check">Check this device</strong>
+            <span data-i18n="home.checkSize"
+              >Optional. Tests the speed of this device and keeps the app for offline use. Downloads about 50
+              MB.</span
+            >
+          </button>
+          <progress id="home-check-progress" value="0" hidden></progress>
+          <p class="status" id="home-check-status" role="status"></p>
+          <button class="link" id="home-recheck" hidden data-i18n="home.recheck">Check again</button>
         </section>
 
         <footer>

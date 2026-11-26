@@ -35,8 +35,9 @@ const en = {
     'Two stations, seen from behind. On the left a man throws to the upper target, and on the right a woman throws to the lower target. A rep counts when the hips go below the knees and the ball then hits the athlete’s target. A squat above parallel, or a man’s throw that reaches only the lower target, is a no-rep.',
   'home.ruleDepth': 'Hips below the knees',
   'home.ruleTarget': 'Ball on the athlete’s target',
+  'home.demoCaption': 'Men throw to the upper target. Women throw to the lower target.',
   'home.recording': 'Replay a video',
-  'home.live': 'Set up',
+  'home.live': 'Start',
   'home.settings': 'Settings',
   'home.phone': 'This device',
   'home.runs': 'Can this device run the app?',
@@ -47,7 +48,8 @@ const en = {
   'home.offline': 'Ready for offline use',
   'home.installed': 'Installed',
   'home.check': 'Check this device',
-  'home.checkSize': 'Downloads about 50 MB, then times the models on the GPU and the CPU',
+  'home.checkSize':
+    'Optional. Tests the speed of this device and keeps the app for offline use. Downloads about 50 MB.',
   'home.recheck': 'Check again',
   'home.place': 'How to position the device',
   'home.planLabel':
@@ -310,8 +312,9 @@ const ptPT: Texts = {
     'Duas estações, vistas de trás. À esquerda, um homem lança para o alvo superior; à direita, uma mulher lança para o alvo inferior. Uma repetição conta quando a anca desce abaixo dos joelhos e depois a bola acerta no alvo do atleta. Um agachamento acima da paralela, ou um lançamento de um homem que só chega ao alvo inferior, é um no rep.',
   'home.ruleDepth': 'Anca abaixo dos joelhos',
   'home.ruleTarget': 'Bola no alvo do atleta',
+  'home.demoCaption': 'Os homens lançam para o alvo superior. As mulheres lançam para o alvo inferior.',
   'home.recording': 'Rever um vídeo',
-  'home.live': 'Preparar',
+  'home.live': 'Começar',
   'home.settings': 'Definições',
   'home.phone': 'Este dispositivo',
   'home.runs': 'Este dispositivo consegue correr a app?',
@@ -322,7 +325,8 @@ const ptPT: Texts = {
   'home.offline': 'Pronta a usar sem internet',
   'home.installed': 'Instalada',
   'home.check': 'Testar este dispositivo',
-  'home.checkSize': 'Transfere cerca de 50 MB e mede a velocidade dos modelos na GPU e no CPU',
+  'home.checkSize':
+    'Opcional. Testa a velocidade deste dispositivo e guarda a app para usar sem internet. Transfere cerca de 50 MB.',
   'home.recheck': 'Testar de novo',
   'home.place': 'Como posicionar o dispositivo',
   'home.planLabel':

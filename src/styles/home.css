@@ -181,6 +181,12 @@
   font-size: 0.8rem;
   font-weight: 700;
 }
+.demo-caption {
+  margin: 0.5rem 0 0;
+  color: var(--steel);
+  font-size: 0.9rem;
+  line-height: 1.3rem;
+}
 
 /* The start controls sit as a camera's do: the shutter in the middle, the gallery to its left. */
 .controls {
@@ -258,12 +264,15 @@
   transform: scale(0.92);
 }
 .shutter .name {
-  margin-top: 0.4rem;
+  color: var(--on-chalk);
+  font-size: 1.1rem;
   font-weight: 700;
 }
 .shutter:disabled {
-  color: var(--steel);
   cursor: default;
+}
+.shutter:disabled .name {
+  color: var(--steel);
 }
 .shutter:disabled .key {
   background: var(--rule);
@@ -549,7 +558,7 @@
     width: min(100%, calc((100dvh - 29rem) * 3 / 4));
     margin-inline: auto;
   }
-  .home section.phone {
+  .home .stage + section {
     margin-top: 1.75rem;
     padding-top: 0;
     border-top: 0;
@@ -560,7 +569,7 @@
 }
 
 /* A phone on its side: the picture as tall as the screen on the left and the words and the start controls on its right,
-   then the device and the placing side by side. */
+   then the placing and the device side by side. */
 @media (orientation: landscape) and (max-height: 600px) {
   .home {
     max-width: 56rem;

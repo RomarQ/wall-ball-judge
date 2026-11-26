@@ -1,8 +1,8 @@
 /**
  * The home screen, laid out as the PWA's home view: the title and the drawn demo with the rule, the controls that start
- * a set, the how-to video, whether this device runs the app, where to stand the phone, and the note that the video stays
+ * a set, the how-to video, where to stand the phone, whether this device runs the app, and the note that the video stays
  * on the device. On a phone on its side, the demo stands beside the words, the controls and the how-to video, and the
- * device and the placing side by side.
+ * placing and the device side by side.
  */
 import React, { useEffect, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -94,10 +94,13 @@ export function HomeScreen({
     </>
   );
   const rules = (
-    <View style={styles.rule}>
-      <Rule n={1} text={t('home.ruleDepth')} />
-      <Rule n={2} text={t('home.ruleTarget')} />
-    </View>
+    <>
+      <View style={styles.rule}>
+        <Rule n={1} text={t('home.ruleDepth')} />
+        <Rule n={2} text={t('home.ruleTarget')} />
+      </View>
+      <Text style={styles.demoCaption}>{t('home.demoCaption')}</Text>
+    </>
   );
   const controls = (
     <View style={styles.controls}>
@@ -106,12 +109,11 @@ export function HomeScreen({
       </Control>
       <Pressable style={styles.shutter} onPress={onLive} accessibilityRole="button" accessibilityLabel={t('home.live')}>
         {({ pressed }) => (
-          <>
-            <View style={styles.ring}>
-              <View style={[styles.shutterKey, pressed && styles.shutterPressed]} />
+          <View style={styles.ring}>
+            <View style={[styles.shutterKey, pressed && styles.shutterPressed]}>
+              <Text style={styles.shutterName}>{t('home.live')}</Text>
             </View>
-            <Text style={[styles.controlName, styles.shutterName]}>{t('home.live')}</Text>
-          </>
+          </View>
         )}
       </Pressable>
       <Control label={t('nav.settings')} onPress={onSettings}>
@@ -164,16 +166,6 @@ export function HomeScreen({
 
       <View style={side ? styles.sideSections : undefined}>
         <View style={[styles.section, side && styles.sideSection]}>
-          <Text style={page.h2}>{t('home.phone')}</Text>
-          <Spec
-            label={t('home.runs')}
-            value={<State state={ready} text={ready === 'none' ? t('home.checking') : t(ANSWER[ready])} />}
-            note={ready === 'slow' || ready === 'bad' ? t(WHY[ready]) : undefined}
-            first
-          />
-        </View>
-
-        <View style={[styles.section, side && styles.sideSection]}>
           <Text style={page.h2}>{t('home.place')}</Text>
           {width > 0 ? <Plan width={side ? (width - SIDE_GAP) / 2 : width} /> : null}
           <View style={styles.notes}>
@@ -184,6 +176,16 @@ export function HomeScreen({
               </View>
             ))}
           </View>
+        </View>
+
+        <View style={[styles.section, side && styles.sideSection]}>
+          <Text style={page.h2}>{t('home.phone')}</Text>
+          <Spec
+            label={t('home.runs')}
+            value={<State state={ready} text={ready === 'none' ? t('home.checking') : t(ANSWER[ready])} />}
+            note={ready === 'slow' || ready === 'bad' ? t(WHY[ready]) : undefined}
+            first
+          />
         </View>
       </View>
 
@@ -257,6 +259,7 @@ const styles = StyleSheet.create({
   ruleNumber: { width: 1.4 * REM, height: 1.4 * REM, borderRadius: 999, borderWidth: 1.5, borderColor: COLOURS.chalk, alignItems: 'center', justifyContent: 'center' },
   ruleNumberText: { color: COLOURS.chalk, fontSize: 0.8 * REM, fontWeight: '700' },
   ruleText: { color: COLOURS.chalk, fontFamily: CONDENSED, fontSize: REM, fontWeight: '600' },
+  demoCaption: { marginTop: 0.5 * REM, color: COLOURS.steel, fontSize: 0.9 * REM, lineHeight: 1.3 * REM },
   controls: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 1.25 * REM },
   control: { flex: 1, alignItems: 'center', gap: 0.4 * REM },
   key: {
@@ -275,9 +278,9 @@ const styles = StyleSheet.create({
   shutter: { alignItems: 'center', gap: 0.4 * REM },
   // The PWA's shutter: a chalk disc in a black gap and a chalk ring.
   ring: { padding: 4, borderRadius: 999, borderWidth: 3, borderColor: COLOURS.chalk, margin: -7 },
-  shutterKey: { width: SHUTTER, height: SHUTTER, borderRadius: 999, backgroundColor: COLOURS.chalk },
+  shutterKey: { width: SHUTTER, height: SHUTTER, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: COLOURS.chalk },
   shutterPressed: { transform: [{ scale: 0.92 }] },
-  shutterName: { marginTop: 0.8 * REM, fontWeight: '700' },
+  shutterName: { color: COLOURS.onChalk, fontFamily: CONDENSED, fontSize: 1.1 * REM, fontWeight: '700' },
   howTo: {
     flexDirection: 'row',
     alignItems: 'center',
