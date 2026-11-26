@@ -11,9 +11,9 @@ const FILE = 'sets.json';
 const SAVE_SETS_KEY = 'saveSets';
 const SAVE_VIDEO_KEY = 'saveSetsVideo';
 
-/** Whether finished sets are kept, the setting; off until it is turned on. */
+/** Whether finished sets are kept, the setting; on until it is turned off. */
 export function saveSetsOn(): boolean {
-  return localStorage.getItem(SAVE_SETS_KEY) === 'true';
+  return localStorage.getItem(SAVE_SETS_KEY) !== 'false';
 }
 
 export function setSaveSets(on: boolean): void {
