@@ -15,7 +15,7 @@
  * stored files never wait on it.
  *
  * The loaders are imported by each step, so the home view that lists the steps
- * does not load the model libraries before the person asks for the download.
+ * loads the model libraries only when a download starts.
  */
 import { modelPaths } from './config';
 import { t } from './i18n';
@@ -30,8 +30,8 @@ interface Step {
 }
 
 /** Fetches `url` whole, so that the service worker keeps it. */
-async function fetchWhole(url: string): Promise<void> {
-  const response = await fetch(url);
+async function fetchWhole(url: string, signal: AbortSignal): Promise<void> {
+  const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`${url}: ${response.status}`);
   await response.arrayBuffer();
 }
@@ -40,9 +40,11 @@ export const STEPS: Step[] = [
   {
     name: 'check.pose',
     file: 'poseFull',
-    async load() {
+    async load(signal) {
       const { wasmLoaderPath, wasmBinaryPath } = await (await import('./vision')).loadVision();
-      await Promise.all([wasmLoaderPath, wasmBinaryPath, modelPaths().poseFull].map(fetchWhole));
+      await Promise.all(
+        [wasmLoaderPath, wasmBinaryPath, modelPaths().poseFull].map((url) => fetchWhole(url, signal)),
+      );
       return { close() {} };
     },
   },
@@ -78,6 +80,9 @@ export const STEPS: Step[] = [
   },
 ];
 
+/** The steps that store a model file: the check without its speed test. */
+export const DOWNLOADS = STEPS.filter((step) => step.file !== null);
+
 /** The addresses of the model files that a complete download leaves in the cache. */
 export function modelFiles(): string[] {
   const paths = modelPaths();
@@ -85,17 +90,19 @@ export function modelFiles(): string[] {
 }
 
 /**
- * Runs the steps in sequence and calls `onStep` when each one starts. An
- * abort stops the download before the next step and rejects with the signal's reason.
+ * Runs `steps` in sequence and calls `onStep` when each one starts. An abort
+ * stops the download before the next step, or within the pose model's files,
+ * and rejects with the signal's reason.
  *
  * In sequence, because two detectors that load together each download the
  * runtime before the cache holds it.
  */
 export async function preload(
+  steps: readonly Step[],
   onStep: (index: number, name: string) => void,
   signal: AbortSignal,
 ): Promise<void> {
-  for (const [index, step] of STEPS.entries()) {
+  for (const [index, step] of steps.entries()) {
     signal.throwIfAborted();
     onStep(index, t(step.name));
     (await step.load(signal)).close();

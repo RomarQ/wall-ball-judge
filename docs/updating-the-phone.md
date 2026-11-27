@@ -51,7 +51,7 @@ The models are not part of the app shell. They are cached on first use in a cach
 
 **A model file that changes without the revision changing will not reach the phone.** The phone has the old bytes under the old name, and nothing tells it to look again. So when a model file changes under the same name, bump `revision` in the same commit. `v5` to `v6` is enough; the value is a cache name, not a version number anyone reads.
 
-After that, the **Ready for offline use** row on the home view reads "Not yet". Tap **Check this device** there before you go to the gym. A new revision replaces the whole model cache, so the download gets the four model files again, about 36 MB. The runtime files come from their own cache.
+After that, the **Ready for offline use** row on the home view reads "Not yet", and the home view downloads the new files. Open the home view with a network before you go to the gym, and wait until the row reads "Yes". A new revision replaces the whole model cache, so the download gets the four model files again, about 36 MB. The runtime files come from their own cache.
 
 ## Checking what the phone is actually running
 
@@ -79,6 +79,6 @@ Either way this says what the phone would fetch next, not what it holds. What it
 
 The gym has no network that you can rely on. Opening the app is not sufficient, because the worker caches the WASM runtimes and the models on first use only.
 
-While the phone has a network, tap **Check this device** on the home view. The download loads the pose models, the ball detector and the target detector through the app's own loaders, so the worker caches the files that this phone asks for. When the **Ready for offline use** row reads "Yes", the app runs with the laptop shut. The row reads the same on each later visit, until a new model revision or a new runtime version replaces a cache. [docs/phone.md](phone.md) describes how the home view decides.
+While the phone has a network, open the home view. It downloads the pose model, the ball detector and the target detector through the app's own loaders, so the worker caches the files that this phone asks for. When the **Ready for offline use** row reads "Yes", the app runs with the laptop shut. The row reads the same on each later visit, until a new model revision or a new runtime version replaces a cache. [docs/phone.md](phone.md) describes how the home view decides.
 
 For a build that must never reach out at all, `VITE_MODELS=local npm run build` puts the pose models inside the bundle as well; [docs/models.md](models.md) has the detail.

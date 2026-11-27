@@ -1,7 +1,8 @@
 /**
  * The home view: the drawing of a rep, the controls that start a set, the
- * how-to video, whether this device runs the app, the check that tests it and
- * stores the models for use with no network, and the offer to install the app.
+ * how-to video, whether this device runs the app, the download of the models
+ * for use with no network, the check that tests the device, and the offer to
+ * install the app.
  */
 import { playDemo } from './demo';
 import { cameraBlocker } from './diagnostics';
@@ -10,7 +11,7 @@ import { onLanguage, t } from './i18n';
 import { HOW_TO, LINKS } from './links';
 import { confirmDownload, keepStored, readOfflineState, storedKept, type OfflineState } from './offline';
 import { savedFinder, savedTimes, unitFor, type UnitTimes } from './phone-check';
-import { STEPS, modelFiles, preload } from './preload';
+import { DOWNLOADS, STEPS, modelFiles, preload } from './preload';
 import {
   ballReadiness,
   phoneReadiness,
@@ -34,8 +35,17 @@ type State = Readiness;
 /** The state of each part of the judge on this device, which the answer to whether it runs the app sums up. */
 const parts: Parts = { camera: 'none', pose: 'none', ball: 'none', finder: 'none' };
 
-/** The check in progress, which stops when another view takes the place of the home view. */
+/** The check or the download in progress, which stops when another view takes the place of the home view. */
 let checking: AbortController | null = null;
+
+/** Whether the run in progress is the check, which times the models, rather than the download alone. */
+let timing = false;
+
+/** Whether a run failed in this visit, so that the home view starts no download by itself again. */
+let failed = false;
+
+/** Whether the home view shows, the one view that downloads the models by itself. */
+let shown = false;
 
 /** Whether the last check timed both models, though it may have found no time for the pose. */
 let checked = false;
@@ -55,7 +65,7 @@ function showReady(): void {
     setNote('home-ready', state === 'good' ? '' : t(WHY[state]));
     return;
   }
-  const reading = checking !== null || parts.camera === 'none';
+  const reading = (checking !== null && timing) || parts.camera === 'none';
   const text = reading ? 'home.checking' : checked ? 'home.notKnown' : 'home.notChecked';
   setSpec('home-ready', state, t(text));
   setNote('home-ready', text === 'home.notKnown' ? t('home.firstSet') : '');
@@ -213,7 +223,8 @@ function offerCheck(needed: boolean): void {
 }
 
 /**
- * Shows the rows that come from the last check and from the caches, and offers the check that either lacks.
+ * Shows the rows that come from the last check and from the caches, offers the check that either lacks, and downloads
+ * the models that the caches lack.
  *
  * The last check shows at once. The caches can be read only once a service
  * worker controls the page, which on a first visit takes a moment.
@@ -234,6 +245,9 @@ async function showReadiness(problem = ''): Promise<void> {
   setSpec('home-offline', OFFLINE[offline].state, OFFLINE[offline].text());
   setNote('home-offline', offline === 'ready' ? keptNote(kept) : '');
   offerCheck(!checked || offline === 'not-ready');
+  // Without a controlling worker, the download stores nothing and would start again on each visit.
+  if (offline === 'not-ready' && shown && !failed && navigator.serviceWorker?.controller)
+    void runSteps(false);
 }
 
 /** What may undo a ready phone: nothing once the browser keeps the files, else a full phone. */
@@ -242,29 +256,39 @@ function keptNote(kept: boolean): string {
   return runsAsApp() || installed ? t('home.mayClear') : t('home.mayClearInstall');
 }
 
-async function checkPhone(): Promise<void> {
+/**
+ * Downloads the models, and with `check` also times them on this device and asks the browser to keep them. Only the
+ * check asks, because Firefox puts that request to the person, and the check is the run that they started.
+ */
+async function runSteps(check: boolean): Promise<void> {
+  const steps = check ? STEPS : DOWNLOADS;
   const progress = $<HTMLProgressElement>('home-check-progress');
   const status = $('home-check-status');
   checking = new AbortController();
+  timing = check;
   showReady();
   const { signal } = checking;
   $('home-check').hidden = true;
   $('home-recheck').hidden = true;
-  progress.max = STEPS.length;
+  progress.max = steps.length;
   progress.value = 0;
   progress.hidden = false;
   status.classList.remove('failed');
   let problem = '';
   try {
-    await preload((index, name) => {
-      progress.value = index;
-      status.textContent = t('home.step')(index + 1, STEPS.length, name);
-    }, signal);
-    progress.value = STEPS.length;
+    await preload(
+      steps,
+      (index, name) => {
+        progress.value = index;
+        status.textContent = t('home.step')(index + 1, steps.length, name);
+      },
+      signal,
+    );
+    progress.value = steps.length;
     status.textContent = t('home.storing');
     if ((await confirmDownload(modelFiles())) === 'not-ready') {
       problem = t('home.notKept');
-    } else await keepStored();
+    } else if (check) await keepStored();
   } catch (err) {
     if (!signal.aborted) {
       const why = err instanceof Error ? err.message : String(err);
@@ -273,6 +297,7 @@ async function checkPhone(): Promise<void> {
   } finally {
     checking = null;
   }
+  failed ||= Boolean(problem);
   await showReadiness(problem);
 }
 
@@ -284,7 +309,8 @@ export function checkRunning(): boolean {
 let demo: (on: boolean) => void = () => {};
 
 /** Tells the home view that it shows, or that another view took its place. */
-export function homeShown(shown: boolean): void {
+export function homeShown(visible: boolean): void {
+  shown = visible;
   demo(shown);
   if (shown) {
     showLastSet();
@@ -330,8 +356,8 @@ export function bindHome(start: { live: () => void; recording: (file: File) => v
   $('home-how-to-close').addEventListener('click', () => player.close());
   player.addEventListener('close', () => video.pause());
 
-  $('home-check').addEventListener('click', () => void checkPhone());
-  $('home-recheck').addEventListener('click', () => void checkPhone());
+  $('home-check').addEventListener('click', () => void runSteps(true));
+  $('home-recheck').addEventListener('click', () => void runSteps(true));
   navigator.serviceWorker?.addEventListener('controllerchange', () => void showReadiness());
 
   window.addEventListener('beforeinstallprompt', (e) => {

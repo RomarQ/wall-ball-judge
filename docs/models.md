@@ -28,7 +28,7 @@ The manifest is the only place the app learns a model's identity, so a model cha
 
 ## Choosing an earlier revision
 
-The settings offer the shipped revision and every revision under `offered` in the manifest, each with its two detectors' sizes, checksums, classes and training date. An offered revision loads from its tag on the Hub, `https://huggingface.co/<repo>/resolve/<revision>/<file>`, in every build, `VITE_MODELS=local` included, so its first start needs a network. The service worker keeps its files in the model cache with the shipped ones, and **Check this device** downloads the revision chosen at the time, so a phone that ran the check after the choice judges with it offline.
+The settings offer the shipped revision and every revision under `offered` in the manifest, each with its two detectors' sizes, checksums, classes and training date. An offered revision loads from its tag on the Hub, `https://huggingface.co/<repo>/resolve/<revision>/<file>`, in every build, `VITE_MODELS=local` included, so its first start needs a network. The service worker keeps its files in the model cache with the shipped ones, and the home view downloads the revision chosen at the time, so a phone that showed the home view with a network after the choice judges with it offline.
 
 The choice is stored on the phone and read at the board's next start, which drops the detectors of another revision first. A stored revision that the manifest no longer offers falls back to the shipped one. The settings name the revision in use, and the phone check's result holds for that revision only.
 
@@ -38,7 +38,7 @@ To offer a revision, add its two files' entries under `offered.<revision>.files`
 
 The settings offer each input size in the revision's `balls`: 320, the default, and 416 for v11. The ball check reads a window of that many input pixels at the training scale, so the size sets how much of the frame around the target the window takes in. At 320 the window is half the frame's long side, and at 416 about two thirds. The model then reads 1.7 times the pixels on each look, and takes more time for it.
 
-The choice is stored on the device under `ballInput` and read at the board's next start, which drops a ball detector of the other size first. The phone check's result holds for one ball model, so a change of size asks for the check again, and **Check this device** downloads the ball model of the size chosen at the time. The Android app ships both sizes, each with its own TPU file, probe frame and unit check (see [mobile/README.md](../mobile/README.md)).
+The choice is stored on the device under `ballInput` and read at the board's next start, which drops a ball detector of the other size first. The phone check's result holds for one ball model, so a change of size asks for the check again, and the home view downloads the ball model of the size chosen at the time. The Android app ships both sizes, each with its own TPU file, probe frame and unit check (see [mobile/README.md](../mobile/README.md)).
 
 ## Trying a candidate on a phone
 

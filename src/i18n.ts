@@ -50,8 +50,7 @@ const en = {
   'home.installApp': 'Install the web app',
   'home.openInstalled': 'Open the web app from its icon.',
   'home.check': 'Check this device',
-  'home.checkSize':
-    'Optional. Tests the speed of this device and keeps the app for offline use. Downloads about 50 MB.',
+  'home.checkSize': 'Optional. Tests the speed of this device.',
   'home.recheck': 'Check again',
   'home.place': 'How to position the device',
   'home.planLabel':
@@ -330,8 +329,7 @@ const ptPT: Texts = {
   'home.installApp': 'Instalar a app da Web',
   'home.openInstalled': 'Abra a app da Web pelo seu ícone.',
   'home.check': 'Testar este dispositivo',
-  'home.checkSize':
-    'Opcional. Testa a velocidade deste dispositivo e guarda a app para usar sem internet. Transfere cerca de 50 MB.',
+  'home.checkSize': 'Opcional. Testa a velocidade deste dispositivo.',
   'home.recheck': 'Testar de novo',
   'home.place': 'Como posicionar o dispositivo',
   'home.planLabel':
