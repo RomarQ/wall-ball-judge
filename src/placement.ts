@@ -48,9 +48,10 @@ export interface FinderOptions {
   /**
    * The widest a candidate may be against its height.
    *
-   * A plate is round or a board of marks, so it is never much wider than it
-   * is tall: of the verified target boxes, ninety-nine in a hundred are
-   * within 1.62. A wide strip is a shelf, a beam or the edge of the wall.
+   * A plate or a disc is about as wide as it is tall, but a line of tape or
+   * paint is a thin strip: the target labels of v12's training set reach 8.7,
+   * and the detector boxes the lines of val-gym-6 at up to 9.8. A strip wider
+   * still is a shelf, a beam or the edge of the wall.
    */
   maxWide: number;
   /**
@@ -103,7 +104,7 @@ export const DEFAULTS: FinderOptions = {
   sureScore: 0.6,
   minScore: 0.25,
   lookScore: 0.1,
-  maxWide: 2,
+  maxWide: 12,
   maxTall: 0.3,
   // Measured over the verified target boxes: stacked marks sit under 0.5 box
   // widths apart with a clear gap before the plates of the next lane, and

@@ -216,15 +216,17 @@ it("stops the pose's view short of a person outside the target's lane, on their 
 
 {
   // A shelf across the wall: the detector calls it a target, and it is wider
-  // than any plate. Offering it makes the judge pick between real marks and it.
-  const wide: Box = { x: 0, y: 100, w: 600, h: 60, score: 0.9, name: 'target' };
+  // than any mark. Offering it makes the judge pick between real marks and it.
+  const shelf: Box = { x: 0, y: 100, w: 600, h: 40, score: 0.9, name: 'target' };
   const plate: Box = { x: 255, y: 29, w: 179, h: 154, score: 0.9, name: 'target' };
+  // A line of tape on the wall is a target, as wide as the strips of val-gym-6.
+  const line: Box = { x: 420, y: 60, w: 120, h: 15, score: 0.9, name: 'target' };
   // Half the picture: the shape passes, because it is not a strip. Only its
   // size says it is the room rather than a mark on the wall.
   const huge: Box = { x: 100, y: 800, w: 760, h: 700, score: 0.9, name: 'target' };
   check(
-    'a plate is neither a strip nor half the picture',
-    readLook([wide, plate, huge], 1920).look.plates.map((b) => b.w),
-    [plate.w],
+    'a mark is a plate or a line, neither a shelf nor half the picture',
+    readLook([shelf, plate, line, huge], 1920).look.plates.map((b) => b.w),
+    [plate.w, line.w],
   );
 }
