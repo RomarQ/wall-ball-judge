@@ -13,6 +13,7 @@
  */
 import manifest from '../models/manifest.json';
 import { ballFileAt, ballInputs, type BallModels } from './ball-model';
+import { modelAddresses, onHub } from './model-addresses';
 import { IOU_MAX, MIN_SCORE } from './boxes';
 import { DEFAULTS as DEPTH } from './depth';
 import { DEFAULTS as REACH } from './reach';
@@ -131,27 +132,17 @@ export function ballInputChoices(): { inputs: number[]; inUse: number | undefine
 /** The stored confidence, which one page may override for a test. */
 const sure = () => (typeof localStorage === 'undefined' ? CONFIDENCE_DEFAULT : poseConfidence());
 
-const MODEL_HOST = 'https://storage.googleapis.com/mediapipe-models';
 /** A path under the app's own origin, whatever page imports this and wherever the app is mounted. */
 const here = (path: string) => new URL(import.meta.env.BASE_URL + path, document.baseURI).href;
-/** A trained file at `revision`, a tag on the Hub, so the address never changes what it serves. */
-const onHub = (revision: string, file: string) =>
-  `https://huggingface.co/${manifest.repo}/resolve/${revision}/${file}`;
+const addresses = () => modelAddresses(here(''), config.models === 'local');
 
-/**
- * A trained detector: a candidate this page asked for, else an offered
- * revision from the Hub, else the shipped one from the Hub once the manifest
- * points there, else from the app's own models folder.
- */
+/** A trained detector: a candidate this page asked for, else an offered revision from the Hub, else the shipped one. */
 const trained = (file: string) => {
   const candidate = askedModels();
   if (candidate)
     return here(/\.tflite$/.test(candidate) ? `models/${candidate}` : `models/${candidate}/${file}`);
   const revision = chosenModels();
-  if (revision !== manifest.revision) return onHub(revision, file);
-  return manifest.source === 'hub' && config.models !== 'local'
-    ? onHub(revision, file)
-    : here(`models/${file}`);
+  return revision === manifest.revision ? addresses().shipped(file) : onHub(revision, file);
 };
 
 /** The classes a trained detector's rows name, in the order of their ids, as the manifest lists them. */
@@ -229,30 +220,14 @@ export const config = {
 };
 
 export function modelPaths(): ModelPaths {
-  const runtimes = {
-    mediapipeWasm: here('vendor/mediapipe'),
-    litertWasm: here('vendor/litert/'),
-  };
-  const classes = {
-    detectorClasses: classesOf(ballFile()),
-    targetDetectorClasses: classesOf(finderFile()),
-  };
-  if (config.models === 'local') {
-    return {
-      poseLite: here('models/pose_landmarker_lite.task'),
-      poseFull: here('models/pose_landmarker_full.task'),
-      detector: trained(ballFile()),
-      targetDetector: trained(finderFile()),
-      ...classes,
-      ...runtimes,
-    };
-  }
   return {
-    poseLite: `${MODEL_HOST}/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task`,
-    poseFull: `${MODEL_HOST}/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task`,
+    poseLite: addresses().pose('lite'),
+    poseFull: addresses().pose('full'),
     detector: trained(ballFile()),
     targetDetector: trained(finderFile()),
-    ...classes,
-    ...runtimes,
+    detectorClasses: classesOf(ballFile()),
+    targetDetectorClasses: classesOf(finderFile()),
+    mediapipeWasm: here('vendor/mediapipe'),
+    litertWasm: here('vendor/litert/'),
   };
 }

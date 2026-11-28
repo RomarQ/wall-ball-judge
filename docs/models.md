@@ -22,7 +22,7 @@ A revision names its ball check's file in the manifest's `ball` and its search's
 - `repo`: the files are committed under `public/models/` and served by the app itself.
 - `hub`: the app fetches `https://huggingface.co/<repo>/resolve/<revision>/<file>`. The revision is a tag on the Hub repository, so the URL is immutable.
 
-The service worker names its model cache after the shipped revision: a new revision gets a new cache, and the old one is dropped on the next activation. That is how a phone stops serving a stale model file without any file-level versioning in the app. Bump the revision whenever a file changes, whichever source is in use.
+The service worker names its model cache after the shipped revision: a new revision gets a new cache, and the old one is dropped on the next activation. The new worker fills its cache during its install: for each detector of the old cache, it downloads the shipped detector of the same name, and it keeps the detector of a revision that the manifest still offers. That is how a phone stops serving a stale model file without any file-level versioning in the app. Bump the revision whenever a file changes, whichever source is in use.
 
 The manifest is the only place the app learns a model's identity, so a model change is a one-line diff in git with a checksum beside it.
 

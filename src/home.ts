@@ -301,9 +301,12 @@ async function runSteps(check: boolean): Promise<void> {
   await showReadiness(problem);
 }
 
-/** Whether a device check runs, which a reload would stop. */
+/**
+ * Whether the check that the person started runs, which a reload would stop. A reload loses nothing of the
+ * download that the home view starts by itself, as the next page starts it again from the files already cached.
+ */
 export function checkRunning(): boolean {
-  return checking !== null;
+  return checking !== null && timing;
 }
 
 let demo: (on: boolean) => void = () => {};

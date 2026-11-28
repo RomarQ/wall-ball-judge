@@ -59,14 +59,22 @@ async function addresses(cache: string): Promise<string[]> {
   return requests.map((request) => request.url);
 }
 
-function storedRuntimes(): string[] {
+/**
+ * The runtime files of the last download, from `stored`, when that download filled the runtime cache `cache`. A
+ * list from another cache names the files of other runtimes, which the new ones may not ask for, or not all of.
+ */
+export function runtimesIn(stored: string | null, cache: string): string[] {
   try {
-    const list: unknown = JSON.parse(localStorage.getItem(RUNTIMES_KEY) ?? '[]');
-    return Array.isArray(list) ? list.filter((file) => typeof file === 'string') : [];
+    const list: unknown = JSON.parse(stored ?? 'null');
+    if (typeof list !== 'object' || list === null || !('cache' in list) || list.cache !== cache) return [];
+    const files = 'files' in list && Array.isArray(list.files) ? (list.files as unknown[]) : [];
+    return files.filter((file): file is string => typeof file === 'string');
   } catch {
     return [];
   }
 }
+
+const storedRuntimes = () => runtimesIn(localStorage.getItem(RUNTIMES_KEY), VENDOR_CACHE);
 
 /**
  * The service worker of this page, after a short wait for the first one of a visit.
@@ -128,6 +136,9 @@ export async function confirmDownload(models: string[]): Promise<OfflineState> {
     if (models.every((file) => held.has(file))) break;
     await new Promise((resolve) => setTimeout(resolve, WRITE_POLL_MS));
   }
-  localStorage.setItem(RUNTIMES_KEY, JSON.stringify(await addresses(VENDOR_CACHE)));
+  localStorage.setItem(
+    RUNTIMES_KEY,
+    JSON.stringify({ cache: VENDOR_CACHE, files: await addresses(VENDOR_CACHE) }),
+  );
   return readOfflineState(models);
 }

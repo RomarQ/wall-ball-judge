@@ -3,7 +3,7 @@
  *
  * Run: npm test
  */
-import { offlineState, type Held } from '../src/offline';
+import { offlineState, runtimesIn, type Held } from '../src/offline';
 import { expect, it } from 'vitest';
 
 const models = ['https://host/pose_full.task', 'https://app/models/detector-416.tflite'];
@@ -27,4 +27,11 @@ it('is not ready when one file is absent from the caches, a model or a runtime',
 
 it('is not ready before the first download, when no list of runtime files is stored', () => {
   expect(offlineState({ ...full, runtimes: [] })).toBe('not-ready');
+});
+
+it('reads the stored runtime files only for the runtime cache that their download filled', () => {
+  const stored = (cache: string) => JSON.stringify({ cache, files: runtimes });
+  expect(runtimesIn(stored('vendor-2'), 'vendor-2')).toEqual(runtimes);
+  expect(runtimesIn(stored('vendor-1'), 'vendor-2')).toEqual([]);
+  expect(runtimesIn(JSON.stringify(runtimes), 'vendor-2')).toEqual([]);
 });
