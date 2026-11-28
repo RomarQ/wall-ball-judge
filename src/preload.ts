@@ -83,6 +83,9 @@ export const STEPS: Step[] = [
 /** The steps that store a model file: the check without its speed test. */
 export const DOWNLOADS = STEPS.filter((step) => step.file !== null);
 
+/** The step that times the models, which runs from the stored files alone. */
+export const SPEED_TEST = STEPS.filter((step) => step.file === null);
+
 /** The addresses of the model files that a complete download leaves in the cache. */
 export function modelFiles(): string[] {
   const paths = modelPaths();

@@ -1,8 +1,8 @@
 /**
  * The home view: the drawing of a rep, the controls that start a set, the
  * how-to video, whether this device runs the app, the download of the models
- * for use with no network, the check that tests the device, and the offer to
- * install the app.
+ * for use with no network, the check that tests the device, the speed test that
+ * each start runs again, and the offer to install the app.
  */
 import { playDemo } from './demo';
 import { cameraBlocker } from './diagnostics';
@@ -11,7 +11,7 @@ import { onLanguage, t } from './i18n';
 import { HOW_TO, LINKS } from './links';
 import { confirmDownload, keepStored, readOfflineState, storedKept, type OfflineState } from './offline';
 import { savedFinder, savedTimes, unitFor, type UnitTimes } from './phone-check';
-import { DOWNLOADS, STEPS, modelFiles, preload } from './preload';
+import { DOWNLOADS, SPEED_TEST, STEPS, modelFiles, preload } from './preload';
 import {
   ballReadiness,
   phoneReadiness,
@@ -35,13 +35,24 @@ type State = Readiness;
 /** The state of each part of the judge on this device, which the answer to whether it runs the app sums up. */
 const parts: Parts = { camera: 'none', pose: 'none', ball: 'none', finder: 'none' };
 
-/** The check or the download in progress, which stops when another view takes the place of the home view. */
+/**
+ * A run of the home view's steps: `download` stores the models that the caches lack, `check` is the check that the
+ * person starts, and `speed` times the models again on each start.
+ */
+type Run = 'download' | 'check' | 'speed';
+
+const RUN_STEPS = { download: DOWNLOADS, check: STEPS, speed: SPEED_TEST } as const;
+
+/** The run in progress, which stops when another view takes the place of the home view. */
 let checking: AbortController | null = null;
 
-/** Whether the run in progress is the check, which times the models, rather than the download alone. */
-let timing = false;
+/** The kind of the run in progress, while `checking` holds one. */
+let running: Run = 'download';
 
-/** Whether a run failed in this visit, so that the home view starts no download by itself again. */
+/** Whether a run timed the models since this page opened, so that the home view starts no speed test by itself. */
+let timed = false;
+
+/** Whether a run failed in this visit, so that the home view starts no run by itself again. */
 let failed = false;
 
 /** Whether the home view shows, the one view that downloads the models by itself. */
@@ -65,7 +76,7 @@ function showReady(): void {
     setNote('home-ready', state === 'good' ? '' : t(WHY[state]));
     return;
   }
-  const reading = (checking !== null && timing) || parts.camera === 'none';
+  const reading = (checking !== null && running !== 'download') || parts.camera === 'none';
   const text = reading ? 'home.checking' : checked ? 'home.notKnown' : 'home.notChecked';
   setSpec('home-ready', state, t(text));
   setNote('home-ready', text === 'home.notKnown' ? t('home.firstSet') : '');
@@ -245,9 +256,11 @@ async function showReadiness(problem = ''): Promise<void> {
   setSpec('home-offline', OFFLINE[offline].state, OFFLINE[offline].text());
   setNote('home-offline', offline === 'ready' ? keptNote(kept) : '');
   offerCheck(!checked || offline === 'not-ready');
+  if (!shown || failed) return;
   // Without a controlling worker, the download stores nothing and would start again on each visit.
-  if (offline === 'not-ready' && shown && !failed && navigator.serviceWorker?.controller)
-    void runSteps(false);
+  if (offline === 'not-ready' && navigator.serviceWorker?.controller) void runSteps('download');
+  // A check that ran on a busy or hot GPU would otherwise hold every set on the CPU.
+  else if (offline === 'ready' && !timed) void runSteps('speed');
 }
 
 /** What may undo a ready phone: nothing once the browser keeps the files, else a full phone. */
@@ -257,22 +270,24 @@ function keptNote(kept: boolean): string {
 }
 
 /**
- * Downloads the models, and with `check` also times them on this device and asks the browser to keep them. Only the
- * check asks, because Firefox puts that request to the person, and the check is the run that they started.
+ * Runs the steps of `kind`, and lists them unless it is the speed test, which the device's row shows. Only the check
+ * asks the browser to keep the files, because Firefox puts that request to the person, and the check is the run that
+ * they started.
  */
-async function runSteps(check: boolean): Promise<void> {
-  const steps = check ? STEPS : DOWNLOADS;
+async function runSteps(kind: Run): Promise<void> {
+  const steps = RUN_STEPS[kind];
+  const listed = kind !== 'speed';
   const progress = $<HTMLProgressElement>('home-check-progress');
   const status = $('home-check-status');
   checking = new AbortController();
-  timing = check;
+  running = kind;
   showReady();
   const { signal } = checking;
   $('home-check').hidden = true;
   $('home-recheck').hidden = true;
   progress.max = steps.length;
   progress.value = 0;
-  progress.hidden = false;
+  progress.hidden = !listed;
   status.classList.remove('failed');
   let problem = '';
   try {
@@ -280,15 +295,17 @@ async function runSteps(check: boolean): Promise<void> {
       steps,
       (index, name) => {
         progress.value = index;
-        status.textContent = t('home.step')(index + 1, steps.length, name);
+        if (listed) status.textContent = t('home.step')(index + 1, steps.length, name);
       },
       signal,
     );
-    progress.value = steps.length;
-    status.textContent = t('home.storing');
-    if ((await confirmDownload(modelFiles())) === 'not-ready') {
-      problem = t('home.notKept');
-    } else if (check) await keepStored();
+    timed ||= kind !== 'download';
+    if (listed) {
+      progress.value = steps.length;
+      status.textContent = t('home.storing');
+      if ((await confirmDownload(modelFiles())) === 'not-ready') problem = t('home.notKept');
+      else if (kind === 'check') await keepStored();
+    }
   } catch (err) {
     if (!signal.aborted) {
       const why = err instanceof Error ? err.message : String(err);
@@ -302,11 +319,11 @@ async function runSteps(check: boolean): Promise<void> {
 }
 
 /**
- * Whether the check that the person started runs, which a reload would stop. A reload loses nothing of the
- * download that the home view starts by itself, as the next page starts it again from the files already cached.
+ * Whether the check that the person started runs, which a reload would stop. A reload loses nothing of a run that
+ * the home view starts by itself, as the next page starts it again from the files already cached.
  */
 export function checkRunning(): boolean {
-  return checking !== null && timing;
+  return checking !== null && running === 'check';
 }
 
 let demo: (on: boolean) => void = () => {};
@@ -359,8 +376,8 @@ export function bindHome(start: { live: () => void; recording: (file: File) => v
   $('home-how-to-close').addEventListener('click', () => player.close());
   player.addEventListener('close', () => video.pause());
 
-  $('home-check').addEventListener('click', () => void runSteps(true));
-  $('home-recheck').addEventListener('click', () => void runSteps(true));
+  $('home-check').addEventListener('click', () => void runSteps('check'));
+  $('home-recheck').addEventListener('click', () => void runSteps('check'));
   navigator.serviceWorker?.addEventListener('controllerchange', () => void showReadiness());
 
   window.addEventListener('beforeinstallprompt', (e) => {
