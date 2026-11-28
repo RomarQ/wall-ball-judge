@@ -55,7 +55,7 @@ After that, the **Ready for offline use** row on the home view reads "Not yet", 
 
 ## Checking what the phone is actually running
 
-The version beside the logo comes from the worker rather than the page, so it survives a stale cache. **About**, in the settings, names the revision of the detectors the page runs, such as `v11`, or the candidate folder that `?models=` names. To read the phone from this machine:
+The version beside the logo comes from the worker rather than the page, so it survives a stale cache. **About**, in the settings, names the revision of the detectors the page runs, such as `v12`, or the candidate folder that `?models=` names. To read the phone from this machine:
 
 ```sh
 adb forward tcp:9222 localabstract:chrome_devtools_remote

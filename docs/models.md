@@ -7,9 +7,9 @@ The app runs three models on the phone: MediaPipe's pose landmarker, a ball dete
 | Model                                                    | Source                                          | Size           |
 | -------------------------------------------------------- | ----------------------------------------------- | -------------- |
 | `pose_landmarker_full.task`, `pose_landmarker_lite.task` | Google's storage, the published MediaPipe files | 9.4 MB, 5.8 MB |
-| `detector-320.tflite`                                    | the Hub's `v11` tag                             | 9.8 MB         |
-| `detector-416.tflite`                                    | the Hub's `v11` tag                             | 9.8 MB         |
-| `detector-640.tflite`                                    | the Hub's `v11` tag                             | 9.8 MB         |
+| `detector-320.tflite`                                    | the Hub's `v12` tag                             | 9.8 MB         |
+| `detector-416.tflite`                                    | the Hub's `v12` tag                             | 9.8 MB         |
+| `detector-640.tflite`                                    | the Hub's `v12` tag                             | 9.8 MB         |
 
 The WASM runtimes for MediaPipe and LiteRT.js ship in the npm packages and are copied beside the app at build time, under `vendor/`. They are not models and have no version of their own beyond `package-lock.json`.
 
@@ -36,7 +36,7 @@ To offer a revision, add its two files' entries under `offered.<revision>.files`
 
 ## Choosing the ball check's input size
 
-The settings offer each input size in the revision's `balls`: 320, the default, and 416 for v11. The ball check reads a window of that many input pixels at the training scale, so the size sets how much of the frame around the target the window takes in. At 320 the window is half the frame's long side, and at 416 about two thirds. The model then reads 1.7 times the pixels on each look, and takes more time for it.
+The settings offer each input size in the revision's `balls`: 320, the default, and 416 for v12. The ball check reads a window of that many input pixels at the training scale, so the size sets how much of the frame around the target the window takes in. At 320 the window is half the frame's long side, and at 416 about two thirds. The model then reads 1.7 times the pixels on each look, and takes more time for it.
 
 The choice is stored on the device under `ballInput` and read at the board's next start, which drops a ball detector of the other size first. The phone check's result holds for one ball model, so a change of size asks for the check again, and the home view downloads the ball model of the size chosen at the time. The Android app ships both sizes, each with its own TPU file, probe frame and unit check (see [mobile/README.md](../mobile/README.md)).
 
@@ -58,7 +58,7 @@ python -c "from ultralytics import YOLO; YOLO('last.pt').export(format='tflite',
 python -c "from ultralytics import YOLO; YOLO('last.pt').export(format='tflite', imgsz=640)"
 ```
 
-This ran with Ultralytics 8.4.142, which exports through `litert_torch` 0.10.0, in a Python 3.12 environment with TensorFlow 2.21. A first export there failed with "duplicate registrations for aten.miopen_batch_norm.default" and the second worked. Each file keeps the ONNX file's channel order, such as `[1, 3, 320, 320]` in and `[1, 6, 2100]` out, but gives each box as a share of the input, so `src/litert-worker.ts` scales the boxes to pixels. Each LiteRT file of v11 finds the boxes of its ONNX export on eval frames. Check a new export the same way before it ships.
+This ran with Ultralytics 8.4.142, which exports through `litert_torch` 0.10.0, in a Python 3.12 environment with TensorFlow 2.21. A first export there failed with "duplicate registrations for aten.miopen_batch_norm.default" and the second worked. Each file keeps the ONNX file's channel order, such as `[1, 3, 320, 320]` in and `[1, 6, 2100]` out, but gives each box as a share of the input, so `src/litert-worker.ts` scales the boxes to pixels. Each LiteRT file of v11 and v12 finds the boxes of its ONNX export on eval frames. Check a new export the same way before it ships.
 
 LiteRT.js runs a model on the GPU in half precision unless asked otherwise. The ball check does, and its verdicts were checked that way. The search asks for full precision: in half precision its scores moved by up to 0.023 on the reference clips, and the order of the plates changed on 4 of 24 frames. In full precision it answers as the processor does, within a few millionths.
 
